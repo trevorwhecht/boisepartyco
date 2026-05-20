@@ -18,7 +18,7 @@ const ORDER_DETAIL_INCLUDE = {
       resellerLicenseUploadedAt: true,
     },
   },
-  orderLineItems: { include: { variants: true }, orderBy: { sortOrder: "asc" as const } },
+  orderLineItems: { orderBy: { sortOrder: "asc" as const } },
   setUpCosts: true,
   payments: { orderBy: { paidAt: "desc" as const } },
 }

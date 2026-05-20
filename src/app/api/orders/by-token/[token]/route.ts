@@ -14,7 +14,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ token: s
     include: {
       state: true,
       user: { select: { id: true, firstName: true, lastName: true, email: true, phone: true, companyName: true } },
-      orderLineItems: { include: { variants: true }, orderBy: { sortOrder: "asc" as const } },
+      orderLineItems: { orderBy: { sortOrder: "asc" as const } },
       setUpCosts: true,
       payments: { orderBy: { paidAt: "desc" as const } },
     },

@@ -1,3 +1,10 @@
-export default function QuotePage() {
-  return <main className="p-16 text-center"><h1 className="serif text-4xl">Your Quote — G4 coming soon</h1></main>
+import { Suspense } from "react"
+import QuotePage from "./QuotePage"
+
+export default function QuoteRoute() {
+  return (
+    <Suspense fallback={<div className="py-20 text-center text-(--shop-ink-soft)">Loading…</div>}>
+      <QuotePage />
+    </Suspense>
+  )
 }

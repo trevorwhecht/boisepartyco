@@ -331,3 +331,66 @@ export async function validateOrderLines(
 
   return { ok: conflicts.length === 0, conflicts, warnings }
 }
+
+// ---------------------------------------------------------------------------
+// Daily availability — per-day availability over a date range
+// ---------------------------------------------------------------------------
+
+/**
+ * Returns per-day availability for an item for `days` days starting at `startDate`.
+ * Uses a single DB query for the whole range, then filters per-day in memory.
+ */
+export async function getItemDailyAvailability(
+  itemId: number,
+  startDate: Date,
+  days: number = 35,
+): Promise<{ date: string; available: number; total: number }[]> {
+  const rangeEnd = new Date(startDate)
+  rangeEnd.setDate(rangeEnd.getDate() + days)
+
+  const item = await prisma.item.findUnique({
+    where: { id: itemId },
+    select: { qty: true, category: { select: { isSerialized: true } } },
+  })
+  if (!item) return []
+
+  const stock = item.category.isSerialized
+    ? await prisma.serializedUnit.count({ where: { itemId, status: "available" } })
+    : (item.qty ?? 0)
+
+  const lines = await prisma.orderLineItem.findMany({
+    where: {
+      itemId,
+      order: {
+        startDate: { lt: rangeEnd },
+        dueDateEnd: { gt: startDate },
+        state: { consumesInventory: true },
+      },
+    },
+    select: {
+      qty: true,
+      order: { select: { startDate: true, dueDateEnd: true } },
+    },
+  })
+
+  const result: { date: string; available: number; total: number }[] = []
+  for (let i = 0; i < days; i++) {
+    const day = new Date(startDate)
+    day.setDate(day.getDate() + i)
+    day.setHours(0, 0, 0, 0)
+    const dayEnd = new Date(day)
+    dayEnd.setHours(23, 59, 59, 999)
+
+    const booked = lines
+      .filter(l => l.order.startDate !== null && l.order.dueDateEnd !== null
+        && l.order.startDate <= dayEnd && l.order.dueDateEnd >= day)
+      .reduce((sum, l) => sum + l.qty, 0)
+
+    result.push({
+      date: day.toISOString().slice(0, 10),
+      available: Math.max(0, stock - booked),
+      total: stock,
+    })
+  }
+  return result
+}

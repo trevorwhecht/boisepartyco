@@ -6,7 +6,7 @@ import type { CartLine, CartLineKind } from "@/models/inventory"
 type CartContextValue = {
   lines: CartLine[]
   cartCount: number
-  addToCart: (line: CartLine) => void
+  addToCart: (refId: number, kind: CartLineKind, qty: number, name: string, unitPrice: number) => void
   updateLine: (refId: number, kind: CartLineKind, qty: number) => void
   removeLine: (refId: number, kind: CartLineKind) => void
   clearCart: () => void
@@ -35,17 +35,17 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     } catch {}
   }, [lines, mounted])
 
-  const addToCart = (line: CartLine) => {
+  const addToCart = (refId: number, kind: CartLineKind, qty: number, name: string, unitPrice: number) => {
     setLines((prev) => {
-      const existing = prev.find((l) => l.kind === line.kind && l.refId === line.refId)
+      const existing = prev.find((l) => l.refId === refId && l.kind === kind)
       if (existing) {
         return prev.map((l) =>
-          l.kind === line.kind && l.refId === line.refId
-            ? { ...l, qty: l.qty + line.qty }
+          l.refId === refId && l.kind === kind
+            ? { ...l, qty: l.qty + qty }
             : l,
         )
       }
-      return [...prev, line]
+      return [...prev, { kind, refId, qty, name, unitPrice }]
     })
   }
 

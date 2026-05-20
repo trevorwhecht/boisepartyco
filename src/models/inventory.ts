@@ -144,6 +144,7 @@ export type CartLine = {
   kind: CartLineKind
   refId: number              // Item.id or TentConfiguration.id
   qty: number
+  name: string               // display name — captured at add-time to avoid extra fetches
   unitPrice: number          // snapshot — server re-validates
   notes?: string | null
 }
