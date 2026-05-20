@@ -2,6 +2,7 @@ import { Suspense } from "react"
 import { prisma } from "@/lib/prisma"
 import { getItemAvailability, getTentConfigAvailability } from "@/services/inventoryService"
 import TentsListing from "./TentsListing"
+import CategoryHero from "@/components/shared/layout/CategoryHero"
 import type { TentConfigurationSummary, ConfigAvailabilityResult, ItemSummary, AvailabilityResult } from "@/models/inventory"
 
 export const dynamic = "force-dynamic"
@@ -67,22 +68,20 @@ export default async function TentsPage({ searchParams }: { searchParams: Promis
 
   return (
     <main>
-      {/* Page header */}
-      <section className="py-16 pb-12 border-b border-(--shop-line)" style={{ background: "var(--shop-paper)" }}>
-        <div className="max-w-330 mx-auto px-8">
-          <p className="text-xs text-(--shop-ink-soft) mb-3">
-            <a href="/" className="text-(--shop-ink-soft) hover:text-(--shop-ink)">Home</a>
-            {" "}/{" "}
-            <span className="text-(--shop-ink)">Tents</span>
+      {/* Desktop: full photo hero */}
+      <CategoryHero
+        title="Tents"
+        subtitle="From backyard 20×20s up to our 40×80 high-peak — every tent includes setup, stakedown, and inspection by an owner."
+        imgSrc="/images/heroes/tent-hero.jpg"
+        breadcrumb="Tents"
+      />
+      {/* Mobile: simple text header (hero hidden on mobile) */}
+      <section className="md:hidden py-8 pb-5 border-b border-(--shop-line)" style={{ background: "var(--shop-paper)" }}>
+        <div className="max-w-330 mx-auto px-4">
+          <p className="text-xs text-(--shop-ink-soft) mb-2">
+            <a href="/" className="hover:text-(--shop-ink)">Home</a> / <span className="text-(--shop-ink)">Tents</span>
           </p>
-          <div className="flex justify-between items-end gap-8 flex-wrap">
-            <div>
-              <h1 className="serif font-medium leading-tight" style={{ fontSize: 64 }}>Tents</h1>
-              <p className="mt-3 text-base text-(--shop-ink-soft) max-w-lg leading-relaxed">
-                From backyard 20×20s up to our 40×80 high-peak — every tent includes setup, stakedown, and inspection by an owner.
-              </p>
-            </div>
-          </div>
+          <h1 className="serif font-medium leading-tight" style={{ fontSize: "clamp(28px, 8vw, 48px)" }}>Tents</h1>
         </div>
       </section>
 

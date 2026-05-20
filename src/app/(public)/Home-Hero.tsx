@@ -1,4 +1,5 @@
 "use client"
+import Image from "next/image"
 import { useRouter, useSearchParams } from "next/navigation"
 import { ArrowRight } from "lucide-react"
 import DateRangeField from "@/components/shared/DateRangeField"
@@ -20,30 +21,30 @@ export default function HomeHero() {
 
   return (
     <section className="relative overflow-hidden" style={{ minHeight: 480, height: "clamp(480px, 60vw, 640px)" }}>
-      {/* Tent-interior placeholder backdrop */}
-      <div className="absolute inset-0" style={{
-        background: "linear-gradient(180deg, rgba(20,30,50,0.10) 0%, rgba(20,30,50,0.55) 70%, rgba(20,30,50,0.75) 100%), radial-gradient(ellipse at 50% 30%, #d8e3ec 0%, #b4c5d2 35%, #768899 70%, #3d4d5d 100%)",
-      }}>
-        <svg width="100%" height="100%" viewBox="0 0 1600 640" preserveAspectRatio="none"
-          className="absolute inset-0 opacity-30">
-          {[0,1,2,3,4,5,6,7,8,9,10].map(i => (
-            <line key={i} x1={i*160} y1="0" x2="800" y2="180" stroke="#fff" strokeWidth="1.2"/>
-          ))}
-          {[...Array(14)].map((_,i) => (
-            <g key={i}>
-              <line x1={120 + i*100} y1="180" x2={120 + i*100} y2={210 + (i%3)*40} stroke="#fff" strokeWidth="0.8" opacity="0.5"/>
-              <circle cx={120 + i*100} cy={210 + (i%3)*40} r="3" fill="#ffe9a8" opacity="0.95"/>
-            </g>
-          ))}
-        </svg>
-      </div>
+      {/* Real photo background */}
+      <Image
+        src="/images/heroes/home-hero.webp"
+        alt="Boise Party Co. — event rentals in the Treasure Valley"
+        fill
+        priority
+        sizes="100vw"
+        className="object-cover object-center"
+      />
+      {/* Dark gradient overlay */}
+      <div
+        className="absolute inset-0"
+        style={{
+          background:
+            "linear-gradient(180deg, rgba(10,18,38,0.20) 0%, rgba(10,18,38,0.58) 65%, rgba(10,18,38,0.78) 100%)",
+        }}
+      />
 
-      <div className="relative max-w-[1320px] mx-auto px-4 md:px-8 pt-16 md:pt-32 text-white">
+      <div className="relative max-w-330 mx-auto px-4 md:px-8 pt-16 md:pt-32 text-white">
         <p className="text-xs font-semibold uppercase tracking-[0.2em] text-white/80 mb-4">
           Boise · Meridian · Eagle · Nampa
         </p>
         <h1
-          className="serif font-medium leading-[1.05] tracking-tight max-w-[880px]"
+          className="serif font-medium leading-[1.05] tracking-tight max-w-220"
           style={{ fontSize: "clamp(36px, 8vw, 76px)", textShadow: "0 2px 12px rgba(0,0,0,0.3)" }}
         >
           Rentals for <em className="italic">every occasion</em><br />in the Treasure Valley.

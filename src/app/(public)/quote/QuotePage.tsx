@@ -98,19 +98,18 @@ export default function QuotePage() {
   return (
     <main>
       {/* Page header */}
-      <section className="py-12" style={{ background: "var(--shop-paper)" }}>
-        <div className="max-w-330 mx-auto px-8">
+      <section className="py-8 md:py-12" style={{ background: "var(--shop-paper)" }}>
+        <div className="max-w-330 mx-auto px-4 md:px-8">
           <p className="text-xs text-(--shop-ink-soft) mb-3">
             <a href="/" className="hover:text-(--shop-ink)">Home</a> / <span className="text-(--shop-ink)">Your Quote</span>
           </p>
-          <h1 className="serif font-medium leading-tight tracking-tight" style={{ fontSize: 56 }}>Your quote</h1>
+          <h1 className="serif font-medium leading-tight tracking-tight" style={{ fontSize: "clamp(28px, 8vw, 56px)" }}>Your quote</h1>
           <p className="mt-2 text-base text-(--shop-ink-soft)">Review your list, confirm dates, and we'll come back within 4 business hours.</p>
         </div>
       </section>
 
-      <section className="py-10 pb-20">
-        <div className="max-w-330 mx-auto px-8 grid gap-12 items-start"
-          style={{ gridTemplateColumns: "1.6fr 1fr" }}>
+      <section className="py-8 md:py-10 pb-20">
+        <div className="max-w-330 mx-auto px-4 md:px-8 grid grid-cols-1 md:grid-cols-[1.6fr_1fr] gap-8 md:gap-12 items-start">
 
           {/* Left: main content */}
           <div>
@@ -143,25 +142,41 @@ export default function QuotePage() {
                 <div className="bg-white border border-(--shop-line) rounded-xl overflow-hidden">
                   {lines.map((line, idx) => (
                     <div key={`${line.kind}-${line.refId}`}
-                      className="grid gap-5 p-4 items-center"
-                      style={{
-                        gridTemplateColumns: "72px 1fr auto auto auto",
-                        borderBottom: idx < lines.length - 1 ? "1px solid #f0f2f5" : "none",
-                      }}>
-                      <div className="aspect-square bg-(--shop-paper) rounded-lg" />
-                      <div>
-                        <span className="serif text-xl font-medium text-(--shop-ink)">{line.name}</span>
+                      className="flex gap-3 p-3.5 items-start md:grid md:gap-5 md:p-4 md:items-center md:grid-cols-[72px_1fr_auto_auto_auto]"
+                      style={{ borderBottom: idx < lines.length - 1 ? "1px solid #f0f2f5" : "none" }}>
+                      {/* Image placeholder */}
+                      <div className="w-16 shrink-0 aspect-square bg-(--shop-paper) rounded-lg md:w-auto" />
+                      {/* Name + mobile controls */}
+                      <div className="flex-1 min-w-0">
+                        <span className="serif text-lg md:text-xl font-medium text-(--shop-ink)">{line.name}</span>
                         <div className="text-xs text-(--shop-ink-soft) mt-0.5">
                           ${line.unitPrice.toFixed(0)}/day · {days} day{days === 1 ? "" : "s"}
                         </div>
+                        {/* Mobile-only controls row */}
+                        <div className="flex items-center gap-2 mt-2.5 md:hidden">
+                          <QtyStepper compact value={line.qty} min={1} max={99}
+                            onChange={(q) => updateLine(line.refId, line.kind, q)} />
+                          <div className="ml-auto mono text-sm font-semibold whitespace-nowrap">
+                            ${fmtCurrency(line.unitPrice * line.qty * days)}
+                          </div>
+                          <button onClick={() => removeLine(line.refId, line.kind)}
+                            className="w-8 h-8 border border-(--shop-line) bg-white rounded-lg flex items-center justify-center text-(--shop-ink-soft) hover:text-(--shop-ink) cursor-pointer shrink-0">
+                            <X size={14} />
+                          </button>
+                        </div>
                       </div>
-                      <QtyStepper compact value={line.qty} min={1} max={99}
-                        onChange={(q) => updateLine(line.refId, line.kind, q)} />
-                      <div className="mono text-sm font-semibold text-right min-w-[72px]">
+                      {/* Desktop-only: qty stepper */}
+                      <div className="hidden md:block">
+                        <QtyStepper compact value={line.qty} min={1} max={99}
+                          onChange={(q) => updateLine(line.refId, line.kind, q)} />
+                      </div>
+                      {/* Desktop-only: total price */}
+                      <div className="hidden md:block mono text-sm font-semibold text-right min-w-18">
                         ${fmtCurrency(line.unitPrice * line.qty * days)}
                       </div>
+                      {/* Desktop-only: remove button */}
                       <button onClick={() => removeLine(line.refId, line.kind)}
-                        className="w-8 h-8 border border-(--shop-line) bg-white rounded-lg flex items-center justify-center text-(--shop-ink-soft) hover:text-(--shop-ink) cursor-pointer">
+                        className="hidden md:flex w-8 h-8 border border-(--shop-line) bg-white rounded-lg items-center justify-center text-(--shop-ink-soft) hover:text-(--shop-ink) cursor-pointer">
                         <X size={14} />
                       </button>
                     </div>
@@ -255,7 +270,7 @@ export default function QuotePage() {
           </div>
 
           {/* Right: estimate summary */}
-          <aside className="bg-white border border-(--shop-line) rounded-xl p-6 sticky top-[170px]">
+          <aside className="bg-white border border-(--shop-line) rounded-xl p-6 md:sticky md:top-28">
             <h4 className="serif text-2xl font-medium mb-4">Estimate</h4>
             <div className="flex flex-col gap-2.5 text-sm text-(--shop-ink-soft)">
               <div className="flex justify-between">

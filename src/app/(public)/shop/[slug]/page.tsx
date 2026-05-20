@@ -51,7 +51,7 @@ export default async function ShopDetailPage({
     return (
       <main>
         <section className="pt-10 pb-4" style={{ background: "var(--shop-paper)" }}>
-          <div className="max-w-330 mx-auto px-8 text-xs text-(--shop-ink-soft)">
+          <div className="max-w-330 mx-auto px-4 md:px-8 text-xs text-(--shop-ink-soft)">
             <a href="/" className="hover:text-(--shop-ink)">Home</a>
             {" / "}
             <a href={`/${item.category.slug}`} className="hover:text-(--shop-ink)">{item.category.name}</a>
@@ -61,8 +61,7 @@ export default async function ShopDetailPage({
         </section>
 
         <section className="pb-20" style={{ background: "var(--shop-paper)" }}>
-          <div className="max-w-330 mx-auto px-8 pt-6 grid gap-16 items-start"
-            style={{ gridTemplateColumns: "1.2fr 1fr" }}>
+          <div className="max-w-330 mx-auto px-4 md:px-8 pt-6 grid grid-cols-1 md:grid-cols-[1.2fr_1fr] gap-8 md:gap-16 items-start">
             {/* Gallery placeholder */}
             <div>
               <div className="aspect-4/3 bg-white border border-(--shop-line) rounded-xl" />
@@ -78,7 +77,7 @@ export default async function ShopDetailPage({
               <div className="text-xs font-semibold uppercase tracking-[0.2em] text-(--shop-blue) mb-1.5">
                 {item.category.name}
               </div>
-              <h1 className="serif font-medium leading-tight tracking-tight" style={{ fontSize: 48 }}>
+              <h1 className="serif font-medium leading-tight tracking-tight" style={{ fontSize: "clamp(28px, 7vw, 48px)" }}>
                 {item.name}
               </h1>
               {(item.size || item.subcategory) ? (
@@ -103,8 +102,8 @@ export default async function ShopDetailPage({
         </section>
 
         {/* 35-day strip */}
-        <section className="py-16 border-t border-(--shop-line)">
-          <div className="max-w-330 mx-auto px-8">
+        <section className="py-10 md:py-16 border-t border-(--shop-line)">
+          <div className="max-w-330 mx-auto px-4 md:px-8">
             <p className="text-xs font-semibold uppercase tracking-[0.2em] text-(--shop-ink-soft) mb-2">Next 35 days</p>
             <h3 className="serif font-medium mb-6" style={{ fontSize: 32 }}>
               What this item looks like over the next month
@@ -148,18 +147,17 @@ export default async function ShopDetailPage({
   return (
     <main>
       <section className="pt-10 pb-4" style={{ background: "var(--shop-paper)" }}>
-        <div className="max-w-330 mx-auto px-8 text-xs text-(--shop-ink-soft)">
+        <div className="max-w-330 mx-auto px-4 md:px-8 text-xs text-(--shop-ink-soft)">
           <a href="/">Home</a> / <a href="/tents">Tents</a> / <span className="text-(--shop-ink)">{config.name}</span>
         </div>
       </section>
 
       <section className="pb-20" style={{ background: "var(--shop-paper)" }}>
-        <div className="max-w-330 mx-auto px-8 pt-6 grid gap-16 items-start"
-          style={{ gridTemplateColumns: "1.2fr 1fr" }}>
+        <div className="max-w-330 mx-auto px-4 md:px-8 pt-6 grid grid-cols-1 md:grid-cols-[1.2fr_1fr] gap-8 md:gap-16 items-start">
           <div className="aspect-4/3 bg-white border border-(--shop-line) rounded-xl" />
           <div>
             <div className="text-xs font-semibold uppercase tracking-[0.2em] text-(--shop-blue) mb-1.5">Tent</div>
-            <h1 className="serif font-medium leading-tight tracking-tight" style={{ fontSize: 48 }}>{config.name}</h1>
+            <h1 className="serif font-medium leading-tight tracking-tight" style={{ fontSize: "clamp(28px, 7vw, 48px)" }}>{config.name}</h1>
             {(config.widthFt || config.capacity) ? (
               <div className="flex gap-4 text-sm text-(--shop-ink-soft) mt-3">
                 {config.widthFt ? <span><strong className="text-(--shop-ink)">{config.widthFt}×{config.lengthFt} ft</strong></span> : null}

@@ -2,6 +2,7 @@ import { Suspense } from "react"
 import { prisma } from "@/lib/prisma"
 import { getItemAvailability } from "@/services/inventoryService"
 import CategoryListing from "@/components/shared/CategoryListing"
+import CategoryHero from "@/components/shared/layout/CategoryHero"
 import type { ItemSummary, AvailabilityResult } from "@/models/inventory"
 
 export const dynamic = "force-dynamic"
@@ -42,22 +43,20 @@ export default async function TablesChairsPage({ searchParams }: { searchParams:
 
   return (
     <main>
-      {/* Page header */}
-      <section className="py-16 pb-12 border-b border-(--shop-line)" style={{ background: "var(--shop-paper)" }}>
-        <div className="max-w-330 mx-auto px-8">
-          <p className="text-xs text-(--shop-ink-soft) mb-3">
-            <a href="/" className="text-(--shop-ink-soft) hover:text-(--shop-ink)">Home</a>
-            {" "}/{" "}
-            <span className="text-(--shop-ink)">Tables &amp; Chairs</span>
+      {/* Desktop: full photo hero */}
+      <CategoryHero
+        title="Tables & Chairs"
+        subtitle="Crossbacks to chiavari, farmhouse to folding. All stock is washed and inspected between rentals."
+        imgSrc="/images/heroes/tables-hero.webp"
+        breadcrumb="Tables & Chairs"
+      />
+      {/* Mobile: simple text header (hero hidden on mobile) */}
+      <section className="md:hidden py-8 pb-5 border-b border-(--shop-line)" style={{ background: "var(--shop-paper)" }}>
+        <div className="max-w-330 mx-auto px-4">
+          <p className="text-xs text-(--shop-ink-soft) mb-2">
+            <a href="/" className="hover:text-(--shop-ink)">Home</a> / <span className="text-(--shop-ink)">Tables &amp; Chairs</span>
           </p>
-          <div className="flex justify-between items-end gap-8 flex-wrap">
-            <div>
-              <h1 className="serif font-medium leading-tight" style={{ fontSize: 64 }}>Tables &amp; Chairs</h1>
-              <p className="mt-3 text-base text-(--shop-ink-soft) max-w-lg leading-relaxed">
-                Crossbacks to chiavari, farmhouse to folding. All stock is washed and inspected between rentals.
-              </p>
-            </div>
-          </div>
+          <h1 className="serif font-medium leading-tight" style={{ fontSize: "clamp(28px, 8vw, 48px)" }}>Tables &amp; Chairs</h1>
         </div>
       </section>
 

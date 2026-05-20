@@ -21,12 +21,17 @@ const DOW = ["S","M","T","W","T","F","S"]
 function monthGrid(year: number, month: number) {
   const first = new Date(year, month, 1)
   const startDate = new Date(year, month, 1 - first.getDay())
-  return Array.from({ length: 42 }, (_, i) => {
+  const cells = Array.from({ length: 42 }, (_, i) => {
     const d = new Date(startDate)
     d.setDate(startDate.getDate() + i)
     d.setHours(0, 0, 0, 0)
     return { date: d, inMonth: d.getMonth() === month }
   })
+  // Trim trailing rows that are entirely out of month
+  while (cells.length > 7 && cells.slice(-7).every(c => !c.inMonth)) {
+    cells.splice(-7)
+  }
+  return cells
 }
 
 type MonthViewProps = {
@@ -64,6 +69,7 @@ function MonthView({ year, month, start, end, hover, minDate, onPick, onHover, o
           <div key={i} style={{ fontSize: 11, textTransform: "uppercase", color: "#90969f", textAlign: "center", padding: "6px 0", letterSpacing: "0.06em", fontWeight: 500 }}>{d}</div>
         ))}
         {cells.map((c, i) => {
+          if (!c.inMonth) return <div key={i} style={{ height: 36 }} />
           const t = c.date.getTime()
           const disabled = c.date < minDate
           const isStart = !!(start && t === start.getTime())
@@ -75,14 +81,14 @@ function MonthView({ year, month, start, end, hover, minDate, onPick, onHover, o
             <div key={i}
               style={{
                 height: 36, display: "flex", alignItems: "center", justifyContent: "center",
-                cursor: disabled || !c.inMonth ? "default" : "pointer",
+                cursor: disabled ? "default" : "pointer",
                 fontSize: 13, position: "relative", userSelect: "none",
-                color: isEndpoint ? "#fff" : !c.inMonth ? "#c4c8cf" : disabled ? "#d4d8df" : "#1a2433",
+                color: isEndpoint ? "#fff" : disabled ? "#d4d8df" : "#1a2433",
                 background: isEndpoint ? "#1f6fb2" : inRange ? "#e9f2fa" : inHover ? "#f1f6fb" : "transparent",
                 borderRadius: isEndpoint ? 6 : 0,
               }}
-              onClick={() => !disabled && c.inMonth && onPick(c.date)}
-              onMouseEnter={() => !disabled && c.inMonth && onHover(c.date)}
+              onClick={() => !disabled && onPick(c.date)}
+              onMouseEnter={() => !disabled && onHover(c.date)}
               onMouseLeave={() => onHover(null)}
             >
               {c.date.getDate()}

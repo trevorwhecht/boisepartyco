@@ -27,7 +27,8 @@ export default function ThirtyDayStrip({ days }: { days: DayData[] }) {
           <span className="w-2.5 h-2.5 bg-[#fbeae6] border border-[#c0613a]" /> Booked
         </span>
       </div>
-      <div className="grid gap-1" style={{ gridTemplateColumns: `repeat(${days.length}, 1fr)` }}>
+      <div className="overflow-x-auto -mx-4 px-4 md:mx-0 md:px-0">
+      <div className="grid gap-1 min-w-140" style={{ gridTemplateColumns: `repeat(${days.length}, 1fr)` }}>
         {days.map(day => {
           const pct = day.total > 0 ? day.available / day.total : 1
           let bg = "#e7f4ec", border = "#c3e0cd"
@@ -49,6 +50,7 @@ export default function ThirtyDayStrip({ days }: { days: DayData[] }) {
             </button>
           )
         })}
+      </div>
       </div>
     </div>
   )

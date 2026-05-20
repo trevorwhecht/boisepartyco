@@ -5,7 +5,7 @@ import Logo from "@/components/shared/layout/Logo"
 export default function ShopFooter() {
   return (
     <footer style={{ background: "#14507f", color: "#fff", padding: "60px 0 30px", marginTop: 80 }}>
-      <div style={{ maxWidth: 1320, margin: "0 auto", padding: "0 32px", display: "grid", gridTemplateColumns: "1.4fr 1fr 1fr 1fr", gap: 60 }}>
+      <div className="max-w-330 mx-auto px-4 md:px-8 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-[1.4fr_1fr_1fr_1fr] gap-10 md:gap-15">
         <div>
           <Logo variant="white" size="md" />
           <p style={{ marginTop: 18, fontSize: 14, opacity: 0.78, lineHeight: 1.7 }}>
@@ -37,7 +37,7 @@ export default function ShopFooter() {
           </div>
         </div>
       </div>
-      <div style={{ maxWidth: 1320, margin: "40px auto 0", padding: "20px 32px 0", borderTop: "1px solid rgba(255,255,255,0.15)", display: "flex", justifyContent: "space-between", fontSize: 12.5, opacity: 0.65 }}>
+      <div className="max-w-330 mx-auto mt-10 px-4 md:px-8 flex justify-between" style={{ paddingTop: "20px", borderTop: "1px solid rgba(255,255,255,0.15)", fontSize: 12.5, opacity: 0.65 }}>
         <span>© {new Date().getFullYear()} Boise Party Rentals. All rights reserved.</span>
       </div>
     </footer>

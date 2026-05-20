@@ -1,7 +1,7 @@
 // src/components/shared/DateRangeField.tsx
 "use client"
 
-import { useRef, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { Calendar } from "lucide-react"
 import DateRangePicker, { type DateRange } from "./DateRangePicker"
 import { fmtRangeShort, daysBetween } from "@/lib/availability"
@@ -24,6 +24,17 @@ export default function DateRangeField({ start, end, onChange, compact, dark, fu
     if (ref.current) setAnchorRect(ref.current.getBoundingClientRect())
     setOpen((o) => !o)
   }
+
+  useEffect(() => {
+    if (!open) return
+    const handler = (e: MouseEvent) => {
+      const target = e.target as Element
+      if (target.closest("[data-cal-pop]") || target.closest("[data-cal-trigger]")) return
+      setOpen(false)
+    }
+    document.addEventListener("mousedown", handler)
+    return () => document.removeEventListener("mousedown", handler)
+  }, [open])
 
   const label = start && end
     ? fmtRangeShort(start, end)
