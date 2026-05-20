@@ -1,16 +1,13 @@
 "use client"
-
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { toast } from "sonner"
-import type { LineItemPreset } from "@/models/preset"
+import { Loader2 } from "lucide-react"
 
 export type AddItemResult = {
-  presetId: number | null
+  itemId: number | null
   description: string
   qty: number
   unitPrice: number
@@ -18,27 +15,47 @@ export type AddItemResult = {
   isCustom: boolean
 }
 
+type InventoryItem = { id: number; name: string; flatPrice: number }
+
 type Props = {
   open: boolean
   onOpenChange: (v: boolean) => void
-  presets: LineItemPreset[]
   isAdmin: boolean
   onAdd: (item: AddItemResult) => void
 }
 
-export default function GetQuoteAddItemDialog({ open, onOpenChange, presets, isAdmin, onAdd }: Props) {
-  const [selection, setSelection] = useState("")
+export default function GetQuoteAddItemDialog({ open, onOpenChange, isAdmin, onAdd }: Props) {
+  const [allItems, setAllItems] = useState<InventoryItem[]>([])
+  const [loading, setLoading] = useState(false)
+  const [search, setSearch] = useState("")
+  const [selected, setSelected] = useState<InventoryItem | null>(null)
   const [qty, setQty] = useState(1)
-  const [description, setDescription] = useState("")
-  const [price, setPrice] = useState(0)
-  const [cost, setCost] = useState(0)
+  const [customDescription, setCustomDescription] = useState("")
+  const [customPrice, setCustomPrice] = useState(0)
+  const [customCost, setCustomCost] = useState(0)
+  const [isCustom, setIsCustom] = useState(false)
+
+  useEffect(() => {
+    if (!open) return
+    setLoading(true)
+    fetch("/api/inventory/items")
+      .then((r) => r.json())
+      .then(({ data }) => { if (data) setAllItems(data) })
+      .finally(() => setLoading(false))
+  }, [open])
+
+  const filtered = search.trim()
+    ? allItems.filter((i) => i.name.toLowerCase().includes(search.toLowerCase()))
+    : allItems
 
   function reset() {
-    setSelection("")
+    setSearch("")
+    setSelected(null)
     setQty(1)
-    setDescription("")
-    setPrice(0)
-    setCost(0)
+    setCustomDescription("")
+    setCustomPrice(0)
+    setCustomCost(0)
+    setIsCustom(false)
   }
 
   function handleOpenChange(v: boolean) {
@@ -47,32 +64,18 @@ export default function GetQuoteAddItemDialog({ open, onOpenChange, presets, isA
   }
 
   function handleAdd() {
-    if (!selection) return
-    const isCustom = selection === "custom"
-    const preset = presets.find((p) => String(p.id) === selection)
-
-    if (isCustom && !description.trim()) {
-      toast.error("Please enter a description.")
-      return
+    if (isCustom) {
+      if (!customDescription.trim()) return
+      onAdd({ itemId: null, description: customDescription, qty, unitPrice: customPrice, unitCost: customCost, isCustom: true })
+    } else {
+      if (!selected) return
+      onAdd({ itemId: selected.id, description: selected.name, qty, unitPrice: Number(selected.flatPrice), unitCost: 0, isCustom: false })
     }
-    if (isCustom && isAdmin && price <= 0) {
-      toast.error("Please enter a price for this custom item.")
-      return
-    }
-
-    onAdd({
-      presetId: preset?.id ?? null,
-      description: isCustom ? description : (preset?.name ?? ""),
-      qty,
-      unitPrice: isCustom ? price : Number(preset?.defaultPrice ?? 0),
-      unitCost: isCustom ? cost : Number(preset?.defaultCost ?? 0),
-      isCustom,
-    })
     reset()
     onOpenChange(false)
   }
 
-  const selectedPreset = presets.find((p) => String(p.id) === selection)
+  const canAdd = isCustom ? !!customDescription.trim() : !!selected
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
@@ -82,56 +85,72 @@ export default function GetQuoteAddItemDialog({ open, onOpenChange, presets, isA
         </DialogHeader>
         <div className="space-y-4">
           <div className="space-y-1.5">
-            <Label>Item</Label>
-            <Select value={selection} onValueChange={(v) => setSelection(v ?? "")}>
-              <SelectTrigger className="text-base">
-                <SelectValue placeholder="Select an item…" />
-              </SelectTrigger>
-              <SelectContent className="bg-(--color-background)">
-                {presets.map((p) => (
-                  <SelectItem key={p.id} value={String(p.id)}>
-                    <div>
-                      <p className="font-medium">{p.name}</p>
-                      {p.description ? <p className="text-xs text-(--color-muted)">{p.description}</p> : null}
-                    </div>
-                  </SelectItem>
-                ))}
-                <SelectItem value="custom">Custom Item</SelectItem>
-              </SelectContent>
-            </Select>
+            <Label>Search inventory</Label>
+            <Input
+              value={search}
+              onChange={(e) => { setSearch(e.target.value); setIsCustom(false); setSelected(null) }}
+              placeholder="Type to filter items…"
+              className="text-base"
+              autoFocus
+            />
           </div>
 
-          {selection === "custom" ? (
-            <div className="space-y-1.5">
-              <Label>Description</Label>
-              <Input value={description} onChange={(e) => setDescription(e.target.value)}
-                placeholder="Describe this item" className="text-base" />
+          {loading ? (
+            <div className="flex justify-center py-4"><Loader2 className="h-5 w-5 animate-spin text-(--color-muted)" /></div>
+          ) : (
+            <div className="max-h-48 overflow-y-auto border border-(--color-border) rounded-md divide-y divide-(--color-border)">
+              {filtered.map((item) => (
+                <button
+                  key={item.id}
+                  type="button"
+                  onClick={() => { setSelected(item); setIsCustom(false) }}
+                  className={`w-full text-left px-3 py-2.5 text-sm flex justify-between items-center gap-3 hover:bg-(--color-surface) transition-colors ${selected?.id === item.id ? "bg-(--color-surface) font-medium" : ""}`}
+                >
+                  <span>{item.name}</span>
+                  <span className="text-(--color-muted) shrink-0">${Number(item.flatPrice).toFixed(0)}/day</span>
+                </button>
+              ))}
+              {filtered.length === 0 ? (
+                <div className="px-3 py-3 text-sm text-(--color-muted)">No items match "{search}"</div>
+              ) : null}
+            </div>
+          )}
+
+          <div className="flex items-center gap-2">
+            <input
+              type="checkbox"
+              id="custom-item"
+              checked={isCustom}
+              onChange={(e) => { setIsCustom(e.target.checked); setSelected(null) }}
+            />
+            <label htmlFor="custom-item" className="text-sm text-(--color-muted) cursor-pointer">Custom item (not in inventory)</label>
+          </div>
+
+          {isCustom ? (
+            <div className="space-y-3">
+              <div className="space-y-1.5">
+                <Label>Description</Label>
+                <Input value={customDescription} onChange={(e) => setCustomDescription(e.target.value)}
+                  placeholder="Describe the custom item" className="text-base" />
+              </div>
+              {isAdmin ? (
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1.5">
+                    <Label>Price</Label>
+                    <Input type="number" inputMode="decimal" step="0.01" min={0} value={customPrice}
+                      onChange={(e) => setCustomPrice(Number(e.target.value))} className="text-base" />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label>Cost</Label>
+                    <Input type="number" inputMode="decimal" step="0.01" min={0} value={customCost}
+                      onChange={(e) => setCustomCost(Number(e.target.value))} className="text-base" />
+                  </div>
+                </div>
+              ) : null}
             </div>
           ) : null}
 
-          {selection === "custom" && isAdmin ? (
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1.5">
-                <Label>Price *</Label>
-                <Input type="number" inputMode="decimal" step="0.01" min={0} value={price}
-                  onChange={(e) => setPrice(Number(e.target.value))} className="text-base" />
-              </div>
-              <div className="space-y-1.5">
-                <Label>Cost</Label>
-                <Input type="number" inputMode="decimal" step="0.01" min={0} value={cost}
-                  onChange={(e) => setCost(Number(e.target.value))} className="text-base" />
-              </div>
-            </div>
-          ) : null}
-
-          {selection && selection !== "custom" && selectedPreset ? (
-            <p className="text-sm text-(--color-muted)">
-              Price: <span className="font-medium text-(--color-foreground)">${Number(selectedPreset.defaultPrice).toFixed(2)}</span> each
-              {selectedPreset.description ? ` — ${selectedPreset.description}` : ""}
-            </p>
-          ) : null}
-
-          {selection ? (
+          {(selected || isCustom) ? (
             <div className="space-y-1.5">
               <Label>Qty</Label>
               <Input type="number" inputMode="numeric" min={1} value={qty}
@@ -141,7 +160,7 @@ export default function GetQuoteAddItemDialog({ open, onOpenChange, presets, isA
         </div>
         <DialogFooter className="pb-[max(1rem,env(safe-area-inset-bottom))]">
           <Button variant="outline" onClick={() => handleOpenChange(false)}>Cancel</Button>
-          <Button autoFocus onClick={handleAdd} disabled={!selection}>Add Item</Button>
+          <Button autoFocus onClick={handleAdd} disabled={!canAdd}>Add Item</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

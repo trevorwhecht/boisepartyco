@@ -17,7 +17,7 @@ import { computeOrderTotals } from "@/services/orderService"
 import { Switch } from "@/components/ui/switch"
 import SectionShell from "@/components/shared/layout/SectionShell"
 import GetQuoteAddItemDialog, { type AddItemResult } from "./GetQuote-AddItemDialog"
-import type { LineItemPreset, SetupFeePreset } from "@/models/preset"
+import type { SetupFeePreset } from "@/models/preset"
 import type { UserSummary } from "@/models/user"
 
 type FormLineItem = AddItemResult & { localId: string }
@@ -42,7 +42,6 @@ export default function GetQuoteForm({ role, taxRate }: Props) {
   const isAdmin = role === "admin"
   const isStaff = role === "admin" || role === "employee"
 
-  const [lineItemPresets, setLineItemPresets] = useState<LineItemPreset[]>([])
   const [setupFeePresets, setSetupFeePresets] = useState<SetupFeePreset[]>([])
   const [users, setUsers] = useState<UserSummary[]>([])
 
@@ -70,7 +69,6 @@ export default function GetQuoteForm({ role, taxRate }: Props) {
   const [orderNickname, setOrderNickname] = useState("")
 
   useEffect(() => {
-    fetch("/api/line-item-presets").then((r) => r.json()).then(({ data }) => { if (data) setLineItemPresets(data) })
     fetch("/api/setup-fee-presets").then((r) => r.json()).then(({ data }) => { if (data) setSetupFeePresets(data) })
     if (isAdmin) {
       fetch("/api/users").then((r) => r.json()).then(({ data }) => { if (data) setUsers(data) })
@@ -456,7 +454,6 @@ export default function GetQuoteForm({ role, taxRate }: Props) {
       <GetQuoteAddItemDialog
         open={showAddItem}
         onOpenChange={setShowAddItem}
-        presets={lineItemPresets}
         isAdmin={isAdmin}
         onAdd={handleAddItem}
       />

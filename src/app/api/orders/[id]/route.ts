@@ -18,7 +18,13 @@ const ORDER_DETAIL_INCLUDE = {
       resellerLicenseUploadedAt: true,
     },
   },
-  orderLineItems: { orderBy: { sortOrder: "asc" as const } },
+  orderLineItems: {
+    orderBy: { sortOrder: "asc" as const },
+    include: {
+      item: { select: { id: true, name: true, slug: true } },
+      tentConfig: { select: { id: true, name: true, slug: true } },
+    },
+  },
   setUpCosts: true,
   payments: { orderBy: { paidAt: "desc" as const } },
 }

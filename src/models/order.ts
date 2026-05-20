@@ -28,6 +28,8 @@ export type OrderLineItem = {
   unitCost: number
   sortOrder: number
   notes: string | null
+  item: { id: number; name: string; slug: string } | null
+  tentConfig: { id: number; name: string; slug: string } | null
   variants: OrderLineItemVariant[]
   createdAt: string
   updatedAt: string

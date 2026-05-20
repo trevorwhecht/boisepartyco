@@ -1,7 +1,7 @@
 // src/components/shared/DateRangePicker.tsx
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { ChevronLeft, ChevronRight } from "lucide-react"
 import { addDays, daysBetween, fmtRangeShort } from "@/lib/availability"
 
@@ -52,7 +52,7 @@ function MonthView({ year, month, start, end, hover, minDate, onPick, onHover, o
             <ChevronLeft size={14} />
           </button>
         ) : <span style={{ width: 28 }} />}
-        <div className="serif" style={{ fontSize: 20, fontWeight: 600, color: "#1a2433" }}>{MONTHS[month]} {year}</div>
+        <div className="serif" style={{ fontSize: 18, fontWeight: 600, color: "#1a2433" }}>{MONTHS[month]} {year}</div>
         {onNext ? (
           <button type="button" onClick={onNext} aria-label="next" style={{ width: 28, height: 28, display: "inline-flex", alignItems: "center", justifyContent: "center", borderRadius: 6, border: "1px solid #e4e7ec", background: "#fff", color: "#4a5666", cursor: "pointer" }}>
             <ChevronRight size={14} />
@@ -100,6 +100,14 @@ export default function DateRangePicker({ start, end, onChange, onClose, anchorR
   const [view, setView] = useState({ year: initial.getFullYear(), month: initial.getMonth() })
   const [hover, setHover] = useState<Date | null>(null)
   const [picking, setPicking] = useState<"start" | "end">(start && !end ? "end" : "start")
+  const [isMobile, setIsMobile] = useState(false)
+
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 768)
+    check()
+    window.addEventListener("resize", check)
+    return () => window.removeEventListener("resize", check)
+  }, [])
 
   const nav = (dir: number) => {
     setView((v) => {
@@ -120,26 +128,104 @@ export default function DateRangePicker({ start, end, onChange, onClose, anchorR
 
   const right = { year: view.month === 11 ? view.year + 1 : view.year, month: (view.month + 1) % 12 }
 
-  const top = anchorRect ? anchorRect.bottom + 8 : 80
-  const left = anchorRect ? Math.max(16, anchorRect.left - 100) : 0
-
   const thisWeekend = (() => {
     const d = new Date(today); const dow = d.getDay(); d.setDate(d.getDate() + (dow <= 5 ? 5 - dow : 6)); return d
   })()
 
+  // Position: fixed so it's relative to viewport (works inside sticky/relative ancestors)
+  // On mobile: full-width with 8px gutters, anchored near the trigger
+  // On desktop: right-aligned to the anchor button, min-width 660px for two months
+  const positionStyle: React.CSSProperties = (() => {
+    if (!anchorRect) return { top: 80, left: 16, right: 16 }
+
+    if (isMobile) {
+      return {
+        top: Math.min(anchorRect.bottom + 8, window.innerHeight - 400),
+        left: 8,
+        right: 8,
+      }
+    }
+
+    // Desktop: right-align to anchor, clamp to viewport left edge
+    const pickerWidth = 660
+    const rightEdge = anchorRect.right
+    const leftPos = Math.max(16, rightEdge - pickerWidth)
+    return {
+      top: anchorRect.bottom + 8,
+      left: leftPos,
+    }
+  })()
+
   return (
-    <div data-cal-pop style={{ position: "absolute", top, left, background: "#fff", border: "1px solid #e4e7ec", borderRadius: 12, padding: 18, boxShadow: "0 24px 60px -16px rgba(20,30,50,0.18), 0 2px 8px rgba(0,0,0,0.04)", zIndex: 100, minWidth: 660 }}>
-      <div style={{ display: "flex", gap: 28 }}>
-        <MonthView year={view.year} month={view.month} start={start} end={end} hover={hover} minDate={today} onPick={pick} onHover={setHover} onPrev={() => nav(-1)} />
-        <MonthView year={right.year} month={right.month} start={start} end={end} hover={hover} minDate={today} onPick={pick} onHover={setHover} onNext={() => nav(1)} />
+    <div
+      data-cal-pop
+      style={{
+        position: "fixed",
+        ...positionStyle,
+        background: "#fff",
+        border: "1px solid #e4e7ec",
+        borderRadius: 12,
+        padding: isMobile ? 14 : 18,
+        boxShadow: "0 24px 60px -16px rgba(20,30,50,0.18), 0 2px 8px rgba(0,0,0,0.04)",
+        zIndex: 100,
+        // On desktop, enforce the two-month min width; on mobile let it fill
+        ...(isMobile ? {} : { minWidth: 660 }),
+      }}
+    >
+      <div style={{ display: "flex", gap: isMobile ? 0 : 28 }}>
+        {/* Always show left/current month */}
+        <MonthView
+          year={view.year}
+          month={view.month}
+          start={start}
+          end={end}
+          hover={hover}
+          minDate={today}
+          onPick={pick}
+          onHover={setHover}
+          onPrev={() => nav(-1)}
+          onNext={isMobile ? () => nav(1) : undefined}
+        />
+        {/* Second month — desktop only */}
+        {!isMobile ? (
+          <MonthView
+            year={right.year}
+            month={right.month}
+            start={start}
+            end={end}
+            hover={hover}
+            minDate={today}
+            onPick={pick}
+            onHover={setHover}
+            onNext={() => nav(1)}
+          />
+        ) : null}
       </div>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 14, paddingTop: 14, borderTop: "1px solid #f0f2f5" }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 14, paddingTop: 14, borderTop: "1px solid #f0f2f5", flexWrap: "wrap", gap: 8 }}>
         <div style={{ fontSize: 13, color: "#4a5666" }}>
-          {start && end ? <><strong style={{ color: "#1a2433" }}>{daysBetween(start, end)}</strong> {daysBetween(start, end) === 1 ? "day" : "days"} · {fmtRangeShort(start, end)}</> : start ? <>Pick an end date</> : <>Pick a start date</>}
+          {start && end ? (
+            <><strong style={{ color: "#1a2433" }}>{daysBetween(start, end)}</strong> {daysBetween(start, end) === 1 ? "day" : "days"} · {fmtRangeShort(start, end)}</>
+          ) : start ? (
+            <>Pick an end date</>
+          ) : (
+            <>Pick a start date</>
+          )}
         </div>
         <div style={{ display: "flex", gap: 8 }}>
-          <button type="button" onClick={() => { onChange({ start: null, end: null }); setPicking("start") }} style={{ padding: "7px 14px", background: "transparent", border: "1px solid #e4e7ec", borderRadius: 6, color: "#4a5666", fontSize: 13, cursor: "pointer" }}>Clear</button>
-          <button type="button" onClick={() => { onChange({ start: thisWeekend, end: addDays(thisWeekend, 2) }); setPicking("start"); onClose?.() }} style={{ padding: "7px 14px", background: "#f5f7fa", border: "1px solid #e4e7ec", borderRadius: 6, color: "#1a2433", fontSize: 13, cursor: "pointer" }}>This weekend</button>
+          <button
+            type="button"
+            onClick={() => { onChange({ start: null, end: null }); setPicking("start") }}
+            style={{ padding: "7px 14px", background: "transparent", border: "1px solid #e4e7ec", borderRadius: 6, color: "#4a5666", fontSize: 13, cursor: "pointer" }}
+          >
+            Clear
+          </button>
+          <button
+            type="button"
+            onClick={() => { onChange({ start: thisWeekend, end: addDays(thisWeekend, 2) }); setPicking("start"); onClose?.() }}
+            style={{ padding: "7px 14px", background: "#f5f7fa", border: "1px solid #e4e7ec", borderRadius: 6, color: "#1a2433", fontSize: 13, cursor: "pointer" }}
+          >
+            This weekend
+          </button>
         </div>
       </div>
     </div>

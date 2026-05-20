@@ -20,10 +20,21 @@ type DraftLineItem = {
   unitPrice: number
   unitCost: number
   notes: string
+  item: { id: number; name: string; slug: string } | null
+  tentConfig: { id: number; name: string; slug: string } | null
 }
 
 function toLineItem(li: OrderLineItem): DraftLineItem {
-  return { id: li.id, description: li.description, qty: li.qty, unitPrice: li.unitPrice, unitCost: li.unitCost, notes: li.notes ?? "" }
+  return {
+    id: li.id,
+    description: li.description,
+    qty: li.qty,
+    unitPrice: li.unitPrice,
+    unitCost: li.unitCost,
+    notes: li.notes ?? "",
+    item: li.item ?? null,
+    tentConfig: li.tentConfig ?? null,
+  }
 }
 
 export default function DashboardOrderSheetLineItems({ order, onOrderUpdated, role }: Props) {
@@ -36,7 +47,7 @@ export default function DashboardOrderSheetLineItems({ order, onOrderUpdated, ro
   }
 
   function addItem() {
-    setItems((prev) => [...prev, { description: "", qty: 1, unitPrice: 0, unitCost: 0, notes: "" }])
+    setItems((prev) => [...prev, { description: "", qty: 1, unitPrice: 0, unitCost: 0, notes: "", item: null, tentConfig: null }])
   }
 
   function removeItem(idx: number) {
@@ -84,6 +95,17 @@ export default function DashboardOrderSheetLineItems({ order, onOrderUpdated, ro
                     placeholder="Description"
                     className="text-base h-8"
                   />
+                  {item.item?.slug ? (
+                    <a href={`/shop/${item.item.slug}`} target="_blank" rel="noopener noreferrer"
+                      className="text-xs text-(--color-primary) hover:underline mt-0.5 block">
+                      {item.item.name}
+                    </a>
+                  ) : item.tentConfig?.slug ? (
+                    <a href={`/shop/${item.tentConfig.slug}`} target="_blank" rel="noopener noreferrer"
+                      className="text-xs text-(--color-primary) hover:underline mt-0.5 block">
+                      {item.tentConfig.name}
+                    </a>
+                  ) : null}
                 </td>
                 <td className="py-2 pr-2">
                   <Input

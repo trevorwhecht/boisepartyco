@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation"
 import { useState } from "react"
 import { Menu, X, UserRound } from "lucide-react"
 import { cn } from "@/lib/utils"
+import Logo from "@/components/shared/layout/Logo"
 import NavbarAccountPanel from "./Navbar-AccountPanel"
 
 export default function NavbarLinks() {
@@ -59,9 +60,9 @@ export default function NavbarLinks() {
           </button>
 
           {/* Logo — desktop: inline in left group */}
-          <Link href="/" onClick={closeAll} className="hidden md:block font-semibold text-(--color-foreground) text-lg tracking-tight shrink-0">
-            QuotingApp
-          </Link>
+          <div className="hidden md:block">
+            <Logo size="sm" onClick={closeAll} />
+          </div>
 
           {/* Desktop nav links — immediately after logo */}
           <nav className="hidden md:flex items-center gap-6">
@@ -76,9 +77,9 @@ export default function NavbarLinks() {
         </div>
 
         {/* Logo — mobile: perfectly centered via absolute positioning */}
-        <Link href="/" onClick={closeAll} className="md:hidden absolute left-1/2 -translate-x-1/2 font-semibold text-(--color-foreground) text-lg tracking-tight pointer-events-auto">
-          QuotingApp
-        </Link>
+        <div className="md:hidden absolute left-1/2 -translate-x-1/2 pointer-events-auto">
+          <Logo size="sm" onClick={closeAll} />
+        </div>
 
         {/* Right group: account icon always on far right */}
         <button

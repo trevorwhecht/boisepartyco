@@ -1,9 +1,10 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { Trash2, ChevronDown } from "lucide-react"
+import { Trash2, ChevronDown, Loader2 } from "lucide-react"
 import { Button, buttonVariants } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem,
   DropdownMenuSeparator, DropdownMenuTrigger,
@@ -11,12 +12,12 @@ import {
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from "@/components/ui/dialog"
-import { Label } from "@/components/ui/label"
 import { newLocalId } from "../quoteBuilderUtils"
 import SectionShell from "@/components/shared/layout/SectionShell"
-import type { LineItemPreset } from "@/models/preset"
 import type { DraftLineItem } from "../QuoteBuilder"
 import type { QuoteBuilderPermissions } from "../quoteBuilderPermissions"
+
+type InventoryItem = { id: number; name: string; flatPrice: number }
 
 type Props = {
   items: DraftLineItem[]
@@ -25,15 +26,53 @@ type Props = {
 }
 
 export default function QuoteBuilderOrderItems({ items, onChange, permissions }: Props) {
-  const [presets, setPresets] = useState<LineItemPreset[]>([])
+  const [showInventoryDialog, setShowInventoryDialog] = useState(false)
   const [showCustomDialog, setShowCustomDialog] = useState(false)
   const [customDraft, setCustomDraft] = useState({ description: "", qty: 1, unitPrice: 0, unitCost: 0 })
 
+  // Inventory search state
+  const [allInventoryItems, setAllInventoryItems] = useState<InventoryItem[]>([])
+  const [inventoryLoading, setInventoryLoading] = useState(false)
+  const [inventorySearch, setInventorySearch] = useState("")
+  const [inventorySelected, setInventorySelected] = useState<InventoryItem | null>(null)
+  const [inventoryQty, setInventoryQty] = useState(1)
+
   useEffect(() => {
-    fetch("/api/line-item-presets")
+    if (!showInventoryDialog) return
+    setInventoryLoading(true)
+    fetch("/api/inventory/items")
       .then((r) => r.json())
-      .then(({ data }) => { if (data) setPresets(data) })
-  }, [])
+      .then(({ data }) => { if (data) setAllInventoryItems(data) })
+      .finally(() => setInventoryLoading(false))
+  }, [showInventoryDialog])
+
+  function resetInventoryDialog() {
+    setInventorySearch("")
+    setInventorySelected(null)
+    setInventoryQty(1)
+  }
+
+  function handleInventoryOpenChange(v: boolean) {
+    if (!v) resetInventoryDialog()
+    setShowInventoryDialog(v)
+  }
+
+  function addFromInventory() {
+    if (!inventorySelected) return
+    onChange([...items, {
+      localId: newLocalId(),
+      description: inventorySelected.name,
+      qty: inventoryQty,
+      unitPrice: Number(inventorySelected.flatPrice),
+      unitCost: 0,
+    }])
+    resetInventoryDialog()
+    setShowInventoryDialog(false)
+  }
+
+  const filteredInventory = inventorySearch.trim()
+    ? allInventoryItems.filter((i) => i.name.toLowerCase().includes(inventorySearch.toLowerCase()))
+    : allInventoryItems
 
   function updateItem(localId: string, field: keyof DraftLineItem, value: string | number) {
     onChange(items.map((item) => item.localId === localId ? { ...item, [field]: value } : item))
@@ -41,16 +80,6 @@ export default function QuoteBuilderOrderItems({ items, onChange, permissions }:
 
   function removeItem(localId: string) {
     onChange(items.filter((item) => item.localId !== localId))
-  }
-
-  function addFromPreset(preset: LineItemPreset) {
-    onChange([...items, {
-      localId: newLocalId(),
-      description: preset.name,
-      qty: 1,
-      unitPrice: preset.defaultPrice,
-      unitCost: preset.defaultCost,
-    }])
   }
 
   function addCustomItem() {
@@ -75,22 +104,17 @@ export default function QuoteBuilderOrderItems({ items, onChange, permissions }:
           <DropdownMenuTrigger className={buttonVariants({ variant: "outline", size: "sm" }) + " gap-1"}>
             Add Line Item <ChevronDown size={14} />
           </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56 bg-(--color-background)">
-              {presets.map((p) => (
-                <DropdownMenuItem key={p.id} onClick={() => addFromPreset(p)}>
-                  <div>
-                    <p className="font-medium">{p.name}</p>
-                    {p.description ? <p className="text-xs text-(--color-muted)">{p.description}</p> : null}
-                  </div>
-                </DropdownMenuItem>
-              ))}
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => setShowCustomDialog(true)}>
-                + Add Custom Item
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        ) : null}
+          <DropdownMenuContent align="end" className="w-56 bg-(--color-background)">
+            <DropdownMenuItem onClick={() => setShowInventoryDialog(true)}>
+              Add from Inventory
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={() => setShowCustomDialog(true)}>
+              + Add Custom Item
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      ) : null}
     >
       <div className="w-full overflow-x-auto border border-(--color-border) rounded-lg">
         <table className={`w-full text-sm ${isAdmin ? "min-w-180" : "min-w-120"}`}>
@@ -189,7 +213,60 @@ export default function QuoteBuilderOrderItems({ items, onChange, permissions }:
         </table>
       </div>
 
-      <Dialog open={showCustomDialog} onOpenChange={setShowCustomDialog}>
+      {/* Inventory search dialog */}
+      <Dialog open={showInventoryDialog} onOpenChange={handleInventoryOpenChange}>
+        <DialogContent className="bg-(--color-background)">
+          <DialogHeader>
+            <DialogTitle>Add from Inventory</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-1.5">
+              <Label>Search items</Label>
+              <Input
+                value={inventorySearch}
+                onChange={(e) => { setInventorySearch(e.target.value); setInventorySelected(null) }}
+                placeholder="Type to filter items…"
+                className="text-base"
+                autoFocus
+              />
+            </div>
+            {inventoryLoading ? (
+              <div className="flex justify-center py-4"><Loader2 className="h-5 w-5 animate-spin text-(--color-muted)" /></div>
+            ) : (
+              <div className="max-h-48 overflow-y-auto border border-(--color-border) rounded-md divide-y divide-(--color-border)">
+                {filteredInventory.map((item) => (
+                  <button
+                    key={item.id}
+                    type="button"
+                    onClick={() => setInventorySelected(item)}
+                    className={`w-full text-left px-3 py-2.5 text-sm flex justify-between items-center gap-3 hover:bg-(--color-surface) transition-colors ${inventorySelected?.id === item.id ? "bg-(--color-surface) font-medium" : ""}`}
+                  >
+                    <span>{item.name}</span>
+                    <span className="text-(--color-muted) shrink-0">${Number(item.flatPrice).toFixed(0)}/day</span>
+                  </button>
+                ))}
+                {filteredInventory.length === 0 ? (
+                  <div className="px-3 py-3 text-sm text-(--color-muted)">No items match "{inventorySearch}"</div>
+                ) : null}
+              </div>
+            )}
+            {inventorySelected ? (
+              <div className="space-y-1.5">
+                <Label>Qty</Label>
+                <Input type="number" inputMode="numeric" min={1} value={inventoryQty}
+                  onChange={(e) => setInventoryQty(Math.max(1, Number(e.target.value)))} className="text-base" />
+              </div>
+            ) : null}
+          </div>
+          <DialogFooter className="pb-[max(1rem,env(safe-area-inset-bottom))]">
+            <Button variant="outline" onClick={() => handleInventoryOpenChange(false)}>Cancel</Button>
+            <Button autoFocus onClick={addFromInventory} disabled={!inventorySelected}>Add Item</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Custom item dialog */}
+      <Dialog open={showCustomDialog} onOpenChange={(v) => { if (!v) setCustomDraft({ description: "", qty: 1, unitPrice: 0, unitCost: 0 }); setShowCustomDialog(v) }}>
         <DialogContent className="bg-(--color-background)">
           <DialogHeader>
             <DialogTitle>Add Custom Item</DialogTitle>

@@ -1,29 +1,13 @@
 // src/components/shared/layout/ShopFooter.tsx
 import Link from "next/link"
-
-function Logo() {
-  return (
-    <div style={{ display: "inline-flex", alignItems: "center", gap: 12, color: "#fff" }}>
-      <svg width="44" height="44" viewBox="0 0 44 44" fill="none" aria-hidden>
-        <circle cx="22" cy="22" r="21" stroke="currentColor" strokeWidth="1.5"/>
-        <path d="M22 10 L34 30 H10 Z" stroke="currentColor" strokeWidth="1.5" fill="none"/>
-        <path d="M22 10 V30 M16 30 L22 22 L28 30" stroke="currentColor" strokeWidth="1.5"/>
-        <circle cx="22" cy="20" r="1.6" fill="currentColor"/>
-      </svg>
-      <div style={{ lineHeight: 1.05 }}>
-        <div className="serif" style={{ fontSize: 24, fontWeight: 600, letterSpacing: "0.02em" }}>BOISE</div>
-        <div style={{ fontFamily: "Inter, sans-serif", fontSize: 9.5, letterSpacing: "0.32em", fontWeight: 500, marginTop: 2 }}>PARTY  RENTALS</div>
-      </div>
-    </div>
-  )
-}
+import Logo from "@/components/shared/layout/Logo"
 
 export default function ShopFooter() {
   return (
     <footer style={{ background: "#14507f", color: "#fff", padding: "60px 0 30px", marginTop: 80 }}>
       <div style={{ maxWidth: 1320, margin: "0 auto", padding: "0 32px", display: "grid", gridTemplateColumns: "1.4fr 1fr 1fr 1fr", gap: 60 }}>
         <div>
-          <Logo />
+          <Logo variant="white" size="md" />
           <p style={{ marginTop: 18, fontSize: 14, opacity: 0.78, lineHeight: 1.7 }}>
             Family-owned event rentals in the Treasure Valley. Tents, tables, dance floors, and the details in between — delivered, set up, and picked up by us.
           </p>

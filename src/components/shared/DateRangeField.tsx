@@ -12,9 +12,10 @@ type Props = {
   onChange: (r: DateRange) => void
   compact?: boolean
   dark?: boolean
+  fullWidth?: boolean
 }
 
-export default function DateRangeField({ start, end, onChange, compact, dark }: Props) {
+export default function DateRangeField({ start, end, onChange, compact, dark, fullWidth }: Props) {
   const [open, setOpen] = useState(false)
   const ref = useRef<HTMLButtonElement>(null)
   const [anchorRect, setAnchorRect] = useState<DOMRect | null>(null)
@@ -31,12 +32,13 @@ export default function DateRangeField({ start, end, onChange, compact, dark }: 
     : "Pick event dates"
 
   const style: React.CSSProperties = compact ? {
-    display: "inline-flex", alignItems: "center", gap: 8,
+    display: "flex", alignItems: "center", gap: 8,
     padding: "8px 14px", borderRadius: 999,
     background: dark ? "rgba(255,255,255,0.12)" : "#fff",
     border: `1px solid ${dark ? "rgba(255,255,255,0.25)" : "#e4e7ec"}`,
     color: dark ? "#fff" : "#1a2433",
     fontSize: 13, cursor: "pointer", whiteSpace: "nowrap",
+    width: fullWidth ? "100%" : undefined,
   } : {
     display: "inline-flex", alignItems: "center", gap: 10,
     padding: "14px 22px", borderRadius: 8,
