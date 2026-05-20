@@ -1,15 +1,28 @@
 import type { Metadata, Viewport } from "next"
 import "./globals.css"
 import SessionWrapper from "@/components/shared/layout/SessionWrapper"
-import Navbar from "@/components/shared/layout/Navbar"
 import { Toaster } from "@/components/ui/sonner"
+import { Cormorant_Garamond, JetBrains_Mono } from "next/font/google"
+
+const cormorant = Cormorant_Garamond({
+  subsets: ["latin"],
+  weight: ["400", "500", "600"],
+  variable: "--font-cormorant",
+  display: "swap",
+})
+
+const jetbrains = JetBrains_Mono({
+  subsets: ["latin"],
+  weight: ["400", "500", "600"],
+  variable: "--font-jetbrains",
+  display: "swap",
+})
 
 export const metadata: Metadata = {
-  title: "Quoting Template",
-  description: "Order and quote management",
+  title: "Boise Party Rentals",
+  description: "Party and event rentals in the Treasure Valley — tents, tables, décor, and more.",
 }
 
-// Required for env(safe-area-inset-bottom) to work on iOS — dialogs and sheets need this
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
@@ -18,11 +31,10 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" suppressHydrationWarning>
-      <body className="min-h-screen flex flex-col bg-(--color-background) text-(--color-foreground) antialiased">
+    <html lang="en" className={`${cormorant.variable} ${jetbrains.variable}`} suppressHydrationWarning>
+      <body className="min-h-dvh flex flex-col bg-(--color-background) text-(--color-foreground) antialiased">
         <SessionWrapper>
-          <Navbar />
-          <main className="flex-1">{children}</main>
+          {children}
           <Toaster />
         </SessionWrapper>
       </body>
