@@ -1,10 +1,14 @@
 const FAQS = [
-  { q: "How far in advance should I book?", a: "For peak season (May–October), 6–9 months out is ideal. We do take last-minute bookings when stock allows — check live availability above." },
-  { q: "Do you set up and take down?", a: "Yes. Setup and teardown are included in every quote. We deliver the day before and pick up the morning after." },
-  { q: "What if the weather changes?", a: "Our tents are rated for sustained winds up to 40 mph. We monitor forecasts and will recommend sidewalls or extra ballast if needed." },
-  { q: "What's your cancellation policy?", a: "Full refund up to 30 days out. 50% refund 14–30 days. Inside 14 days, deposit is non-refundable but we offer a date change credit." },
-  { q: "Do you service outside Boise?", a: "Yes — Meridian, Eagle, Nampa, Caldwell, Kuna, Garden City, and most of the Treasure Valley. Delivery fee scales with distance." },
-  { q: "Can I see a tent before booking?", a: "Absolutely. Schedule a 20-minute showroom visit and we'll walk you through every size and finish." },
+  { q: "Do you deliver and set up rentals?", a: "Yes, we provide full-service delivery and professional setup of all rental equipment. This allows you to focus on enjoying your event without worrying about logistics." },
+  { q: "What tent sizes are available?", a: "We offer professional tent rentals ranging from 10'x10' to 40'x80'. All tents come with delivery and setup services included." },
+  { q: "Can you provide tent heating and lighting?", a: "Yes, we offer tent heaters and lighting options for outdoor events. These are available as add-ons to our tent rental packages." },
+  { q: "What types of tables do you rent?", a: "We rent cocktail tables, banquet tables, and conference tables. All table rentals are part of our complete table and chair service." },
+  { q: "Do you offer custom neon signs?", a: "Yes, we provide custom neon signs as part of our comprehensive event decoration rentals. We also offer wooden arches and greenery walls." },
+  { q: "What dance floor options are available?", a: "We offer wood grain dance floors and customizable dance floor options in various sizes. Perfect for creating party atmosphere at weddings and celebrations." },
+  { q: "Do you provide event photography services?", a: "Yes, we offer professional event photography for parties, weddings, and corporate events. Gallery options are available for your photos." },
+  { q: "Do you serve Meridian and Nampa?", a: "Yes, we provide rental services throughout the Boise area including Meridian, Nampa, Caldwell, Eagle, and Kuna." },
+  { q: "What chair styles do you rent?", a: "We offer white resin chairs and plastic folding chairs for events of all sizes. Chair rentals are available with our complete table service." },
+  { q: "Can you handle large corporate events?", a: "Yes, we provide rentals for events of all sizes including corporate events. We offer conference tables, professional photography, and full setup services." },
 ]
 
 export default function FAQPage() {

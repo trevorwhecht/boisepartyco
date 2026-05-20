@@ -20,12 +20,12 @@ export default function TentsListing({ configs, items, hasRange, dateLabel }: Pr
     <>
       {/* Tent configurations */}
       {configs.length > 0 ? (
-        <section className="max-w-[1320px] mx-auto px-8 pt-12 pb-6">
+        <section className="max-w-[1320px] mx-auto px-4 md:px-8 pt-12 pb-6">
           <div className="flex justify-between items-baseline mb-6 pb-3 border-b border-(--shop-line)">
             <h2 className="serif text-3xl font-medium">Tent Packages</h2>
             <span className="mono text-xs text-(--shop-ink-soft) uppercase tracking-widest">{configs.length} configs</span>
           </div>
-          <div className="grid gap-7" style={{ gridTemplateColumns: "repeat(3, 1fr)" }}>
+          <div className="grid gap-4 md:gap-7 grid-cols-2 md:grid-cols-3">
             {configs.map(({ config, avail }) => (
               <TentConfigCard key={config.id} config={config} avail={avail} hasRange={hasRange} />
             ))}
@@ -37,7 +37,7 @@ export default function TentsListing({ configs, items, hasRange, dateLabel }: Pr
       {items.length > 0 ? (
         <section className="mt-8">
           {configs.length > 0 ? (
-            <div className="max-w-[1320px] mx-auto px-8 mb-2">
+            <div className="max-w-[1320px] mx-auto px-4 md:px-8 mb-2">
               <div className="flex justify-between items-baseline pb-3 border-b border-(--shop-line)">
                 <h2 className="serif text-3xl font-medium">Tent Accessories</h2>
               </div>

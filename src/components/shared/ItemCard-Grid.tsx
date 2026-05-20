@@ -1,8 +1,10 @@
 "use client"
+import Image from "next/image"
 import Link from "next/link"
 import { Plus } from "lucide-react"
 import AvailabilityBadge from "@/components/shared/AvailabilityBadge"
 import QtyStepper from "@/components/shared/QtyStepper"
+import { ITEM_IMAGES } from "@/lib/item-images"
 import type { ItemSummary, AvailabilityResult, CartLine } from "@/models/inventory"
 
 type Props = {
@@ -17,17 +19,30 @@ type Props = {
 export default function ItemCardGrid({ item, avail, hasRange, cartLine, onAdd, onUpdate }: Props) {
   const disabled = hasRange && avail.available <= 0
   const maxQty = hasRange ? avail.available + (cartLine?.qty ?? 0) : (item.qty ?? 99)
+  const imgSrc = ITEM_IMAGES[item.slug] ?? null
 
   return (
     <div className="bg-white border border-(--shop-line) rounded-xl overflow-hidden flex flex-col">
       <Link href={`/shop/${item.slug}`} className="block">
-        <div className="aspect-[4/3] bg-(--shop-paper) flex items-center justify-center text-(--shop-ink-soft) text-sm">
-          {item.name}
+        <div className="aspect-4/3 relative bg-(--shop-paper)">
+          {imgSrc ? (
+            <Image
+              src={imgSrc}
+              alt={item.name}
+              fill
+              sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+              className="object-cover object-center"
+            />
+          ) : (
+            <div className="absolute inset-0 flex items-center justify-center text-(--shop-ink-soft) text-sm p-2 text-center">
+              {item.name}
+            </div>
+          )}
         </div>
       </Link>
-      <div className="p-5 flex-1 flex flex-col">
+      <div className="p-4 md:p-5 flex-1 flex flex-col">
         <div className="flex justify-between items-baseline gap-2">
-          <h3 className="serif text-2xl font-medium leading-tight">
+          <h3 className="serif text-xl md:text-2xl font-medium leading-tight">
             <Link href={`/shop/${item.slug}`} className="text-(--shop-ink) hover:text-(--shop-blue)">
               {item.name}
             </Link>
@@ -42,18 +57,12 @@ export default function ItemCardGrid({ item, avail, hasRange, cartLine, onAdd, o
           <div className="text-xs text-(--shop-ink-soft) mt-1">{item.subcategory}</div>
         ) : null}
         {item.blurb ? (
-          <p className="text-sm text-(--shop-ink-soft) mt-3 mb-4 leading-relaxed flex-1">{item.blurb}</p>
+          <p className="text-sm text-(--shop-ink-soft) mt-3 mb-4 leading-relaxed flex-1 hidden sm:block">{item.blurb}</p>
         ) : <div className="flex-1" />}
         <div className="flex justify-between items-center gap-3 mt-2">
           <AvailabilityBadge available={avail.available} stock={avail.stock} hasRange={hasRange} />
           {cartLine ? (
-            <QtyStepper
-              compact
-              value={cartLine.qty}
-              min={1}
-              max={maxQty}
-              onChange={(q) => onUpdate(item.id, q)}
-            />
+            <QtyStepper compact value={cartLine.qty} min={1} max={maxQty} onChange={(q) => onUpdate(item.id, q)} />
           ) : (
             <button
               disabled={disabled}

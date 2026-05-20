@@ -38,8 +38,8 @@ export default function CategoryListing({ items, hasRange, dateLabel }: Props) {
   return (
     <>
       {/* Filter strip */}
-      <div className="bg-white border-b border-(--shop-line) py-4 sticky top-[137px] z-30">
-        <div className="max-w-[1320px] mx-auto px-8 flex justify-between items-center">
+      <div className="bg-white border-b border-(--shop-line) py-4 sticky top-32 md:top-25.75 z-30">
+        <div className="max-w-[1320px] mx-auto px-4 md:px-8 flex justify-between items-center">
           <div className="flex gap-6 items-center">
             <span className="text-sm text-(--shop-ink-soft)">
               <strong className="text-(--shop-ink)">{visible.length}</strong> items
@@ -71,7 +71,7 @@ export default function CategoryListing({ items, hasRange, dateLabel }: Props) {
       </div>
 
       {/* Items */}
-      <div className="max-w-[1320px] mx-auto px-8 py-10 pb-20">
+      <div className="max-w-[1320px] mx-auto px-4 md:px-8 py-10 pb-20">
         {groups.map((g, gi) => (
           <div key={g.name} className={gi < groups.length - 1 ? "mb-14" : ""}>
             {groups.length > 1 ? (
@@ -83,7 +83,7 @@ export default function CategoryListing({ items, hasRange, dateLabel }: Props) {
               </div>
             ) : null}
             {view === "grid" ? (
-              <div className="grid gap-7" style={{ gridTemplateColumns: "repeat(3, 1fr)" }}>
+              <div className="grid gap-4 md:gap-7 grid-cols-2 md:grid-cols-3">
                 {g.items.map(({ item, avail }) => (
                   <ItemCardGrid
                     key={item.id}
