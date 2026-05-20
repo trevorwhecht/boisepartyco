@@ -1,6 +1,7 @@
 import { PrismaClient, Prisma } from "@prisma/client"
 import { hash } from "bcryptjs"
 import { projectConfig } from "../project.config"
+import { seedRentalInventory } from "./seed-rental"
 
 const prisma = new PrismaClient()
 
@@ -33,12 +34,6 @@ const SETUP_FEE_PRESETS = [
   { id: 3, name: "Rush Fee",     description: "Expedited turnaround", unitLabel: "Flat",       defaultRate: 50,  defaultCost: 0,   sortOrder: 2 },
   { id: 4, name: "Shipping",     description: "Ground shipping",      unitLabel: "Flat",       defaultRate: 20,  defaultCost: 12,  sortOrder: 3 },
   { id: 5, name: "Custom Item",  description: "Misc setup charge",    unitLabel: "Per Item",   defaultRate: 0,   defaultCost: 0,   sortOrder: 4 },
-]
-
-const LINE_ITEM_PRESETS = [
-  { id: 1, name: "Standard T-Shirt", description: "100% cotton, unisex", defaultPrice: new Prisma.Decimal(12.00), defaultCost: new Prisma.Decimal(5.00),  sortOrder: 0 },
-  { id: 2, name: "Premium Hoodie",   description: "Fleece pullover",      defaultPrice: new Prisma.Decimal(28.00), defaultCost: new Prisma.Decimal(14.00), sortOrder: 1 },
-  { id: 3, name: "Custom Item",      description: "Price set by admin",   defaultPrice: new Prisma.Decimal(0),     defaultCost: new Prisma.Decimal(0),     sortOrder: 2 },
 ]
 
 async function main() {
@@ -103,14 +98,7 @@ async function main() {
     })
   }
 
-  console.log("Seeding line item presets...")
-  for (const p of LINE_ITEM_PRESETS) {
-    await prisma.lineItemPreset.upsert({
-      where: { id: p.id },
-      update: { name: p.name, description: p.description, defaultPrice: p.defaultPrice, defaultCost: p.defaultCost, sortOrder: p.sortOrder },
-      create: p,
-    })
-  }
+  await seedRentalInventory(prisma)
 
   const adminEmail = process.env.SEED_ADMIN_EMAIL
   const adminPassword = process.env.SEED_ADMIN_PASSWORD
@@ -162,13 +150,6 @@ async function main() {
               lineTotal: 120.00,
               unitCost: 5.00,
               sortOrder: 0,
-              variants: {
-                create: [
-                  { variant: "S", qty: 3, price: 10.00, cost: 5.00 },
-                  { variant: "M", qty: 5, price: 10.00, cost: 5.00 },
-                  { variant: "L", qty: 4, price: 10.00, cost: 5.00 },
-                ],
-              },
             },
             {
               description: "Custom Hoodies",
@@ -177,12 +158,6 @@ async function main() {
               lineTotal: 120.00,
               unitCost: 5.00,
               sortOrder: 1,
-              variants: {
-                create: [
-                  { variant: "M", qty: 6, price: 10.00, cost: 5.00 },
-                  { variant: "L", qty: 6, price: 10.00, cost: 5.00 },
-                ],
-              },
             },
           ],
         },

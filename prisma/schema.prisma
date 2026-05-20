@@ -58,10 +58,11 @@ model OrderState {
   description String?
   isActive    Boolean  @default(true)
   isRequired  Boolean  @default(false)
-  color       String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  orders      Order[]
+  color             String?
+  consumesInventory Boolean  @default(false)   // inventory reserved once deposit received
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  orders            Order[]
 }
 
 model Order {
@@ -119,37 +120,30 @@ model Order {
 }
 
 model OrderLineItem {
-  id          Int      @id @default(autoincrement())
-  orderId     Int
-  description String
-  qty         Int      @default(1)
-  unitPrice   Decimal  @default(0) @db.Decimal(10, 2)
-  lineTotal   Decimal  @default(0) @db.Decimal(10, 2)
-  unitCost    Decimal  @default(0) @db.Decimal(10, 2)
-  sortOrder   Int      @default(0)
-  notes       String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  createdBy   String?
-  updatedBy   String?
+  id                  Int                @id @default(autoincrement())
+  orderId             Int
+  description         String
+  qty                 Int                @default(1)
+  unitPrice           Decimal            @default(0) @db.Decimal(10, 2)
+  lineTotal           Decimal            @default(0) @db.Decimal(10, 2)
+  unitCost            Decimal            @default(0) @db.Decimal(10, 2)
+  sortOrder           Int                @default(0)
+  notes               String?
+  itemId              Int?
+  tentConfigId        Int?
+  availabilityWarning String?
+  createdAt           DateTime           @default(now())
+  updatedAt           DateTime           @updatedAt
+  createdBy           String?
+  updatedBy           String?
 
-  order    Order                   @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  variants OrderLineItemVariant[]
+  order      Order              @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  item       Item?              @relation(fields: [itemId], references: [id], onDelete: SetNull)
+  tentConfig TentConfiguration? @relation(fields: [tentConfigId], references: [id], onDelete: SetNull)
 
   @@index([orderId])
-}
-
-model OrderLineItemVariant {
-  id              Int      @id @default(autoincrement())
-  orderLineItemId Int
-  variant         String   // size, color, SKU, config — anything that creates a sub-qty
-  qty             Int
-  price           Decimal  @db.Decimal(10, 2)
-  cost            Decimal? @db.Decimal(10, 2)
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-
-  orderLineItem OrderLineItem @relation(fields: [orderLineItemId], references: [id], onDelete: Cascade)
+  @@index([itemId])
+  @@index([tentConfigId])
 }
 
 model SetUpCost {
@@ -244,20 +238,226 @@ model SetupFeePreset {
   @@map("setup_fee_presets")
 }
 
-// STUB — replace this table with your real inventory catalog when forking.
-// See README § "Early Setup: Inventory / Catalog".
-model LineItemPreset {
-  id           Int      @id @default(autoincrement())
+
+// =============================================================================
+// RENTAL INVENTORY
+// =============================================================================
+
+model Category {
+  id           Int       @id @default(autoincrement())
+  slug         String    @unique
   name         String
   description  String?
-  defaultPrice Decimal  @db.Decimal(10, 2)
-  defaultCost  Decimal  @db.Decimal(10, 2)
-  sortOrder    Int      @default(0)
-  isActive     Boolean  @default(true)
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  isSerialized Boolean   @default(false)
+  sortOrder    Int       @default(0)
+  isActive     Boolean   @default(true)
+  items        Item[]
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+}
 
-  @@map("line_item_presets")
+model Item {
+  id              Int       @id @default(autoincrement())
+  sku             String    @unique
+  slug            String    @unique
+  name            String
+  description     String?
+  blurb           String?
+  categoryId      Int
+  category        Category  @relation(fields: [categoryId], references: [id])
+  subcategory     String?
+  flatPrice       Decimal   @db.Decimal(10, 2)
+  cost            Decimal   @db.Decimal(10, 2) @default(0)
+  qty             Int?
+  size            String?
+  capacity        String?
+  pricingMode     String    @default("per_day")
+  pricingNote     String?
+  sortOrder       Int       @default(0)
+  isActive        Boolean   @default(true)
+  primaryImageUrl String?
+  images          ItemImage[]
+  tentSpec        TentSpec?
+  chairSpec       ChairSpec?
+  tableSpec       TableSpec?
+  linenSpec       LinenSpec?
+  decorationSpec  DecorationSpec?
+  heaterSpec      HeaterSpec?
+  floorSpec       FloorSpec?
+  cateringSpec    CateringSpec?
+  lightingSpec    LightingSpec?
+  serializedUnits SerializedUnit[]
+  orderLineItems  OrderLineItem[]
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@index([categoryId, sortOrder])
+  @@index([isActive])
+}
+
+model ItemImage {
+  id        Int      @id @default(autoincrement())
+  itemId    Int
+  item      Item     @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  url       String
+  alt       String?
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+
+  @@index([itemId])
+}
+
+model TentConfiguration {
+  id              Int               @id @default(autoincrement())
+  slug            String            @unique
+  name            String
+  widthFt         Int
+  lengthFt        Int
+  flatPrice       Decimal           @db.Decimal(10, 2)
+  cost            Decimal           @db.Decimal(10, 2) @default(0)
+  blurb           String?
+  description     String?
+  capacity        String?
+  sortOrder       Int               @default(0)
+  isActive        Boolean           @default(true)
+  bomComplete     Boolean           @default(false)
+  primaryImageUrl String?
+  bomParts        TentConfigPart[]
+  orderLineItems  OrderLineItem[]
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+
+  @@index([isActive, sortOrder])
+}
+
+model TentPart {
+  id              Int              @id @default(autoincrement())
+  name            String           @unique
+  partType        String
+  isSerialized    Boolean          @default(false)
+  qty             Int?
+  isActive        Boolean          @default(true)
+  serializedUnits SerializedUnit[]
+  bomEntries      TentConfigPart[]
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+
+  @@index([partType])
+  @@index([isActive])
+}
+
+model TentConfigPart {
+  id           Int               @id @default(autoincrement())
+  tentConfigId Int
+  tentConfig   TentConfiguration @relation(fields: [tentConfigId], references: [id], onDelete: Cascade)
+  tentPartId   Int
+  tentPart     TentPart          @relation(fields: [tentPartId], references: [id], onDelete: Restrict)
+  qtyRequired  Int
+  createdAt    DateTime          @default(now())
+  updatedAt    DateTime          @updatedAt
+
+  @@unique([tentConfigId, tentPartId])
+  @@index([tentPartId])
+}
+
+model SerializedUnit {
+  id             Int       @id @default(autoincrement())
+  // Exactly one of itemId / tentPartId must be set (enforced at service layer)
+  itemId         Int?
+  item           Item?     @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  tentPartId     Int?
+  tentPart       TentPart? @relation(fields: [tentPartId], references: [id], onDelete: Cascade)
+  serialNumber   String    @unique
+  status         String    @default("available")
+  notes          String?
+  damagePhotoUrl String?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  @@index([itemId])
+  @@index([tentPartId])
+  @@index([status])
+}
+
+model TentSpec {
+  id       Int    @id @default(autoincrement())
+  itemId   Int    @unique
+  item     Item   @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  widthFt  Int
+  lengthFt Int
+  style    String?
+}
+
+model ChairSpec {
+  id          Int      @id @default(autoincrement())
+  itemId      Int      @unique
+  item        Item     @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  material    String?
+  color       String?
+  hasArmrests Boolean?
+}
+
+model TableSpec {
+  id       Int    @id @default(autoincrement())
+  itemId   Int    @unique
+  item     Item   @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  shape    String
+  widthIn  Int?
+  lengthIn Int?
+}
+
+model LinenSpec {
+  id       Int    @id @default(autoincrement())
+  itemId   Int    @unique
+  item     Item   @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  linType  String
+  widthIn  Int?
+  lengthIn Int?
+}
+
+model DecorationSpec {
+  id       Int    @id @default(autoincrement())
+  itemId   Int    @unique
+  item     Item   @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  decType  String?
+  widthIn  Int?
+  heightIn Int?
+}
+
+model HeaterSpec {
+  id         Int    @id @default(autoincrement())
+  itemId     Int    @unique
+  item       Item   @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  heaterType String
+  fuelType   String?
+  btu        Int?
+}
+
+model FloorSpec {
+  id       Int    @id @default(autoincrement())
+  itemId   Int    @unique
+  item     Item   @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  widthFt  Int
+  lengthFt Int
+  material String?
+}
+
+model CateringSpec {
+  id             Int      @id @default(autoincrement())
+  itemId         Int      @unique
+  item           Item     @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  equipmentType  String?
+  capacityLiters Decimal? @db.Decimal(8, 2)
+  includesLid    Boolean?
+}
+
+model LightingSpec {
+  id           Int      @id @default(autoincrement())
+  itemId       Int      @unique
+  item         Item     @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  lightType    String
+  pricePerFoot Decimal? @db.Decimal(10, 2)
+  minFeet      Int?
 }
 
 // NextAuth required tables
