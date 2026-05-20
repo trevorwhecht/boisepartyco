@@ -1,0 +1,98 @@
+@import "tailwindcss";
+
+/* Exclude non-source dirs so Tailwind doesn't parse example/plan code as real utilities */
+@source not "./docs/**";
+@source not "./.claude/**";
+
+:root {
+  color-scheme: light;
+
+  /* Brand */
+  --color-primary: #111827;
+  --color-primary-foreground: #ffffff;
+  --color-accent: #22c55e;
+  --color-accent-foreground: #ffffff;
+
+  /* Surface */
+  --color-background: #ffffff;
+  --color-surface: #f9fafb;
+  --color-border: #e5e7eb;
+
+  /* Text */
+  --color-foreground: #111827;
+  --color-muted: #6b7280;
+  --color-muted-foreground: #9ca3af;
+
+  /* Status / feedback */
+  --color-success: #22c55e;
+  --color-warning: #f59e0b;
+  --color-danger: #ef4444;
+
+  /* Calendar */
+  --color-today: #3b82f6;
+  --color-today-bg: #eff6ff;
+
+  /* Kanban state column headers — match OrderState seed colors */
+  --color-state-review: #f59e0b;
+  --color-state-awaiting: #3b82f6;
+  --color-state-progress: #8b5cf6;
+  --color-state-pickup: #10b981;
+  --color-state-payment: #ef4444;
+  --color-state-complete: #6b7280;
+  --color-state-archived: #6b7280;
+
+  /* Radius */
+  --radius: 0.5rem;
+
+  /* shadcn required variables (mapped to our theme) */
+  /* TODO[7]: shadcn Tailwind 4 CSS variable bridge — bg-popover/bg-muted/bg-card/text-muted-foreground
+     etc. in src/components/ui/ resolve to bg-[--color-{name}] in Tailwind 4, but only --color-background
+     and --color-foreground are in @theme inline. The others are transparent. Naming collision prevents a
+     simple @theme inline fix (--color-muted is already used as a text color here). Resolution: audit which
+     shadcn utility classes are actively used, add --color-popover/--color-card as separate @theme entries,
+     and rename --color-muted to --color-muted-text so it can't collide with shadcn's --muted bg token. */
+  --background: var(--color-background);
+  --foreground: var(--color-foreground);
+  --card: var(--color-surface);
+  --card-foreground: var(--color-foreground);
+  --popover: var(--color-background);
+  --popover-foreground: var(--color-foreground);
+  --primary: var(--color-primary);
+  --primary-foreground: var(--color-primary-foreground);
+  --secondary: var(--color-surface);
+  --secondary-foreground: var(--color-foreground);
+  --muted: var(--color-surface);
+  --muted-foreground: var(--color-muted);
+  --accent: var(--color-surface);
+  --accent-foreground: var(--color-foreground);
+  --destructive: var(--color-danger);
+  --border: var(--color-border);
+  --input: var(--color-border);
+  --ring: var(--color-primary);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+}
+
+body {
+  background: var(--color-background);
+  color: var(--color-foreground);
+  font-family: system-ui, -apple-system, sans-serif;
+}
+
+* {
+  border-color: var(--color-border);
+}
+
+button, a {
+  touch-action: manipulation; /* removes 300ms tap delay on mobile */
+}
+
+/* Z-index scale — use only these values, never arbitrary numbers */
+/* z-10  — sticky elements, floating labels                        */
+/* z-20  — dropdowns, popovers                                     */
+/* z-40  — modals, dialogs                                         */
+/* z-50  — nav overlays                                            */
+/* z-[100] — toasts, notifications                                 */
