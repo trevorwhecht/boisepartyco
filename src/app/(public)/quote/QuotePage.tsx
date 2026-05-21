@@ -59,8 +59,8 @@ export default function QuotePage() {
   const handleSubmit = () => {
     if (!start || !end) return
     const payload = {
-      pickupDate: start.toISOString().slice(0, 10),
-      dropoffDate: end.toISOString().slice(0, 10),
+      pickupDate: fmtLocalDate(start),
+      dropoffDate: fmtLocalDate(end),
       customer: {
         firstName: contact.firstName,
         lastName: contact.lastName,

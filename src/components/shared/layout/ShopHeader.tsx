@@ -58,10 +58,10 @@ export default function ShopHeader() {
   function handleDateChange({ start: s, end: e }: DateRange) {
     const params = new URLSearchParams(searchParams.toString())
     if (s) {
-      const from = s.toISOString().split("T")[0]
+      const from = fmtLocalDate(s)
       params.set("from", from)
       if (e) {
-        const to = e.toISOString().split("T")[0]
+        const to = fmtLocalDate(e)
         params.set("to", to)
         localStorage.setItem("bpr_dates", JSON.stringify({ from, to }))
       } else {

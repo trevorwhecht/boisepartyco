@@ -7,6 +7,7 @@ import DateRangeField from "@/components/shared/DateRangeField"
 import QtyStepper from "@/components/shared/QtyStepper"
 import AvailabilityBadge from "@/components/shared/AvailabilityBadge"
 import type { DateRange } from "@/components/shared/DateRangePicker"
+import { parseLocalDate, fmtLocalDate } from "@/lib/availability"
 
 type Props = {
   config: {
