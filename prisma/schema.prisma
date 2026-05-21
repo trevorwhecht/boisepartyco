@@ -197,6 +197,19 @@ model Notification {
   @@map("notifications")
 }
 
+model NotificationSettings {
+  id            Int      @id @default(1)
+  smsEnabled    Boolean  @default(false)
+  smsPhone      String?
+  onNewOrder    Boolean  @default(true)
+  onStateChange Boolean  @default(true)
+  onPayment     Boolean  @default(true)
+  updatedAt     DateTime @updatedAt
+  updatedBy     String?
+
+  @@map("notification_settings")
+}
+
 model MonthlyExpense {
   id             Int      @id @default(autoincrement())
   name           String

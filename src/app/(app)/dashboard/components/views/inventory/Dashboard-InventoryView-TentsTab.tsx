@@ -41,8 +41,12 @@ export default function DashboardInventoryViewTentsTab({ role }: Props) {
     setConfigSheetOpen(true)
   }
 
-  function handlePartSaved(updated: AdminTentPartSummary) {
+  async function handlePartSaved(updated: AdminTentPartSummary) {
     setParts(prev => prev.map(p => p.id === updated.id ? updated : p))
+    // Re-fetch configs so canBuild / bottleneck recalculates from new qty
+    const res = await fetch("/api/admin/inventory/tent-configurations")
+    const { data } = await res.json()
+    if (data) setConfigs(data)
   }
 
   if (loading) return <div className="p-6 text-sm text-(--color-muted)">Loading…</div>

@@ -9,6 +9,7 @@ import DateRangeField from "@/components/shared/DateRangeField"
 import { useCart } from "@/contexts/CartContext"
 import Logo from "@/components/shared/layout/Logo"
 import NavbarAccountPanel from "@/components/shared/layout/Navbar-AccountPanel"
+import NavbarNotificationBell from "@/components/shared/layout/Navbar-NotificationBell"
 import type { DateRange } from "@/components/shared/DateRangePicker"
 
 const NAV = [
@@ -220,6 +221,9 @@ export default function ShopHeader() {
                 <DateRangeField start={start} end={end} onChange={handleDateChange} compact />
                 <QuoteButton cartCount={cartCount} onClick={closeAll} />
               </div>
+
+              {/* Notification bell — renders only for logged-in staff */}
+              <NavbarNotificationBell />
 
               {/* Account icon — both mobile and desktop */}
               <button

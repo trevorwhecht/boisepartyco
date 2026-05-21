@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { serializeOrder, stripAdminFields, computeOrderTotals, getEmployeeFieldPermissions } from "@/services/orderService"
+import { sendSms } from "@/services/twilioService"
 
 const ORDER_DETAIL_INCLUDE = {
   state: true,
@@ -183,19 +184,50 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
     include: ORDER_DETAIL_INCLUDE,
   })
 
-  if (stateId !== undefined && updated.userId) {
-    const STATE_NOTIFICATIONS: Record<number, { title: string; message: string }> = {
-      2: { title: "Quote Ready to Review", message: `Your quote #${orderId} has been reviewed and is ready for your approval.` },
-      3: { title: "Order In Progress", message: `We've started working on your order #${orderId}.` },
-      4: { title: "Awaiting Pickup", message: `Your order #${orderId} is complete and ready for pickup!` },
-      5: { title: "Awaiting Payment", message: `Your order #${orderId} is ready. Please arrange final payment before pickup.` },
-      6: { title: "Order Complete", message: `Your order #${orderId} has been completed. Thank you for your business!` },
+  if (stateId !== undefined) {
+    // Customer notification (existing behaviour — only when order has an owner)
+    if (updated.userId) {
+      const STATE_NOTIFICATIONS: Record<number, { title: string; message: string }> = {
+        2: { title: "Quote Ready to Review", message: `Your quote #${orderId} has been reviewed and is ready for your approval.` },
+        3: { title: "Order In Progress", message: `We've started working on your order #${orderId}.` },
+        4: { title: "Awaiting Pickup", message: `Your order #${orderId} is complete and ready for pickup!` },
+        5: { title: "Awaiting Payment", message: `Your order #${orderId} is ready. Please arrange final payment before pickup.` },
+        6: { title: "Order Complete", message: `Your order #${orderId} has been completed. Thank you for your business!` },
+      }
+      const notifData = STATE_NOTIFICATIONS[stateId as number]
+      if (notifData) {
+        await prisma.notification.create({
+          data: { userId: updated.userId, orderId, type: "state_changed", title: notifData.title, message: notifData.message },
+        }).catch(() => {})
+      }
     }
-    const notifData = STATE_NOTIFICATIONS[stateId as number]
-    if (notifData) {
-      await prisma.notification.create({
-        data: { userId: updated.userId, orderId, type: "state_changed", title: notifData.title, message: notifData.message },
+
+    // Admin notification — always, regardless of whether order has a user
+    const stateName = updated.state?.name ?? `State ${stateId}`
+    const adminNotifTitle = `Order #${orderId} → ${stateName}`
+    const adminNotifMessage = `Order #${orderId} was moved to "${stateName}"${updated.user ? ` (${updated.user.firstName} ${updated.user.lastName})` : ""}.`
+
+    const admins = await prisma.user.findMany({ where: { role: "admin" }, select: { id: true } })
+    if (admins.length > 0) {
+      await prisma.notification.createMany({
+        data: admins.map((a) => ({
+          userId: a.id,
+          orderId,
+          type: "state_changed",
+          title: adminNotifTitle,
+          message: adminNotifMessage,
+          actionUrl: `/dashboard`,
+        })),
       }).catch(() => {})
+    }
+
+    // SMS — fire-and-forget
+    const ns = await prisma.notificationSettings.findUnique({ where: { id: 1 } })
+    if (ns?.smsEnabled && ns.onStateChange && ns.smsPhone) {
+      sendSms(
+        ns.smsPhone,
+        `Order #${orderId} moved to "${stateName}". Open dashboard to review.`,
+      ).catch(() => {})
     }
   }
 

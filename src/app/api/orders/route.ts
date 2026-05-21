@@ -4,6 +4,7 @@ import { authOptions } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { serializeOrder, stripAdminFields, computeOrderTotals } from "@/services/orderService"
 import { validateOrderLines } from "@/services/inventoryService"
+import { sendSms } from "@/services/twilioService"
 
 export async function GET() {
   const session = await getServerSession(authOptions)
@@ -210,7 +211,7 @@ export async function POST(req: Request) {
     },
   })
 
-  // Notify all admins on public submission
+  // Notify all admins on public submission (DB notification + optional SMS)
   if (isPublic) {
     const admins = await prisma.user.findMany({ where: { role: "admin" }, select: { id: true } })
     await prisma.notification.createMany({
@@ -219,10 +220,22 @@ export async function POST(req: Request) {
         orderId: order.id,
         type: "order_submitted",
         title: "New Quote Request",
-        message: `A new quote request (#${order.id}) was submitted via the Get Quote form.`,
+        message: `A new quote request (#${order.id}) was submitted via the shop.`,
         actionUrl: `/dashboard`,
       })),
     })
+
+    // SMS — fire-and-forget, never block the response
+    const ns = await prisma.notificationSettings.findUnique({ where: { id: 1 } })
+    if (ns?.smsEnabled && ns.onNewOrder && ns.smsPhone) {
+      const customerName = body.customer
+        ? `${body.customer.firstName ?? ""} ${body.customer.lastName ?? ""}`.trim()
+        : "a customer"
+      sendSms(
+        ns.smsPhone,
+        `New quote request #${order.id} from ${customerName}. Open dashboard to review.`,
+      ).catch(() => {})
+    }
   }
 
   const serialized = serializeOrder(order)
