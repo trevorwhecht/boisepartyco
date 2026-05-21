@@ -147,6 +147,31 @@ async function handlePublicShopQuote(body: any): Promise<Response> {
     select: { id: true, token: true },
   })
 
+  // Notify all admins on public submission (DB notification + optional SMS)
+  const admins = await prisma.user.findMany({ where: { role: "admin" }, select: { id: true } })
+  if (admins.length > 0) {
+    await prisma.notification.createMany({
+      data: admins.map((a) => ({
+        userId: a.id,
+        orderId: order.id,
+        type: "order_submitted",
+        title: "New Quote Request",
+        message: `A new quote request (#${order.id}) was submitted via the shop.`,
+        actionUrl: `/dashboard`,
+      })),
+    }).catch(() => {})
+  }
+
+  // SMS — fire-and-forget, never block the response
+  const ns = await prisma.notificationSettings.findUnique({ where: { id: 1 } })
+  if (ns?.smsEnabled && ns.onNewOrder && ns.smsPhone) {
+    const customerName = `${customer.firstName} ${customer.lastName}`.trim()
+    sendSms(
+      ns.smsPhone,
+      `New quote request #${order.id} from ${customerName}. Open dashboard to review.`,
+    ).catch(() => {})
+  }
+
   return NextResponse.json({ data: { id: order.id, token: order.token }, error: null }, { status: 201 })
 }
 
@@ -210,33 +235,6 @@ export async function POST(req: Request) {
       _count: { select: { orderLineItems: true } },
     },
   })
-
-  // Notify all admins on public submission (DB notification + optional SMS)
-  if (isPublic) {
-    const admins = await prisma.user.findMany({ where: { role: "admin" }, select: { id: true } })
-    await prisma.notification.createMany({
-      data: admins.map((a) => ({
-        userId: a.id,
-        orderId: order.id,
-        type: "order_submitted",
-        title: "New Quote Request",
-        message: `A new quote request (#${order.id}) was submitted via the shop.`,
-        actionUrl: `/dashboard`,
-      })),
-    })
-
-    // SMS — fire-and-forget, never block the response
-    const ns = await prisma.notificationSettings.findUnique({ where: { id: 1 } })
-    if (ns?.smsEnabled && ns.onNewOrder && ns.smsPhone) {
-      const customerName = body.customer
-        ? `${body.customer.firstName ?? ""} ${body.customer.lastName ?? ""}`.trim()
-        : "a customer"
-      sendSms(
-        ns.smsPhone,
-        `New quote request #${order.id} from ${customerName}. Open dashboard to review.`,
-      ).catch(() => {})
-    }
-  }
 
   const serialized = serializeOrder(order)
   const data = role === "employee" ? stripAdminFields(serialized) : serialized

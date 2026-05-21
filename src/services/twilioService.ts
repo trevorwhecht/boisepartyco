@@ -1,3 +1,4 @@
+// src/services/twilioService.ts
 import twilio from "twilio"
 
 /**
@@ -16,16 +17,12 @@ export async function sendSms(
     return { data: false, error: "Twilio env vars not configured" }
   }
 
-  if (!to || !body) {
-    return { data: false, error: "Missing required parameter: to and body are required" }
-  }
-
   try {
     const client = twilio(accountSid, authToken)
     await client.messages.create({ from, to, body })
     return { data: true, error: null }
   } catch (err: any) {
-    console.error("Twilio sendSms error:", String(err?.message ?? err))
-    return { data: false, error: String(err?.message ?? "Unknown Twilio error") }
+    console.error("Twilio sendSms error:", err?.message ?? err)
+    return { data: false, error: err?.message ?? "Unknown Twilio error" }
   }
 }

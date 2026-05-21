@@ -1,3 +1,4 @@
+// src/app/api/admin/notification-settings/route.ts
 import { NextResponse } from "next/server"
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
@@ -25,9 +26,8 @@ export async function GET() {
       update: {},
     })
     return NextResponse.json({ data: settings, error: null })
-  } catch (err) {
-    console.error("[notification-settings GET]", err)
-    return NextResponse.json({ data: null, error: "Failed to load settings" }, { status: 500 })
+  } catch {
+    return NextResponse.json({ data: null, error: "Failed to load notification settings" }, { status: 500 })
   }
 }
 
@@ -38,31 +38,29 @@ export async function PATCH(req: Request) {
     return NextResponse.json({ data: null, error: "Forbidden" }, { status: 403 })
   }
 
-  let body: Record<string, unknown>
+  let body: any
   try {
     body = await req.json()
   } catch {
     return NextResponse.json({ data: null, error: "Invalid request body" }, { status: 400 })
   }
-
   const { smsEnabled, smsPhone, onNewOrder, onStateChange, onPayment } = body
 
-  const data: Record<string, any> = { updatedBy: session.user.email ?? null }
-  if (smsEnabled !== undefined) data.smsEnabled = Boolean(smsEnabled)
-  if (smsPhone !== undefined) data.smsPhone = smsPhone || null
-  if (onNewOrder !== undefined) data.onNewOrder = Boolean(onNewOrder)
-  if (onStateChange !== undefined) data.onStateChange = Boolean(onStateChange)
-  if (onPayment !== undefined) data.onPayment = Boolean(onPayment)
+  const patch: Record<string, any> = { updatedBy: session.user.email ?? null }
+  if (smsEnabled !== undefined) patch.smsEnabled = Boolean(smsEnabled)
+  if (smsPhone !== undefined) patch.smsPhone = smsPhone || null
+  if (onNewOrder !== undefined) patch.onNewOrder = Boolean(onNewOrder)
+  if (onStateChange !== undefined) patch.onStateChange = Boolean(onStateChange)
+  if (onPayment !== undefined) patch.onPayment = Boolean(onPayment)
 
   try {
     const settings = await prisma.notificationSettings.upsert({
       where: { id: 1 },
-      create: { ...DEFAULT_SETTINGS, ...data },
-      update: data,
+      create: { ...DEFAULT_SETTINGS, ...patch },
+      update: patch,
     })
     return NextResponse.json({ data: settings, error: null })
-  } catch (err) {
-    console.error("[notification-settings PATCH]", err)
-    return NextResponse.json({ data: null, error: "Failed to save settings" }, { status: 500 })
+  } catch {
+    return NextResponse.json({ data: null, error: "Failed to update notification settings" }, { status: 500 })
   }
 }

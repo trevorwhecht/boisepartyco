@@ -3,6 +3,7 @@
 
 import { useState, useEffect, useRef, useCallback } from "react"
 import { useSession } from "next-auth/react"
+import { useRouter } from "next/navigation"
 import { Bell } from "lucide-react"
 
 type NotificationItem = {
@@ -28,6 +29,7 @@ function timeAgo(dateStr: string): string {
 
 export default function NavbarNotificationBell() {
   const { data: session } = useSession()
+  const router = useRouter()
   const [unreadCount, setUnreadCount] = useState(0)
   const [notifications, setNotifications] = useState<NotificationItem[]>([])
   const [isOpen, setIsOpen] = useState(false)
@@ -147,7 +149,7 @@ export default function NavbarNotificationBell() {
             width: 340,
             maxHeight: 480,
             overflowY: "auto",
-            background: "#fff",
+            background: "var(--shop-background, #fff)",
             border: "1px solid var(--shop-line)",
             borderRadius: 10,
             boxShadow: "0 8px 24px rgba(0,0,0,0.12)",
@@ -198,13 +200,13 @@ export default function NavbarNotificationBell() {
                   style={{
                     padding: "12px 16px",
                     borderBottom: "1px solid var(--shop-line)",
-                    background: n.isRead ? "#fff" : "var(--shop-blue-soft)",
+                    background: n.isRead ? "var(--shop-background, #fff)" : "var(--shop-blue-soft)",
                     cursor: n.actionUrl ? "pointer" : "default",
                   }}
                   onClick={() => {
                     if (n.actionUrl) {
                       setIsOpen(false)
-                      window.location.href = n.actionUrl
+                      router.push(n.actionUrl)
                     }
                   }}
                 >
