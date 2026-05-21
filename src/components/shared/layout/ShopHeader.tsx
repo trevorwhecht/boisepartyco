@@ -16,7 +16,6 @@ const NAV = [
   { href: "/tents", label: "Tents", match: ["/tents"] },
   { href: "/tables-and-chairs", label: "Tables & Chairs", match: ["/tables-and-chairs"] },
   { href: "/decor", label: "Decor & Dance Floor", match: ["/decor"] },
-  { href: "/gallery", label: "Gallery", match: ["/gallery"] },
   { href: "/faq", label: "FAQ", match: ["/faq"] },
   { href: "/contact", label: "Contact", match: ["/contact"] },
 ]

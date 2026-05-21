@@ -15,7 +15,7 @@ export default function ShopFooter() {
         <div>
           <h4 style={{ fontSize: 12, letterSpacing: "0.18em", textTransform: "uppercase", opacity: 0.7, marginBottom: 18 }}>Rentals</h4>
           <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "flex", flexDirection: "column", gap: 10, fontSize: 14 }}>
-            {[["Tents", "/tents"],["Tables & Chairs","/tables-and-chairs"],["Decor & Dance Floor","/decor"],["Gallery","/gallery"]].map(([label, href]) => (
+            {[["Tents", "/tents"],["Tables & Chairs","/tables-and-chairs"],["Decor & Dance Floor","/decor"]].map(([label, href]) => (
               <li key={href}><Link href={href} style={{ color: "#fff", opacity: 0.85, textDecoration: "none" }}>{label}</Link></li>
             ))}
           </ul>

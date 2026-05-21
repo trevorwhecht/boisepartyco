@@ -81,7 +81,7 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
                 <Link
                   key={c.slug}
                   href={c.href}
-                  className="block bg-white rounded-xl overflow-hidden border border-(--shop-line) hover:-translate-y-1 hover:shadow-xl transition-all duration-200 motion-reduce:transition-none"
+                  className="relative z-1 block bg-white rounded-xl overflow-hidden border border-(--shop-line) hover:-translate-y-1 hover:shadow-xl transition-all duration-200 motion-reduce:transition-none"
                 >
                   <div className="aspect-5/3 relative bg-(--shop-paper)">
                     <Image

@@ -5,6 +5,7 @@ import { Plus } from "lucide-react"
 import AvailabilityBadge from "@/components/shared/AvailabilityBadge"
 import QtyStepper from "@/components/shared/QtyStepper"
 import { ITEM_IMAGES } from "@/lib/item-images"
+import { itemUrl } from "@/lib/item-url"
 import type { ItemSummary, AvailabilityResult, CartLine } from "@/models/inventory"
 
 type Props = {
@@ -25,7 +26,7 @@ export default function ItemCardList({ item, avail, hasRange, cartLine, onAdd, o
     <div className="bg-white border border-(--shop-line) rounded-xl p-3.5 flex gap-3.5 items-start md:grid md:gap-5 md:items-center md:p-4 md:grid-cols-[96px_1fr_auto_auto_auto]">
 
       {/* Col 1: Image */}
-      <Link href={`/shop/${item.slug}`} className="shrink-0">
+      <Link href={itemUrl(item.category.slug, item.slug)} className="shrink-0">
         <div className="w-18 md:w-auto aspect-4/3 relative rounded-lg md:rounded-xl overflow-hidden bg-(--shop-paper)">
           {imgSrc ? (
             <Image
@@ -46,7 +47,7 @@ export default function ItemCardList({ item, avail, hasRange, cartLine, onAdd, o
       {/* Col 2: Name + subcategory + blurb + mobile controls */}
       <div className="flex-1 min-w-0">
         <h3 className="serif text-[1.05rem] md:text-xl font-medium leading-tight">
-          <Link href={`/shop/${item.slug}`} className="text-(--shop-ink) hover:text-(--shop-blue)">
+          <Link href={itemUrl(item.category.slug, item.slug)} className="text-(--shop-ink) hover:text-(--shop-blue)">
             {item.name}
           </Link>
         </h3>
