@@ -33,8 +33,8 @@ export default function ShopItemModalTentConfigBooking({ config, avail, hasRange
   const params = useSearchParams()
   const from = params.get("from")
   const to = params.get("to")
-  const start = from ? new Date(from) : null
-  const end = to ? new Date(to) : null
+  const start = from ? parseLocalDate(from) : null
+  const end = to ? parseLocalDate(to) : null
   const days = start && end ? daysBetween(start, end) : 1
 
   const { lines, addToCart, updateLine } = useCart()
@@ -45,8 +45,8 @@ export default function ShopItemModalTentConfigBooking({ config, avail, hasRange
 
   const handleDateChange = ({ start: s, end: e }: DateRange) => {
     const next = new URLSearchParams(params.toString())
-    if (s) next.set("from", s.toISOString().slice(0, 10)); else next.delete("from")
-    if (e) next.set("to", e.toISOString().slice(0, 10)); else next.delete("to")
+    if (s) next.set("from", fmtLocalDate(s)); else next.delete("from")
+    if (e) next.set("to", fmtLocalDate(e)); else next.delete("to")
     router.replace(`?${next.toString()}`)
   }
 
