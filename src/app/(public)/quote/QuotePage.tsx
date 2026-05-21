@@ -5,6 +5,7 @@ import Link from "next/link"
 import { ArrowRight, ArrowLeft, X, Info, CheckCircle } from "lucide-react"
 import { useCart } from "@/contexts/CartContext"
 import DateRangeField from "@/components/shared/DateRangeField"
+import { parseLocalDate } from "@/lib/availability"
 import QtyStepper from "@/components/shared/QtyStepper"
 import type { DateRange } from "@/components/shared/DateRangePicker"
 
@@ -26,8 +27,8 @@ export default function QuotePage() {
   const params = useSearchParams()
   const from = params.get("from")
   const to = params.get("to")
-  const start = from ? new Date(from) : null
-  const end = to ? new Date(to) : null
+  const start = from ? parseLocalDate(from) : null
+  const end = to ? parseLocalDate(to) : null
   const hasRange = !!(start && end)
   const days = hasRange ? daysBetween(start!, end!) : 1
 

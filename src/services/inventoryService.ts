@@ -113,9 +113,10 @@ export async function getTentPartAvailability(
   })
   if (!part) return buildAvailability(0, 0)
 
-  // Stock
+  // Stock — if qty is explicitly set, always use it (qty-based tracking).
+  // Only count SerializedUnit records when isSerialized is true AND qty is null.
   let stock = 0
-  if (part.isSerialized) {
+  if (part.isSerialized && part.qty === null) {
     stock = await prisma.serializedUnit.count({
       where: { tentPartId, status: "available" },
     })
@@ -436,7 +437,8 @@ export async function getTentConfigBuildableCount(
 
   const parts: BuildablePart[] = await Promise.all(
     config.bomParts.map(async (row) => {
-      const stock = row.tentPart.isSerialized
+      // Use qty when it's explicitly set; only count SerializedUnits when truly serialized (qty=null).
+      const stock = (row.tentPart.isSerialized && row.tentPart.qty === null)
         ? await prisma.serializedUnit.count({ where: { tentPartId: row.tentPartId, status: "available" } })
         : (row.tentPart.qty ?? 0)
       return {

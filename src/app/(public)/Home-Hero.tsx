@@ -3,14 +3,15 @@ import Image from "next/image"
 import { useRouter, useSearchParams } from "next/navigation"
 import { ArrowRight } from "lucide-react"
 import DateRangeField from "@/components/shared/DateRangeField"
+import { parseLocalDate } from "@/lib/availability"
 
 export default function HomeHero() {
   const router = useRouter()
   const params = useSearchParams()
   const from = params.get("from")
   const to = params.get("to")
-  const start = from ? new Date(from) : null
-  const end = to ? new Date(to) : null
+  const start = from ? parseLocalDate(from) : null
+  const end = to ? parseLocalDate(to) : null
 
   const handleChange = ({ start: s, end: e }: { start: Date | null; end: Date | null }) => {
     const next = new URLSearchParams(params.toString())

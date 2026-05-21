@@ -6,6 +6,7 @@ import TentsListing from "@/app/(public)/tents/TentsListing"
 import CategoryHero from "@/components/shared/layout/CategoryHero"
 import ShopItemModal from "@/components/shared/modals/ShopItemModal"
 import type { TentConfigurationSummary, ConfigAvailabilityResult, ItemSummary, AvailabilityResult } from "@/models/inventory"
+import { parseLocalDate } from "@/lib/availability"
 
 export const dynamic = "force-dynamic"
 
@@ -22,8 +23,8 @@ export default async function TentsItemPage({
 }) {
   const { slug } = await params
   const { from: fromParam, to: toParam } = await searchParams
-  const from = fromParam ? new Date(fromParam) : null
-  const to = toParam ? new Date(toParam) : null
+  const from = fromParam ? parseLocalDate(fromParam) : null
+  const to = toParam ? parseLocalDate(toParam) : null
   const hasRange = !!(from && to)
   const dateLabel = hasRange ? `${fmtDate(from!)} – ${fmtDate(to!)}` : undefined
   const qs = fromParam && toParam ? `?from=${fromParam}&to=${toParam}` : ""

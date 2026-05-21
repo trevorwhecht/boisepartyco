@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation"
 import { prisma } from "@/lib/prisma"
 import { getItemAvailability, getItemDailyAvailability, getTentConfigAvailability } from "@/services/inventoryService"
+import { parseLocalDate } from "@/lib/availability"
 import ShopItemModal from "@/components/shared/modals/ShopItemModal"
 
 export const dynamic = "force-dynamic"
@@ -14,8 +15,8 @@ export default async function TentsItemModalPage({
 }) {
   const { slug } = await params
   const { from: fromParam, to: toParam } = await searchParams
-  const from = fromParam ? new Date(fromParam) : null
-  const to = toParam ? new Date(toParam) : null
+  const from = fromParam ? parseLocalDate(fromParam) : null
+  const to = toParam ? parseLocalDate(toParam) : null
   const hasRange = !!(from && to)
   const qs = fromParam && toParam ? `?from=${fromParam}&to=${toParam}` : ""
 

@@ -6,6 +6,13 @@
 
 // ----- Date helpers ---------------------------------------------------------
 
+// Parse a "YYYY-MM-DD" string as local midnight — new Date(str) parses as UTC,
+// which rolls back a day in any timezone behind UTC (e.g. Mountain Time).
+export function parseLocalDate(s: string): Date {
+  const [y, m, d] = s.split("-").map(Number)
+  return new Date(y, m - 1, d)
+}
+
 export function startOfDay(d: Date): Date {
   const x = new Date(d)
   x.setHours(0, 0, 0, 0)

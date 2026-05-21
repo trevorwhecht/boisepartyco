@@ -29,12 +29,12 @@ const CATEGORIES = [
 // TENT PARTS (master list)
 // -----------------------------------------------------------------------------
 const TENT_PARTS = [
-  // panels — always serialized
-  { name: "End Panel 10'x10'", partType: "panel",    isSerialized: true,  qty: null },
-  { name: "End Panel 10'x20'", partType: "panel",    isSerialized: true,  qty: null },
-  { name: "End Panel 15'x15'", partType: "panel",    isSerialized: true,  qty: null },
-  { name: "Mid Panel 10'x20'", partType: "panel",    isSerialized: true,  qty: null },
-  { name: "Mid Panel 20'x20'", partType: "panel",    isSerialized: true,  qty: null },
+  // panels — qty-based (bulk count, not individually serialized)
+  { name: "End Panel 10'x10'", partType: "panel",    isSerialized: false, qty: null },
+  { name: "End Panel 10'x20'", partType: "panel",    isSerialized: false, qty: null },
+  { name: "End Panel 15'x15'", partType: "panel",    isSerialized: false, qty: null },
+  { name: "Mid Panel 10'x20'", partType: "panel",    isSerialized: false, qty: null },
+  { name: "Mid Panel 20'x20'", partType: "panel",    isSerialized: false, qty: null },
   // poles
   { name: "Black Pole 7'8\"",  partType: "pole",     isSerialized: false, qty: 0 },
   { name: "White Pole 9'4\"",  partType: "pole",     isSerialized: false, qty: 0 },
@@ -291,7 +291,8 @@ export async function seedRentalInventory(prisma: PrismaClient) {
     await prisma.tentPart.upsert({
       where: { name: p.name },
       create: { name: p.name, partType: p.partType, isSerialized: p.isSerialized ?? false, qty: p.qty ?? null },
-      update: { partType: p.partType, isSerialized: p.isSerialized ?? false, qty: p.qty ?? null },
+      // Do NOT reset qty on update — admins enter these through the UI and we must not clobber them.
+      update: { partType: p.partType, isSerialized: p.isSerialized ?? false },
     })
   }
   const partsByName = Object.fromEntries(
