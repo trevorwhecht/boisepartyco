@@ -1,6 +1,12 @@
 import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 import { sendSms } from "@/services/twilioService"
+import { fmtRangeShort } from "@/lib/availability"
+
+function parseLocalDateStr(s: string): Date {
+  const [y, m, d] = s.split("-").map(Number)
+  return new Date(y, m - 1, d)
+}
 
 export async function POST(req: NextRequest) {
   let body: Record<string, unknown>
@@ -10,14 +16,14 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ data: null, error: "Invalid request body" }, { status: 400 })
   }
 
-  const { name, email, phone, dateConfirmed, eventDate, eventAddress, message } = body
+  const { name, email, phone, dateConfirmed, eventDateStart, eventDateEnd, eventAddress, message } = body
 
   const missing =
     !name ||
     !email ||
     !phone ||
     !eventAddress ||
-    (dateConfirmed && !eventDate) ||
+    (dateConfirmed && (!eventDateStart || !eventDateEnd)) ||
     (!dateConfirmed && !message)
 
   if (missing) {
@@ -34,11 +40,9 @@ export async function POST(req: NextRequest) {
     if (settings?.smsEnabled && settings.smsPhone) {
       const eventDateLine = dateConfirmed
         ? (() => {
-            // Parse date-only strings (YYYY-MM-DD) as local dates to avoid UTC offset shifting the day
-            const parsedDate = /^\d{4}-\d{2}-\d{2}$/.test(String(eventDate))
-              ? new Date(String(eventDate) + "T00:00:00")
-              : new Date(String(eventDate))
-            return `Event Date: ${parsedDate.toDateString().replace(/^\S+\s/, "")} ✓ Confirmed`
+            const start = parseLocalDateStr(String(eventDateStart))
+            const end = parseLocalDateStr(String(eventDateEnd))
+            return `Event Date: ${fmtRangeShort(start, end)} ✓ Confirmed`
           })()
         : `Event Date: Not confirmed`
 
