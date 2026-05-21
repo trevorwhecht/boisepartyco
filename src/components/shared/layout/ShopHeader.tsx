@@ -11,6 +11,7 @@ import Logo from "@/components/shared/layout/Logo"
 import NavbarAccountPanel from "@/components/shared/layout/Navbar-AccountPanel"
 import NavbarNotificationBell from "@/components/shared/layout/Navbar-NotificationBell"
 import type { DateRange } from "@/components/shared/DateRangePicker"
+import { parseLocalDate, fmtLocalDate } from "@/lib/availability"
 
 const NAV = [
   { href: "/", label: "Home", match: ["/"], navClass: "hidden xl:flex" },
@@ -31,8 +32,8 @@ export default function ShopHeader() {
 
   const fromStr = searchParams.get("from")
   const toStr = searchParams.get("to")
-  const start = fromStr ? new Date(fromStr) : null
-  const end = toStr ? new Date(toStr) : null
+  const start = fromStr ? parseLocalDate(fromStr) : null
+  const end = toStr ? parseLocalDate(toStr) : null
 
   // Restore dates from localStorage when URL loses them (e.g. navigating to a page with no ?from=&to=)
   useEffect(() => {
