@@ -3,7 +3,7 @@ import Image from "next/image"
 import { useRouter, useSearchParams } from "next/navigation"
 import { ArrowRight } from "lucide-react"
 import DateRangeField from "@/components/shared/DateRangeField"
-import { parseLocalDate } from "@/lib/availability"
+import { parseLocalDate, fmtLocalDate } from "@/lib/availability"
 
 export default function HomeHero() {
   const router = useRouter()
@@ -15,8 +15,8 @@ export default function HomeHero() {
 
   const handleChange = ({ start: s, end: e }: { start: Date | null; end: Date | null }) => {
     const next = new URLSearchParams(params.toString())
-    if (s) next.set("from", s.toISOString().slice(0, 10)); else next.delete("from")
-    if (e) next.set("to", e.toISOString().slice(0, 10)); else next.delete("to")
+    if (s) next.set("from", fmtLocalDate(s)); else next.delete("from")
+    if (e) next.set("to", fmtLocalDate(e)); else next.delete("to")
     router.replace(`/?${next.toString()}`)
   }
 

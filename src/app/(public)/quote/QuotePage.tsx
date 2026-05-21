@@ -5,7 +5,7 @@ import Link from "next/link"
 import { ArrowRight, ArrowLeft, X, Info, CheckCircle } from "lucide-react"
 import { useCart } from "@/contexts/CartContext"
 import DateRangeField from "@/components/shared/DateRangeField"
-import { parseLocalDate } from "@/lib/availability"
+import { parseLocalDate, fmtLocalDate } from "@/lib/availability"
 import QtyStepper from "@/components/shared/QtyStepper"
 import type { DateRange } from "@/components/shared/DateRangePicker"
 
@@ -51,8 +51,8 @@ export default function QuotePage() {
 
   const handleDateChange = (r: DateRange) => {
     const next = new URLSearchParams(params.toString())
-    if (r.start) next.set("from", r.start.toISOString().slice(0, 10)); else next.delete("from")
-    if (r.end) next.set("to", r.end.toISOString().slice(0, 10)); else next.delete("to")
+    if (r.start) next.set("from", fmtLocalDate(r.start)); else next.delete("from")
+    if (r.end) next.set("to", fmtLocalDate(r.end)); else next.delete("to")
     router.replace(`/quote?${next.toString()}`)
   }
 
