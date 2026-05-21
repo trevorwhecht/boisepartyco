@@ -17,6 +17,7 @@ export default function TentConfigCard({ config, avail, hasRange }: Props) {
   return (
     <Link
       href={`/tents/${config.slug}`}
+      scroll={false}
       className="block bg-white border border-(--shop-line) rounded-xl overflow-hidden hover:-translate-y-1 transition-transform duration-150"
     >
       <div className="aspect-4/3 relative bg-(--shop-paper)">

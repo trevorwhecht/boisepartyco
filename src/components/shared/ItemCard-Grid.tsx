@@ -24,7 +24,7 @@ export default function ItemCardGrid({ item, avail, hasRange, cartLine, onAdd, o
 
   return (
     <div className="bg-white border border-(--shop-line) rounded-xl overflow-hidden flex flex-col">
-      <Link href={itemUrl(item.category.slug, item.slug)} className="block">
+      <Link href={itemUrl(item.category.slug, item.slug)} scroll={false} className="block">
         <div className="aspect-4/3 relative bg-(--shop-paper)">
           {imgSrc ? (
             <Image
@@ -44,7 +44,7 @@ export default function ItemCardGrid({ item, avail, hasRange, cartLine, onAdd, o
       <div className="p-4 md:p-5 flex-1 flex flex-col">
         <div className="flex justify-between items-baseline gap-2">
           <h3 className="serif text-xl md:text-2xl font-medium leading-tight">
-            <Link href={itemUrl(item.category.slug, item.slug)} className="text-(--shop-ink) hover:text-(--shop-blue)">
+            <Link href={itemUrl(item.category.slug, item.slug)} scroll={false} className="text-(--shop-ink) hover:text-(--shop-blue)">
               {item.name}
             </Link>
           </h3>

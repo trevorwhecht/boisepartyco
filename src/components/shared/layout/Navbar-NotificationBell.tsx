@@ -203,7 +203,15 @@ export default function NavbarNotificationBell() {
                     background: n.isRead ? "var(--shop-background, #fff)" : "var(--shop-blue-soft)",
                     cursor: n.actionUrl ? "pointer" : "default",
                   }}
-                  onClick={() => {
+                  onClick={async () => {
+                    if (!n.isRead) {
+                      setNotifications(prev =>
+                        prev.map(x => x.id === n.id ? { ...x, isRead: true } : x)
+                      )
+                      setUnreadCount(prev => Math.max(0, prev - 1))
+                      // Await so the DB is updated before the next page mounts and re-polls
+                      await fetch(`/api/notifications/${n.id}`, { method: "PATCH" }).catch(() => null)
+                    }
                     if (n.actionUrl) {
                       setIsOpen(false)
                       router.push(n.actionUrl)

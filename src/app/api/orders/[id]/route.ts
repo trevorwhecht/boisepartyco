@@ -10,6 +10,7 @@ const ORDER_DETAIL_INCLUDE = {
   user: {
     select: {
       id: true,
+      role: true,
       firstName: true,
       lastName: true,
       email: true,
@@ -185,8 +186,9 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
   })
 
   if (stateId !== undefined) {
-    // Customer notification (existing behaviour — only when order has an owner)
-    if (updated.userId) {
+    // Customer notification — only send to regular users (not staff who moved the state themselves)
+    const ownerIsRegularUser = updated.user?.role === "user"
+    if (updated.userId && ownerIsRegularUser) {
       const STATE_NOTIFICATIONS: Record<number, { title: string; message: string }> = {
         2: { title: "Quote Ready to Review", message: `Your quote #${orderId} has been reviewed and is ready for your approval.` },
         3: { title: "Order In Progress", message: `We've started working on your order #${orderId}.` },
@@ -202,23 +204,28 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
       }
     }
 
-    // Admin notification — always, regardless of whether order has a user
-    const stateName = updated.state?.name ?? `State ${stateId}`
-    const adminNotifTitle = `Order #${orderId} → ${stateName}`
-    const adminNotifMessage = `Order #${orderId} was moved to "${stateName}"${updated.user ? ` (${updated.user.firstName} ${updated.user.lastName})` : ""}.`
+    // Admin notification — only when an employee moves a state (admins already know what they did)
+    if (role === "employee") {
+      const stateName = updated.state?.name ?? `State ${stateId}`
+      const adminNotifTitle = `Order #${orderId} → ${stateName}`
+      const actorName = session.user.firstName && session.user.lastName
+        ? `${session.user.firstName} ${session.user.lastName}`
+        : session.user.email
+      const adminNotifMessage = `Order #${orderId} was moved to "${stateName}" by ${actorName}.`
 
-    const admins = await prisma.user.findMany({ where: { role: "admin" }, select: { id: true } })
-    if (admins.length > 0) {
-      await prisma.notification.createMany({
-        data: admins.map((a) => ({
-          userId: a.id,
-          orderId,
-          type: "state_changed",
-          title: adminNotifTitle,
-          message: adminNotifMessage,
-          actionUrl: `/dashboard`,
-        })),
-      }).catch(() => {})
+      const admins = await prisma.user.findMany({ where: { role: "admin" }, select: { id: true } })
+      if (admins.length > 0) {
+        await prisma.notification.createMany({
+          data: admins.map((a) => ({
+            userId: a.id,
+            orderId,
+            type: "state_changed",
+            title: adminNotifTitle,
+            message: adminNotifMessage,
+            actionUrl: `/dashboard`,
+          })),
+        }).catch(() => {})
+      }
     }
 
     // SMS — fire-and-forget

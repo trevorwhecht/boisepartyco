@@ -1,5 +1,5 @@
 "use client"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import Image from "next/image"
 import { X } from "lucide-react"
@@ -43,6 +43,11 @@ export default function ShopItemModal(props: Props) {
   const { hasRange, closeHref } = props
   const router = useRouter()
   const [open, setOpen] = useState(true)
+  // Defer dialog open until after hydration — Base UI adds aria-hidden/data-base-ui-inert to
+  // elements outside the dialog portal when open, which differs from the SSR HTML and causes a
+  // hydration mismatch in dev. Keeping it "closed" for the initial pass prevents that.
+  const [mounted, setMounted] = useState(false)
+  useEffect(() => { setMounted(true) }, [])
 
   const handleClose = () => {
     setOpen(false)
@@ -74,7 +79,7 @@ export default function ShopItemModal(props: Props) {
   )
 
   return (
-    <Dialog open={open} onOpenChange={(o) => { if (!o) handleClose() }}>
+    <Dialog open={mounted && open} onOpenChange={(o) => { if (!o) handleClose() }}>
       <DialogContent
         showCloseButton={false}
         className="sm:max-w-5xl max-h-[92dvh] p-0 overflow-hidden bg-(--color-background) flex flex-col"
