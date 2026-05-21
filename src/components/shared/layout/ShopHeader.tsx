@@ -30,6 +30,8 @@ export default function ShopHeader() {
   const [navOpen, setNavOpen] = useState(false)
   const [accountOpen, setAccountOpen] = useState(false)
 
+  const showDateAndQuote = !pathname.startsWith("/dashboard")
+
   const fromStr = searchParams.get("from")
   const toStr = searchParams.get("to")
   const start = fromStr ? parseLocalDate(fromStr) : null
@@ -218,10 +220,12 @@ export default function ShopHeader() {
             {/* Right group: desktop (date + quote) + account icon (both) */}
             <div style={{ display: "flex", gap: 10, alignItems: "center", flexShrink: 0 }}>
               {/* Date picker + Quote button — desktop only */}
-              <div className="hidden md:flex" style={{ gap: 10, alignItems: "center" }}>
-                <DateRangeField start={start} end={end} onChange={handleDateChange} compact />
-                <QuoteButton cartCount={cartCount} onClick={closeAll} />
-              </div>
+              {showDateAndQuote ? (
+                <div className="hidden md:flex" style={{ gap: 10, alignItems: "center" }}>
+                  <DateRangeField start={start} end={end} onChange={handleDateChange} compact />
+                  <QuoteButton cartCount={cartCount} onClick={closeAll} />
+                </div>
+              ) : null}
 
               {/* Notification bell — renders only for logged-in staff */}
               <NavbarNotificationBell />
@@ -257,15 +261,17 @@ export default function ShopHeader() {
           </div>
 
           {/* Mobile action row: date picker + quote button (full width) */}
-          <div
-            className="md:hidden flex items-center"
-            style={{ gap: 10, paddingBottom: 12 }}
-          >
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <DateRangeField start={start} end={end} onChange={handleDateChange} compact fullWidth />
+          {showDateAndQuote ? (
+            <div
+              className="md:hidden flex items-center"
+              style={{ gap: 10, paddingBottom: 12 }}
+            >
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <DateRangeField start={start} end={end} onChange={handleDateChange} compact fullWidth />
+              </div>
+              <QuoteButton cartCount={cartCount} onClick={closeAll} />
             </div>
-            <QuoteButton cartCount={cartCount} onClick={closeAll} />
-          </div>
+          ) : null}
         </div>
 
         {/* Mobile nav drawer ─────────────────────────────────── */}

@@ -13,6 +13,7 @@ type Props = {
   onChange: (r: DateRange) => void
   onClose?: () => void
   anchorRect?: DOMRect | null
+  inline?: boolean
 }
 
 const MONTHS = ["January","February","March","April","May","June","July","August","September","October","November","December"]
@@ -100,7 +101,7 @@ function MonthView({ year, month, start, end, hover, minDate, onPick, onHover, o
   )
 }
 
-export default function DateRangePicker({ start, end, onChange, onClose, anchorRect }: Props) {
+export default function DateRangePicker({ start, end, onChange, onClose, anchorRect, inline }: Props) {
   const today = new Date(); today.setHours(0, 0, 0, 0)
   const initial = start ?? today
   const [view, setView] = useState({ year: initial.getFullYear(), month: initial.getMonth() })
@@ -164,8 +165,13 @@ export default function DateRangePicker({ start, end, onChange, onClose, anchorR
 
   return (
     <div
-      data-cal-pop
-      style={{
+      {...(!inline ? { "data-cal-pop": true } : {})}
+      style={inline ? {
+        background: "#fff",
+        border: "1px solid #e4e7ec",
+        borderRadius: 12,
+        padding: 18,
+      } : {
         position: "fixed",
         ...positionStyle,
         background: "#fff",
@@ -174,7 +180,6 @@ export default function DateRangePicker({ start, end, onChange, onClose, anchorR
         padding: isMobile ? 14 : 18,
         boxShadow: "0 24px 60px -16px rgba(20,30,50,0.18), 0 2px 8px rgba(0,0,0,0.04)",
         zIndex: 100,
-        // On desktop, enforce the two-month min width; on mobile let it fill
         ...(isMobile ? {} : { minWidth: 660 }),
       }}
     >

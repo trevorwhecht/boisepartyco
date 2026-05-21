@@ -2,9 +2,9 @@
 import { useState, useTransition, useRef } from "react"
 import { Loader2 } from "lucide-react"
 import { toast } from "sonner"
-import DateRangeField from "@/components/shared/DateRangeField"
-import { type DateRange } from "@/components/shared/DateRangePicker"
-import { fmtLocalDate } from "@/lib/availability"
+import DateRangePicker, { type DateRange } from "@/components/shared/DateRangePicker"
+import { fmtLocalDate, fmtRangeShort } from "@/lib/availability"
+import { Calendar } from "lucide-react"
 
 const LABEL = "block text-[11px] font-semibold uppercase tracking-widest text-(--shop-ink-soft) mb-1.5"
 const INPUT = "w-full px-3.5 py-2.5 border border-(--shop-line) rounded-lg text-base focus:outline-none focus:border-(--shop-blue)"
@@ -23,6 +23,7 @@ type Errors = Partial<Record<keyof Fields | "eventDate", string>>
 export default function ContactForm() {
   const [isPending, startTransition] = useTransition()
   const [dateConfirmed, setDateConfirmed] = useState(false)
+  const [calendarOpen, setCalendarOpen] = useState(false)
   const [eventDateStart, setEventDateStart] = useState<Date | null>(null)
   const [eventDateEnd, setEventDateEnd] = useState<Date | null>(null)
   const [submitted, setSubmitted] = useState(false)
@@ -133,7 +134,7 @@ export default function ContactForm() {
     <form className="flex flex-col gap-4" onSubmit={handleSubmit} noValidate>
 
       {/* First + Last Name */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div className="grid grid-cols-2 gap-3 sm:gap-4">
         <div>
           <label htmlFor="cf-first-name" className={LABEL}>First Name</label>
           <input
@@ -204,17 +205,21 @@ export default function ContactForm() {
         </div>
       </div>
 
-      {/* Is a Date Confirmed? toggle + inline calendar trigger */}
-      <div className="flex flex-col gap-1">
+      {/* Is a Date Confirmed? toggle + date trigger on same row */}
+      <div className="flex flex-col gap-2">
         <div className="flex items-center gap-3 flex-wrap">
           <span className="text-[11px] font-semibold uppercase tracking-widest text-(--shop-ink-soft) shrink-0">
-            Is a Date Confirmed?
+            <span className="sm:hidden">Date Confirmed?</span>
+            <span className="hidden sm:inline">Is a Date Confirmed?</span>
           </span>
           <div className="flex rounded-lg border border-(--shop-line) overflow-hidden text-sm shrink-0">
             <button
               type="button"
               onClick={() => {
                 setDateConfirmed(false)
+                setCalendarOpen(false)
+                setEventDateStart(null)
+                setEventDateEnd(null)
                 setErrors(prev => ({ ...prev, eventDate: undefined }))
               }}
               className={`px-4 py-2 font-medium transition-colors ${!dateConfirmed ? "bg-(--shop-blue) text-white" : "text-(--shop-ink-soft) hover:bg-(--shop-paper)"}`}
@@ -233,14 +238,29 @@ export default function ContactForm() {
             </button>
           </div>
           {dateConfirmed ? (
-            <DateRangeField
-              start={eventDateStart}
-              end={eventDateEnd}
-              onChange={handleDateChange}
-              compact
-            />
+            <button
+              type="button"
+              onClick={() => setCalendarOpen(o => !o)}
+              className="flex items-center gap-2 px-3.5 py-2 rounded-full border border-(--shop-line) text-sm font-medium text-(--shop-ink) bg-white hover:border-(--shop-blue) transition-colors shrink-0"
+            >
+              <Calendar size={14} className="text-(--shop-ink-soft)" />
+              <span>
+                {eventDateStart && eventDateEnd
+                  ? fmtRangeShort(eventDateStart, eventDateEnd)
+                  : "Pick event dates"}
+              </span>
+            </button>
           ) : null}
         </div>
+        {dateConfirmed && calendarOpen ? (
+          <DateRangePicker
+            inline
+            start={eventDateStart}
+            end={eventDateEnd}
+            onChange={handleDateChange}
+            onClose={() => setCalendarOpen(false)}
+          />
+        ) : null}
         {errors.eventDate ? (
           <p role="alert" className="text-xs text-(--shop-warn)">{errors.eventDate}</p>
         ) : null}

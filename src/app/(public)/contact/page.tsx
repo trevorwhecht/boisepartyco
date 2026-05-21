@@ -4,7 +4,7 @@ export default function ContactPage() {
   return (
     <main>
       <section className="py-16 pb-12 border-b border-(--shop-line) bg-(--shop-paper)">
-        <div className="max-w-330 mx-auto px-8">
+        <div className="max-w-330 mx-auto px-4 sm:px-8">
           <h1 className="serif font-medium leading-tight" style={{ fontSize: 64 }}>Get in touch</h1>
           <p className="mt-3 text-base text-(--shop-ink-soft) max-w-lg leading-relaxed">
             We answer the phone. Same-day quotes for most inquiries.
@@ -12,7 +12,7 @@ export default function ContactPage() {
         </div>
       </section>
       <section className="py-14 pb-20">
-        <div className="max-w-330 mx-auto px-8 grid grid-cols-1 md:grid-cols-2 gap-14">
+        <div className="max-w-330 mx-auto px-4 sm:px-8 grid grid-cols-1 md:grid-cols-2 gap-14">
           {/* Left — contact form (top on mobile) */}
           <div>
             <h3 className="serif text-2xl font-medium mb-1">Send us a note</h3>
