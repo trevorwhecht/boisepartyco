@@ -12,12 +12,12 @@ import NavbarAccountPanel from "@/components/shared/layout/Navbar-AccountPanel"
 import type { DateRange } from "@/components/shared/DateRangePicker"
 
 const NAV = [
-  { href: "/", label: "Home", match: ["/"] },
-  { href: "/tents", label: "Tents", match: ["/tents"] },
-  { href: "/tables-and-chairs", label: "Tables & Chairs", match: ["/tables-and-chairs"] },
-  { href: "/decor", label: "Decor & Dance Floor", match: ["/decor"] },
-  { href: "/faq", label: "FAQ", match: ["/faq"] },
-  { href: "/contact", label: "Contact", match: ["/contact"] },
+  { href: "/", label: "Home", match: ["/"], navClass: "hidden xl:flex" },
+  { href: "/tents", label: "Tents", match: ["/tents"], navClass: "" },
+  { href: "/tables-and-chairs", label: "Tables & Chairs", match: ["/tables-and-chairs"], navClass: "" },
+  { href: "/decor", label: "Decor & Dance Floor", match: ["/decor"], navClass: "" },
+  { href: "/faq", label: "FAQ", match: ["/faq"], navClass: "" },
+  { href: "/contact", label: "Contact", match: ["/contact"], navClass: "hidden lg:flex" },
 ]
 
 export default function ShopHeader() {
@@ -196,6 +196,7 @@ export default function ShopHeader() {
                     key={n.href}
                     href={n.href}
                     onClick={closeAll}
+                    className={n.navClass}
                     style={{
                       fontSize: 14,
                       fontWeight: 500,

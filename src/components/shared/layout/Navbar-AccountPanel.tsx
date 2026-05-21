@@ -3,7 +3,7 @@
 import { useSession, signIn, signOut } from "next-auth/react"
 import { useRouter } from "next/navigation"
 import { useState, useTransition } from "react"
-import { Eye, EyeOff, LayoutGrid, BarChart2, Users, Settings, UserCog, LogOut } from "lucide-react"
+import { Eye, EyeOff, LayoutGrid, BarChart2, Users, Settings, UserCog, LogOut, Package } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -130,6 +130,7 @@ export default function NavbarAccountPanel({ isOpen, onClose, navigate }: Props)
                 <PanelSubItem onClick={() => navigate("/dashboard?view=calendar")}>Calendar</PanelSubItem>
                 <PanelSubItem onClick={() => navigate("/dashboard?view=complete")}>Complete</PanelSubItem>
                 <PanelSubItem onClick={() => navigate("/dashboard?view=archive")}>Archive</PanelSubItem>
+                <PanelItem icon={<Package className="h-4 w-4" />} onClick={() => navigate("/dashboard?view=inventory")}>Inventory</PanelItem>
                 {role === "admin" ? (
                   <>
                     <PanelItem icon={<BarChart2 className="h-4 w-4" />} onClick={() => navigate("/dashboard?view=insights")}>Insights</PanelItem>

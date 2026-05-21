@@ -1,0 +1,40 @@
+<h2>What does "managing inventory" mean to you?</h2>
+<p class="subtitle">Select all the areas you need to manage from the admin dashboard. This helps us scope the feature correctly.</p>
+
+<div class="options" data-multiselect>
+  <div class="option" data-choice="catalog" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="content">
+      <h3>Item Catalog CRUD</h3>
+      <p>Create new items, edit names / prices / descriptions / specs, toggle active/inactive, set sort order. The core product manager workflow.</p>
+    </div>
+  </div>
+  <div class="option" data-choice="categories" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="content">
+      <h3>Category Management</h3>
+      <p>Add / edit / reorder categories (Tents, Chairs, Tables, Décor…). Currently categories are seeded but there's no UI to manage them.</p>
+    </div>
+  </div>
+  <div class="option" data-choice="bom" onclick="toggleSelect(this)">
+    <div class="letter">C</div>
+    <div class="content">
+      <h3>Tent BOM Editor</h3>
+      <p>For each tent configuration, define which tent parts it requires and how many. Currently <code>bomComplete</code> is false on all configs — this is what fills it in.</p>
+    </div>
+  </div>
+  <div class="option" data-choice="serialized" onclick="toggleSelect(this)">
+    <div class="letter">D</div>
+    <div class="content">
+      <h3>Serialized Units</h3>
+      <p>Track individual physical assets by serial number (tent panels, poles, specific chairs). Set status: available / damaged / in_repair / decommissioned.</p>
+    </div>
+  </div>
+  <div class="option" data-choice="images" onclick="toggleSelect(this)">
+    <div class="letter">E</div>
+    <div class="content">
+      <h3>Image Management</h3>
+      <p>Upload / reorder / delete photos for each item. Currently images are set via URLs; this would add upload support (via Cloudinary or similar).</p>
+    </div>
+  </div>
+</div>

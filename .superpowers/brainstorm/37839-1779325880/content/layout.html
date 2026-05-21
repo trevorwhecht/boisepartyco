@@ -1,0 +1,118 @@
+<h2>How should the Inventory view be organized?</h2>
+<p class="subtitle">The view lives inside the admin dashboard (sidebar → "Inventory"). Pick the layout that best fits your workflow.</p>
+
+<div class="options">
+
+  <div class="option" data-choice="tabs" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="content">
+      <h3>Horizontal Tabs — one per category</h3>
+      <p>Tabs across the top: Chairs · Tables · Linens · Décor · Heaters · Floors · Catering · Lighting · Tents. Each tab shows a table of items in that category with inline qty editing.</p>
+      <div class="mockup" style="margin-top:10px">
+        <div class="mockup-header">Inventory</div>
+        <div class="mockup-body" style="padding:0">
+          <div style="display:flex;gap:0;border-bottom:2px solid #1f6fb2;font-size:11px;overflow:hidden">
+            <div style="padding:6px 10px;background:#1f6fb2;color:#fff;font-weight:600">Chairs</div>
+            <div style="padding:6px 10px;color:#666">Tables</div>
+            <div style="padding:6px 10px;color:#666">Linens</div>
+            <div style="padding:6px 10px;color:#666">Décor</div>
+            <div style="padding:6px 10px;color:#666">···</div>
+            <div style="padding:6px 10px;color:#1f6fb2;font-weight:600">Tents</div>
+          </div>
+          <table style="width:100%;font-size:11px;border-collapse:collapse">
+            <thead><tr style="background:#f5f5f5"><th style="text-align:left;padding:5px 8px">Item</th><th style="padding:5px 8px">Qty Owned</th><th style="padding:5px 8px">Active</th></tr></thead>
+            <tbody>
+              <tr style="border-top:1px solid #eee"><td style="padding:5px 8px">White Folding Chair</td><td style="text-align:center"><input style="width:48px;border:1px solid #ccc;border-radius:3px;text-align:center;padding:2px" value="120"/></td><td style="text-align:center">✓</td></tr>
+              <tr style="border-top:1px solid #eee"><td style="padding:5px 8px">Chiavari Chair – Gold</td><td style="text-align:center"><input style="width:48px;border:1px solid #ccc;border-radius:3px;text-align:center;padding:2px" value="80"/></td><td style="text-align:center">✓</td></tr>
+              <tr style="border-top:1px solid #eee"><td style="padding:5px 8px">Ghost Chair</td><td style="text-align:center"><input style="width:48px;border:1px solid #ccc;border-radius:3px;text-align:center;padding:2px" value="24"/></td><td style="text-align:center">✓</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="pros-cons" style="margin-top:8px">
+        <div class="pros"><h4>Pros</h4><ul><li>Focused — one category at a time</li><li>Clean, familiar UI pattern</li></ul></div>
+        <div class="cons"><h4>Cons</h4><ul><li>9 tabs is a lot; may wrap on smaller screens</li></ul></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="option" data-choice="accordion" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="content">
+      <h3>Single Scrollable Page — category sections</h3>
+      <p>All categories on one page, each collapsed by default. Click a header to expand and inline-edit that category's quantities. Good for a quick top-to-bottom audit.</p>
+      <div class="mockup" style="margin-top:10px">
+        <div class="mockup-header">Inventory</div>
+        <div class="mockup-body" style="padding:8px;font-size:11px">
+          <div style="border:1px solid #e4e7ec;border-radius:6px;overflow:hidden;margin-bottom:6px">
+            <div style="padding:8px 12px;background:#1f6fb2;color:#fff;font-weight:600;display:flex;justify-content:space-between"><span>🪑 Chairs (3 items)</span><span>▼</span></div>
+            <table style="width:100%;border-collapse:collapse">
+              <tr style="background:#f9f9f9"><td style="padding:5px 12px">White Folding Chair</td><td style="text-align:right;padding:5px 12px"><input style="width:48px;border:1px solid #ccc;border-radius:3px;text-align:center;padding:2px" value="120"/></td></tr>
+              <tr style="border-top:1px solid #eee"><td style="padding:5px 12px">Chiavari Chair – Gold</td><td style="text-align:right;padding:5px 12px"><input style="width:48px;border:1px solid #ccc;border-radius:3px;text-align:center;padding:2px" value="80"/></td></tr>
+            </table>
+          </div>
+          <div style="border:1px solid #e4e7ec;border-radius:6px;overflow:hidden;margin-bottom:6px">
+            <div style="padding:8px 12px;background:#f5f5f5;color:#333;font-weight:600;display:flex;justify-content:space-between"><span>🪑 Tables (4 items)</span><span>▶</span></div>
+          </div>
+          <div style="border:1px solid #e4e7ec;border-radius:6px;overflow:hidden">
+            <div style="padding:8px 12px;background:#f5f5f5;color:#333;font-weight:600;display:flex;justify-content:space-between"><span>⛺ Tents (5 configs, 8 parts)</span><span>▶</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="pros-cons" style="margin-top:8px">
+        <div class="pros"><h4>Pros</h4><ul><li>See everything at once; great for bulk audits</li><li>No tabs to manage</li></ul></div>
+        <div class="cons"><h4>Cons</h4><ul><li>Long page if all categories expanded</li></ul></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="option" data-choice="drilldown" onclick="toggleSelect(this)">
+    <div class="letter">C</div>
+    <div class="content">
+      <h3>Category Cards → Drill-in</h3>
+      <p>Landing screen shows a grid of category cards (Chairs, Tables, Tents…) with a quick count of items + total units owned. Click a card to drill into that category's edit table.</p>
+      <div class="mockup" style="margin-top:10px">
+        <div class="mockup-header">Inventory</div>
+        <div class="mockup-body" style="padding:10px">
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;font-size:11px">
+            <div style="border:1px solid #e4e7ec;border-radius:6px;padding:10px;background:#f9fafb;cursor:pointer">
+              <div style="font-size:18px">🪑</div>
+              <div style="font-weight:600;margin-top:4px">Chairs</div>
+              <div style="color:#666;font-size:10px">3 items · 224 units</div>
+            </div>
+            <div style="border:1px solid #e4e7ec;border-radius:6px;padding:10px;background:#f9fafb;cursor:pointer">
+              <div style="font-size:18px">🪞</div>
+              <div style="font-weight:600;margin-top:4px">Tables</div>
+              <div style="color:#666;font-size:10px">4 items · 85 units</div>
+            </div>
+            <div style="border:2px solid #1f6fb2;border-radius:6px;padding:10px;background:#e9f2fa;cursor:pointer">
+              <div style="font-size:18px">⛺</div>
+              <div style="font-weight:600;margin-top:4px">Tents</div>
+              <div style="color:#1f6fb2;font-size:10px">5 configs · 8 part types</div>
+            </div>
+            <div style="border:1px solid #e4e7ec;border-radius:6px;padding:10px;background:#f9fafb;cursor:pointer">
+              <div style="font-size:18px">🎨</div>
+              <div style="font-weight:600;margin-top:4px">Décor</div>
+              <div style="color:#666;font-size:10px">12 items · 340 units</div>
+            </div>
+            <div style="border:1px solid #e4e7ec;border-radius:6px;padding:10px;background:#f9fafb;cursor:pointer">
+              <div style="font-size:18px">🔥</div>
+              <div style="font-weight:600;margin-top:4px">Heaters</div>
+              <div style="color:#666;font-size:10px">2 items · 8 units</div>
+            </div>
+            <div style="border:1px solid #e4e7ec;border-radius:6px;padding:10px;background:#f9fafb;cursor:pointer">
+              <div style="font-size:18px">💡</div>
+              <div style="font-weight:600;margin-top:4px">Lighting</div>
+              <div style="color:#666;font-size:10px">3 items · 600 ft</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="pros-cons" style="margin-top:8px">
+        <div class="pros"><h4>Pros</h4><ul><li>Clean overview; great for at-a-glance health check</li><li>Scales to many categories</li></ul></div>
+        <div class="cons"><h4>Cons</h4><ul><li>Extra click to reach editing; slower for bulk updates</li></ul></div>
+      </div>
+    </div>
+  </div>
+
+</div>

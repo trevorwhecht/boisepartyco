@@ -142,3 +142,50 @@ export function fmtRangeShort(start: Date | null, end: Date | null): string {
   }
   return `${monthA} ${start.getDate()} – ${monthB} ${end.getDate()}, ${end.getFullYear()}`
 }
+
+// ----- Buildable count (physical stock only, no booking factor) ---------------
+
+export type BuildablePart = {
+  tentPartId: number
+  name: string
+  stock: number       // physical units owned (TentPart.qty or SerializedUnit count)
+  qtyRequired: number // how many this part a single config needs
+}
+
+export type BuildableResult = {
+  canBuild: number
+  bottleneck: {
+    tentPartId: number
+    name: string
+    stock: number
+    qtyRequired: number
+    maxFromThisPart: number
+  } | null
+}
+
+/**
+ * Derives how many tent configurations can be built from physical part stock.
+ * No bookings, no date ranges — purely "how many do we own vs how many do we need".
+ *
+ * bottleneck is null when parts list is empty, has one part, or all parts are
+ * equally constraining (nothing stands out as the limiting factor).
+ */
+export function calcBuildableFromParts(parts: BuildablePart[]): BuildableResult {
+  if (parts.length === 0) return { canBuild: 0, bottleneck: null }
+
+  const withMax = parts.map(p => ({
+    ...p,
+    maxFromThisPart: Math.floor(p.stock / p.qtyRequired),
+  }))
+
+  const canBuild = Math.min(...withMax.map(p => p.maxFromThisPart))
+
+  // Only surface a bottleneck when one part clearly limits relative to others
+  const allSame = withMax.every(p => p.maxFromThisPart === canBuild)
+  const limiting = withMax.find(p => p.maxFromThisPart === canBuild)!
+
+  return {
+    canBuild,
+    bottleneck: allSame ? null : limiting,
+  }
+}

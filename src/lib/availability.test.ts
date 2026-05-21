@@ -1,4 +1,4 @@
-import { maxConcurrentBooked, buildAvailability, buildConfigAvailability } from "./availability"
+import { maxConcurrentBooked, buildAvailability, buildConfigAvailability, calcBuildableFromParts } from "./availability"
 
 const d = (offset: number) => {
   const x = new Date("2026-06-01")
@@ -54,5 +54,47 @@ describe("buildConfigAvailability", () => {
     const result = buildConfigAvailability(parts)
     expect(result.available).toBe(2)
     expect(result.bottleneckParts[0].tentPartId).toBe(1)
+  })
+})
+
+describe("calcBuildableFromParts", () => {
+  it("returns 0 and null bottleneck for empty parts array", () => {
+    expect(calcBuildableFromParts([])).toEqual({ canBuild: 0, bottleneck: null })
+  })
+
+  it("returns correct canBuild for a single part", () => {
+    const result = calcBuildableFromParts([
+      { tentPartId: 1, name: "Panel", stock: 40, qtyRequired: 8 },
+    ])
+    expect(result.canBuild).toBe(5)
+    expect(result.bottleneck).toBeNull() // single part — nothing else to be limited by
+  })
+
+  it("returns min across all parts and identifies the bottleneck", () => {
+    const result = calcBuildableFromParts([
+      { tentPartId: 1, name: "Panel", stock: 40, qtyRequired: 8 },   // 5 max
+      { tentPartId: 2, name: "Crown", stock: 12, qtyRequired: 1 },   // 12 max
+    ])
+    expect(result.canBuild).toBe(5)
+    expect(result.bottleneck?.name).toBe("Panel")
+    expect(result.bottleneck?.maxFromThisPart).toBe(5)
+  })
+
+  it("returns null bottleneck when all parts are equally constraining", () => {
+    const result = calcBuildableFromParts([
+      { tentPartId: 1, name: "Panel", stock: 40, qtyRequired: 8 },   // 5 max
+      { tentPartId: 2, name: "Pole",  stock: 20, qtyRequired: 4 },   // 5 max
+    ])
+    expect(result.canBuild).toBe(5)
+    expect(result.bottleneck).toBeNull()
+  })
+
+  it("returns canBuild 0 when any part has zero stock", () => {
+    const result = calcBuildableFromParts([
+      { tentPartId: 1, name: "Panel", stock: 0,  qtyRequired: 4 },
+      { tentPartId: 2, name: "Crown", stock: 12, qtyRequired: 1 },
+    ])
+    expect(result.canBuild).toBe(0)
+    expect(result.bottleneck?.name).toBe("Panel")
   })
 })

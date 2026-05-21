@@ -3,7 +3,7 @@
 import Link from "next/link"
 import { useSearchParams } from "next/navigation"
 import { cn } from "@/lib/utils"
-import { LayoutGrid, Calendar, CheckCircle, Archive, BarChart2, Users, Settings } from "lucide-react"
+import { LayoutGrid, Calendar, CheckCircle, Archive, BarChart2, Users, Settings, Package } from "lucide-react"
 
 type Props = { role: string; firstName: string; lastName: string }
 
@@ -27,6 +27,7 @@ export default function DashboardSidebar({ role, firstName, lastName }: Props) {
         <>
           <div className="my-1 mx-1 border-t border-(--color-border)" />
           <SidebarLink href="?view=insights" label="Insights" icon={<BarChart2 size={16} />} active={view === "insights"} />
+          <SidebarLink href="?view=inventory" label="Inventory" icon={<Package size={16} />} active={view === "inventory"} />
           <SidebarLink href="?view=users" label="Users" icon={<Users size={16} />} active={view === "users"} />
           <SidebarLink href="?view=settings" label="Settings" icon={<Settings size={16} />} active={view === "settings"} />
         </>

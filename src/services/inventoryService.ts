@@ -12,11 +12,15 @@ import {
   buildAvailability,
   buildConfigAvailability,
   maxConcurrentBooked,
+  calcBuildableFromParts,
   type AvailabilityShape,
   type BookingDemand,
   type ConfigAvailabilityShape,
   type PartSnapshot,
+  type BuildablePart,
+  type BuildableResult,
 } from "@/lib/availability"
+import type { AdminTentConfigSummary } from "@/models/inventory"
 
 // ---------------------------------------------------------------------------
 // Item availability
@@ -393,4 +397,68 @@ export async function getItemDailyAvailability(
     })
   }
   return result
+}
+
+// ---------------------------------------------------------------------------
+// Physical buildable count — no booking factor, admin inventory view only
+// ---------------------------------------------------------------------------
+
+/**
+ * How many of a tent configuration can be built from owned physical stock,
+ * ignoring all bookings. Used exclusively by the admin Inventory view.
+ *
+ * Returns the full config shape needed by AdminTentConfigSummary.
+ */
+export async function getTentConfigBuildableCount(
+  tentConfigId: number,
+): Promise<Omit<AdminTentConfigSummary, "id" | "name" | "widthFt" | "lengthFt" | "isActive">> {
+  const config = await prisma.tentConfiguration.findUnique({
+    where: { id: tentConfigId },
+    include: {
+      bomParts: {
+        include: {
+          tentPart: {
+            select: { id: true, name: true, partType: true, isSerialized: true, qty: true },
+          },
+        },
+      },
+    },
+  })
+
+  if (!config || !config.bomComplete || config.bomParts.length === 0) {
+    return {
+      bomComplete: config?.bomComplete ?? false,
+      canBuild: 0,
+      bottleneck: null,
+      bomParts: [],
+    }
+  }
+
+  const parts: BuildablePart[] = await Promise.all(
+    config.bomParts.map(async (row) => {
+      const stock = row.tentPart.isSerialized
+        ? await prisma.serializedUnit.count({ where: { tentPartId: row.tentPartId, status: "available" } })
+        : (row.tentPart.qty ?? 0)
+      return {
+        tentPartId: row.tentPartId,
+        name: row.tentPart.name,
+        stock,
+        qtyRequired: row.qtyRequired,
+      }
+    }),
+  )
+
+  const { canBuild, bottleneck } = calcBuildableFromParts(parts)
+
+  return {
+    bomComplete: true,
+    canBuild,
+    bottleneck,
+    bomParts: config.bomParts.map(row => ({
+      tentPartId: row.tentPartId,
+      name: row.tentPart.name,
+      partType: row.tentPart.partType,
+      qtyRequired: row.qtyRequired,
+    })),
+  }
 }

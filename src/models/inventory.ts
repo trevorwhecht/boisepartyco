@@ -168,3 +168,57 @@ export type CreateOrderPayload = {
   lines: CartLine[]
   customerNotes?: string | null
 }
+
+// -----------------------------------------------------------------------------
+// Admin inventory management types
+// -----------------------------------------------------------------------------
+
+export type AdminCategorySummary = {
+  id: number
+  slug: string
+  name: string
+  sortOrder: number
+}
+
+export type AdminItemSummary = {
+  id: number
+  sku: string
+  slug: string
+  name: string
+  qty: number | null
+  isActive: boolean
+  primaryImageUrl: string | null
+  sortOrder: number
+}
+
+export type AdminTentPartSummary = {
+  id: number
+  name: string
+  partType: PartType
+  qty: number | null
+  isSerialized: boolean
+  isActive: boolean
+}
+
+export type AdminTentConfigSummary = {
+  id: number
+  name: string
+  widthFt: number
+  lengthFt: number
+  isActive: boolean
+  bomComplete: boolean
+  canBuild: number
+  bottleneck: {
+    tentPartId: number
+    name: string
+    stock: number
+    qtyRequired: number
+    maxFromThisPart: number
+  } | null
+  bomParts: {
+    tentPartId: number
+    name: string
+    partType: string
+    qtyRequired: number
+  }[]
+}

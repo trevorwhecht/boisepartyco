@@ -10,6 +10,7 @@ import DashboardArchiveView from "./components/views/Dashboard-ArchiveView"
 import DashboardInsightsView from "./components/views/Dashboard-InsightsView"
 import DashboardUsersView from "./components/views/Dashboard-UsersView"
 import DashboardSettingsView from "./components/views/Dashboard-SettingsView"
+import DashboardInventoryView from "./components/views/Dashboard-InventoryView"
 import DashboardOrderDetailDialog from "./components/order-detail/Dashboard-OrderDetailDialog"
 import { useOrders } from "@/hooks/useOrders"
 import { useOrderStates } from "@/hooks/useOrderStates"
@@ -79,6 +80,7 @@ function DashboardInner({ role, firstName, lastName }: Props) {
     if (view === "insights" && role === "admin") return <DashboardInsightsView />
     if (view === "users" && role === "admin") return <DashboardUsersView />
     if (view === "settings" && role === "admin") return <DashboardSettingsView />
+    if (view === "inventory" && (role === "admin" || role === "employee")) return <DashboardInventoryView role={role} />
     return <DashboardKanban orders={orders} loading={ordersLoading} orderStates={activeStates} statesLoading={statesLoading} onOpenOrder={handleOpenOrder} onOrderMoved={refetchOrders} role={role} />
   }
 
