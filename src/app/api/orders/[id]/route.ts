@@ -205,8 +205,8 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
     }
 
     // Admin notification — only when an employee moves a state (admins already know what they did)
+    const stateName = updated.state?.name ?? `State ${stateId}`
     if (role === "employee") {
-      const stateName = updated.state?.name ?? `State ${stateId}`
       const adminNotifTitle = `Order #${orderId} → ${stateName}`
       const actorName = session.user.firstName && session.user.lastName
         ? `${session.user.firstName} ${session.user.lastName}`
