@@ -1,5 +1,5 @@
 "use client"
-import { useState, useTransition } from "react"
+import { useState, useTransition, useEffect } from "react"
 import { useSearchParams, useRouter } from "next/navigation"
 import Link from "next/link"
 import { ArrowRight, ArrowLeft, X, Info, CheckCircle } from "lucide-react"
@@ -8,6 +8,7 @@ import DateRangeField from "@/components/shared/DateRangeField"
 import { parseLocalDate, fmtLocalDate } from "@/lib/availability"
 import QtyStepper from "@/components/shared/QtyStepper"
 import type { DateRange } from "@/components/shared/DateRangePicker"
+import type { CartLine } from "@/models/inventory"
 
 type Step = "cart" | "contact" | "confirm"
 
@@ -34,6 +35,40 @@ export default function QuotePage() {
 
   const { lines, updateLine, removeLine, clearCart } = useCart()
   const [step, setStep] = useState<Step>("cart")
+  // availMap[`${kind}-${refId}`] = max qty the user is allowed to request
+  const [availMap, setAvailMap] = useState<Record<string, number>>({})
+  // Stable key for the effect — only re-fetch when item set or dates change, not on qty edits
+  const lineKey = lines.map(l => `${l.kind}-${l.refId}`).join(",")
+  useEffect(() => {
+    if (!start || !end || lines.length === 0) { setAvailMap({}); return }
+    const itemIds = lines.filter(l => l.kind === "item").map(l => l.refId)
+    const configIds = lines.filter(l => l.kind === "tentConfig").map(l => l.refId)
+    const qs = new URLSearchParams({ from: fmtLocalDate(start), to: fmtLocalDate(end) })
+    if (itemIds.length) qs.set("itemIds", itemIds.join(","))
+    if (configIds.length) qs.set("configIds", configIds.join(","))
+    fetch(`/api/inventory/availability?${qs}`)
+      .then(r => r.json())
+      .then(json => {
+        if (!json.data) return
+        const map: Record<string, number> = {}
+        for (const [id, a] of Object.entries(json.data.items as Record<string, { available: number }>)) {
+          map[`item-${id}`] = a.available
+        }
+        for (const [id, a] of Object.entries(json.data.configs as Record<string, { available: number }>)) {
+          map[`tentConfig-${id}`] = a.available
+        }
+        setAvailMap(map)
+      })
+      .catch(() => {}) // silent — gracefully degrades to no-cap
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [start?.toISOString(), end?.toISOString(), lineKey])
+
+  const lineMax = (line: CartLine) => {
+    const avail = availMap[`${line.kind}-${line.refId}`]
+    // Use whichever is greater: what's available or what's already in cart
+    // (never hard-block a qty they already set; just stop them going higher)
+    return avail !== undefined ? Math.max(line.qty, avail) : 99
+  }
   const [orderId, setOrderId] = useState<number | null>(null)
   const [contact, setContact] = useState({
     firstName: "", lastName: "", email: "", phone: "", notes: "", venue: "",
@@ -155,7 +190,7 @@ export default function QuotePage() {
                         </div>
                         {/* Mobile-only controls row */}
                         <div className="flex items-center gap-2 mt-2.5 md:hidden">
-                          <QtyStepper compact value={line.qty} min={1} max={99}
+                          <QtyStepper compact value={line.qty} min={1} max={lineMax(line)}
                             onChange={(q) => updateLine(line.refId, line.kind, q)} />
                           <div className="ml-auto mono text-sm font-semibold whitespace-nowrap">
                             ${fmtCurrency(line.unitPrice * line.qty * days)}

@@ -119,3 +119,14 @@ button, a {
 /* z-40  — modals, dialogs                                         */
 /* z-50  — nav overlays                                            */
 /* z-[100] — toasts, notifications                                 */
+
+/* Remove native browser spin buttons from number inputs with .no-spin */
+input[type="number"].no-spin::-webkit-inner-spin-button,
+input[type="number"].no-spin::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+input[type="number"].no-spin {
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
