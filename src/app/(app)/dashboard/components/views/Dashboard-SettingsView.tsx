@@ -7,16 +7,20 @@ import {
 } from "@/components/ui/select"
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
+import { Textarea } from "@/components/ui/textarea"
 import { Switch } from "@/components/ui/switch"
 import { useSession } from "next-auth/react"
 // import DashboardSettingsViewSetupFeePresets from "./Dashboard-SettingsView-SetupFeePresets"
 // import DashboardSettingsViewOrderStates from "./Dashboard-SettingsView-OrderStates"
 
 type Access = "none" | "view" | "edit"
+type InventoryModeValue = "on" | "off" | "fully_in_stock"
 
 type NotifSettings = {
   smsEnabled: boolean
   smsPhone: string | null
+  emailEnabled: boolean
+  emailRecipients: string | null
   onNewOrder: boolean
   onStateChange: boolean
   onPayment: boolean
@@ -39,16 +43,22 @@ export default function DashboardSettingsView() {
   })
   const [isPending, startTransition] = useTransition()
 
+  const [inventoryMode, setInventoryMode] = useState<InventoryModeValue>("on")
+  const [inventoryModePending, startInventoryModeTransition] = useTransition()
+
   // Notification settings state
   const [notif, setNotif] = useState<NotifSettings>({
     smsEnabled: false,
     smsPhone: null,
+    emailEnabled: false,
+    emailRecipients: null,
     onNewOrder: true,
     onStateChange: true,
     onPayment: true,
   })
   const [notifPending, startNotifTransition] = useTransition()
   const [phoneInput, setPhoneInput] = useState("")
+  const [emailRecipientsInput, setEmailRecipientsInput] = useState("")
 
   useEffect(() => {
     fetch("/api/settings")
@@ -62,6 +72,8 @@ export default function DashboardSettingsView() {
           }
           return next
         })
+        const invRow = data.find((item: any) => item.setting === "inventoryMode")
+        if (invRow) setInventoryMode(invRow.value as InventoryModeValue)
       })
   }, [])
 
@@ -74,11 +86,14 @@ export default function DashboardSettingsView() {
         setNotif({
           smsEnabled: data.smsEnabled,
           smsPhone: data.smsPhone,
+          emailEnabled: data.emailEnabled,
+          emailRecipients: data.emailRecipients,
           onNewOrder: data.onNewOrder,
           onStateChange: data.onStateChange,
           onPayment: data.onPayment,
         })
         setPhoneInput(data.smsPhone ?? "")
+        setEmailRecipientsInput(data.emailRecipients ?? "")
       })
   }, [isAdmin])
 
@@ -95,6 +110,23 @@ export default function DashboardSettingsView() {
       if (json.error) {
         toast.error(json.error)
         setPermissions((p) => ({ ...p, [key]: prev as Access }))
+      }
+    })
+  }
+
+  function handleInventoryModeChange(value: InventoryModeValue) {
+    const prev = inventoryMode
+    setInventoryMode(value)
+    startInventoryModeTransition(async () => {
+      const res = await fetch("/api/settings", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ setting: "inventoryMode", value }),
+      })
+      const json = await res.json()
+      if (json.error) {
+        toast.error(json.error)
+        setInventoryMode(prev)
       }
     })
   }
@@ -122,11 +154,51 @@ export default function DashboardSettingsView() {
     patchNotif({ smsPhone: trimmed || null })
   }
 
+  function handleEmailRecipientsBlur() {
+    const trimmed = emailRecipientsInput.trim()
+    if (trimmed === (notif.emailRecipients ?? "")) return // no change
+    patchNotif({ emailRecipients: trimmed || null })
+  }
+
   return (
     <div className="p-6 max-w-4xl space-y-10">
       <h2 className="text-xl font-semibold text-(--color-foreground)">Settings</h2>
       {/* <DashboardSettingsViewSetupFeePresets /> */}
       {/* <DashboardSettingsViewOrderStates /> */}
+
+      {/* Inventory Mode */}
+      <div className="space-y-4">
+        <div>
+          <h3 className="text-base font-semibold text-(--color-foreground)">Inventory</h3>
+          <p className="text-sm text-(--color-muted) mt-0.5">Control how the public shop handles availability.</p>
+        </div>
+        <div className="rounded-lg border border-(--color-border) overflow-hidden">
+          <div className="flex items-center justify-between px-4 py-3">
+            <div>
+              <p className="text-sm font-medium text-(--color-foreground)">Inventory Mode</p>
+              <p className="text-xs text-(--color-muted) mt-0.5">
+                {inventoryMode === "on" && "Showing real availability from your database"}
+                {inventoryMode === "off" && "Booking UI replaced with a Contact Us prompt"}
+                {inventoryMode === "fully_in_stock" && "Everything treated as fully available"}
+              </p>
+            </div>
+            <Select
+              value={inventoryMode}
+              onValueChange={(v) => handleInventoryModeChange(v as InventoryModeValue)}
+              disabled={inventoryModePending}
+            >
+              <SelectTrigger className="w-44 text-sm">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent className="bg-(--color-background)">
+                <SelectItem value="fully_in_stock">Fully In Stock</SelectItem>
+                <SelectItem value="on">Live Inventory</SelectItem>
+                <SelectItem value="off">Contact Only</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+      </div>
 
       <div className="space-y-4">
         <div>
@@ -180,7 +252,7 @@ export default function DashboardSettingsView() {
           <div>
             <h3 className="text-base font-semibold text-(--color-foreground)">Notifications</h3>
             <p className="text-sm text-(--color-muted) mt-0.5">
-              SMS alerts sent to a single phone number when key events occur.
+              Configure SMS and email alerts sent when key events occur.
             </p>
           </div>
 
@@ -216,6 +288,37 @@ export default function DashboardSettingsView() {
             </div>
           </div>
 
+          {/* Email toggle + recipients */}
+          <div className="rounded-lg border border-(--color-border) overflow-hidden">
+            <div className="flex items-center justify-between px-4 py-3 border-b border-(--color-border)">
+              <div>
+                <p className="text-sm font-medium text-(--color-foreground)">Email Notifications</p>
+                <p className="text-xs text-(--color-muted)">Send an email when events occur</p>
+              </div>
+              <Switch
+                checked={notif.emailEnabled}
+                onCheckedChange={(checked) => patchNotif({ emailEnabled: checked })}
+                disabled={notifPending}
+              />
+            </div>
+            <div className="px-4 py-3">
+              <Label htmlFor="notif-email-recipients" className="text-xs uppercase tracking-wide text-(--color-muted)">
+                Send email to these addresses
+              </Label>
+              <Textarea
+                id="notif-email-recipients"
+                placeholder="you@example.com, partner@example.com"
+                value={emailRecipientsInput}
+                onChange={(e) => setEmailRecipientsInput(e.target.value)}
+                onBlur={handleEmailRecipientsBlur}
+                disabled={notifPending}
+                className="mt-1.5 text-base max-w-xs resize-none"
+                rows={3}
+              />
+              <p className="text-xs text-(--color-muted) mt-1">Enter one email per line, or separate with commas</p>
+            </div>
+          </div>
+
           {/* Event toggles */}
           <div className="rounded-lg border border-(--color-border) overflow-hidden divide-y divide-(--color-border)">
             {[
@@ -231,13 +334,13 @@ export default function DashboardSettingsView() {
                 <Switch
                   checked={notif[key]}
                   onCheckedChange={(checked) => patchNotif({ [key]: checked })}
-                  disabled={notifPending || !notif.smsEnabled}
+                  disabled={notifPending || (!notif.smsEnabled && !notif.emailEnabled)}
                 />
               </div>
             ))}
           </div>
           <p className="text-xs text-(--color-muted)">
-            Event toggles are disabled when SMS notifications are off.
+            Event toggles are disabled when all notification channels are off.
           </p>
         </div>
       ) : null}

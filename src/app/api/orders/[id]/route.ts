@@ -4,6 +4,7 @@ import { authOptions } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { serializeOrder, stripAdminFields, computeOrderTotals, getEmployeeFieldPermissions } from "@/services/orderService"
 import { sendSms } from "@/services/twilioService"
+import { sendEmail, parseEmailRecipients } from "@/services/emailService"
 import { parseLocalDate } from "@/lib/availability"
 
 const ORDER_DETAIL_INCLUDE = {
@@ -234,6 +235,15 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
     if (ns?.smsEnabled && ns.onStateChange && ns.smsPhone) {
       sendSms(
         ns.smsPhone,
+        `Order #${orderId} moved to "${stateName}". Open dashboard to review.`,
+      ).catch(() => {})
+    }
+    // Email — fire-and-forget
+    const emailRecipients = parseEmailRecipients(ns?.emailRecipients)
+    if (ns?.emailEnabled && ns.onStateChange && emailRecipients.length > 0) {
+      sendEmail(
+        emailRecipients,
+        `Order #${orderId} State Changed`,
         `Order #${orderId} moved to "${stateName}". Open dashboard to review.`,
       ).catch(() => {})
     }

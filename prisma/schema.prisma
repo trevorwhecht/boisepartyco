@@ -198,14 +198,16 @@ model Notification {
 }
 
 model NotificationSettings {
-  id            Int      @id @default(1)
-  smsEnabled    Boolean  @default(false)
-  smsPhone      String?
-  onNewOrder    Boolean  @default(true)
-  onStateChange Boolean  @default(true)
-  onPayment     Boolean  @default(true)
-  updatedAt     DateTime @updatedAt
-  updatedBy     String?
+  id              Int      @id @default(1)
+  smsEnabled      Boolean  @default(false)
+  smsPhone        String?
+  emailEnabled    Boolean  @default(false)
+  emailRecipients String?
+  onNewOrder      Boolean  @default(true)
+  onStateChange   Boolean  @default(true)
+  onPayment       Boolean  @default(true)
+  updatedAt       DateTime @updatedAt
+  updatedBy       String?
 
   @@map("notification_settings")
 }

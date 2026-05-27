@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 import { sendSms } from "@/services/twilioService"
+import { sendEmail, parseEmailRecipients } from "@/services/emailService"
 import { fmtRangeShort } from "@/lib/availability"
 
 function parseLocalDateStr(s: string): Date {
@@ -61,6 +62,28 @@ export async function POST(req: NextRequest) {
 
       const smsResult = await sendSms(settings.smsPhone, lines.join("\n"))
       if (!smsResult.data) console.warn("[contact POST] SMS not sent:", smsResult.error)
+    }
+
+    // Email — fire-and-forget
+    const emailRecipients = parseEmailRecipients(settings?.emailRecipients)
+    if (settings?.emailEnabled && emailRecipients.length > 0) {
+      const eventDateLine = dateConfirmed
+        ? (() => {
+            const start = parseLocalDateStr(String(eventDateStart))
+            const end = parseLocalDateStr(String(eventDateEnd))
+            return `Event Date: ${fmtRangeShort(start, end)} — Confirmed`
+          })()
+        : `Event Date: Not confirmed`
+      const emailLines = [
+        "New Contact Form Submission",
+        `Name: ${name}`,
+        `Email: ${email}`,
+        `Phone: ${phone}`,
+        eventDateLine,
+        `Event Address: ${eventAddress}`,
+      ]
+      if (message) emailLines.push(`Message: ${message}`)
+      sendEmail(emailRecipients, "New Contact Form Submission", emailLines.join("\n")).catch(() => {})
     }
 
     return NextResponse.json({ data: true, error: null })

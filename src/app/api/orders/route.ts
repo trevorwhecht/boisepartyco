@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma"
 import { serializeOrder, stripAdminFields, computeOrderTotals } from "@/services/orderService"
 import { validateOrderLines } from "@/services/inventoryService"
 import { sendSms } from "@/services/twilioService"
+import { sendEmail, parseEmailRecipients } from "@/services/emailService"
 import { parseLocalDate } from "@/lib/availability"
 
 export async function GET() {
@@ -165,10 +166,19 @@ async function handlePublicShopQuote(body: any): Promise<Response> {
 
   // SMS — fire-and-forget, never block the response
   const ns = await prisma.notificationSettings.findUnique({ where: { id: 1 } })
+  const customerName = `${customer.firstName} ${customer.lastName}`.trim()
   if (ns?.smsEnabled && ns.onNewOrder && ns.smsPhone) {
-    const customerName = `${customer.firstName} ${customer.lastName}`.trim()
     sendSms(
       ns.smsPhone,
+      `New quote request #${order.id} from ${customerName}. Open dashboard to review.`,
+    ).catch(() => {})
+  }
+  // Email — fire-and-forget
+  const emailRecipients = parseEmailRecipients(ns?.emailRecipients)
+  if (ns?.emailEnabled && ns.onNewOrder && emailRecipients.length > 0) {
+    sendEmail(
+      emailRecipients,
+      `New Quote Request #${order.id}`,
       `New quote request #${order.id} from ${customerName}. Open dashboard to review.`,
     ).catch(() => {})
   }

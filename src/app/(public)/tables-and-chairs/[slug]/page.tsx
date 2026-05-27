@@ -55,6 +55,8 @@ export default async function TablesItemPage({
 
   if (!item) notFound()
 
+  const stripPromise = mode === "on" ? getItemDailyAvailability(item.id, new Date(), 35) : Promise.resolve([])
+
   const [itemsWithAvail, avail, strip] = await Promise.all([
     Promise.all(
       items.map(async (i) => ({
@@ -75,7 +77,7 @@ export default async function TablesItemPage({
       : hasRange
       ? getItemAvailability(item.id, from!, to!)
       : Promise.resolve({ available: 0, booked: 0, stock: item.qty ?? 0, isLow: false, hasConflicts: false }),
-    getItemDailyAvailability(item.id, new Date(), 35),
+    stripPromise,
   ])
 
   return (

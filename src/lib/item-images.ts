@@ -17,7 +17,7 @@ export const ITEM_IMAGES: Record<string, string> = {
   "8ft-farm-table":         "/images/tables/banquet-6ft.webp",  // closest rustic rect
 
   // ── Chairs ───────────────────────────────────────────
-  "white-resin-folding":    "/images/chairs/folding-white.webp",
+  "white-resin-folding":    "/images/chairs/folding-white-padded.webp",
   "white-garden-folding":   "/images/chairs/folding-white.webp",
 
   // ── Tent accessories ─────────────────────────────────

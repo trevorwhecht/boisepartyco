@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { sendSms } from "@/services/twilioService"
+import { sendEmail, parseEmailRecipients } from "@/services/emailService"
 
 export async function POST(req: Request) {
   const session = await getServerSession(authOptions)
@@ -51,6 +52,15 @@ export async function POST(req: Request) {
   if (ns?.smsEnabled && ns.onPayment && ns.smsPhone) {
     sendSms(
       ns.smsPhone,
+      `Payment of ${amountFormatted} (${channel}) recorded on Order #${orderId}.`,
+    ).catch(() => {})
+  }
+  // Email — fire-and-forget
+  const emailRecipients = parseEmailRecipients(ns?.emailRecipients)
+  if (ns?.emailEnabled && ns.onPayment && emailRecipients.length > 0) {
+    sendEmail(
+      emailRecipients,
+      `Payment Recorded — Order #${orderId}`,
       `Payment of ${amountFormatted} (${channel}) recorded on Order #${orderId}.`,
     ).catch(() => {})
   }

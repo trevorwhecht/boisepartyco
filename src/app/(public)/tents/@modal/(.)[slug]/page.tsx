@@ -72,7 +72,7 @@ export default async function TentsItemModalPage({
     ? await getItemAvailability(item.id, from!, to!)
     : { available: 0, booked: 0, stock: item.qty ?? 0, isLow: false, hasConflicts: false }
 
-  const strip = await getItemDailyAvailability(item.id, new Date(), 35)
+  const strip = mode === "on" ? await getItemDailyAvailability(item.id, new Date(), 35) : []
 
   return (
     <ShopItemModal
