@@ -5,6 +5,7 @@ import { useSearchParams } from "next/navigation"
 import { ArrowRight, Calendar } from "lucide-react"
 import { useDatePicker } from "@/contexts/DatePickerContext"
 import { parseLocalDate, fmtRangeShort } from "@/lib/availability"
+import { useInventoryMode } from "@/contexts/InventoryModeContext"
 
 function dateLabel(from: string | null, to: string | null): string {
   const start = from ? parseLocalDate(from) : null
@@ -20,6 +21,8 @@ export default function HomeHero() {
   const to = params.get("to")
   const { openPicker } = useDatePicker()
   const label = dateLabel(from, to)
+  const inventoryMode = useInventoryMode()
+  const showBooking = inventoryMode !== "off"
 
   return (
     <section className="relative overflow-hidden" style={{ minHeight: 480, height: "clamp(480px, 60vw, 640px)" }}>
@@ -52,7 +55,7 @@ export default function HomeHero() {
         <p className="mt-4 md:mt-5 text-base md:text-lg text-white/90 max-w-lg leading-relaxed">
           Tents, tables, dance floors, and the small details. Check live availability for your weekend and reserve in minutes.
         </p>
-        <div
+        {showBooking ? <div
           className="mt-8 md:mt-10 flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-0 sm:p-2.5 sm:bg-white/95 sm:rounded-full"
           style={{ boxShadow: "0 14px 40px -10px rgba(0,0,0,0.45)" }}
         >
@@ -107,7 +110,7 @@ export default function HomeHero() {
               See what&apos;s available <ArrowRight size={14} />
             </a>
           </div>
-        </div>
+        </div> : null}
       </div>
     </section>
   )

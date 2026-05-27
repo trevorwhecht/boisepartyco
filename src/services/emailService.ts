@@ -25,6 +25,7 @@ export async function sendEmail(
   const accountSid = process.env.TWILIO_ACCOUNT_SID
   const authToken = process.env.TWILIO_AUTH_TOKEN
   const from = process.env.TWILIO_FROM_EMAIL
+  const fromName = process.env.TWILIO_FROM_NAME ?? "Boise Party Co"
 
   if (!accountSid || !authToken || !from) {
     return { data: false, error: "Email env vars not configured" }
@@ -42,11 +43,12 @@ export async function sendEmail(
         Authorization: `Basic ${Buffer.from(`${accountSid}:${authToken}`).toString("base64")}`,
       },
       body: JSON.stringify({
-        from: { address: from },
+        from: { address: from, name: fromName },
         to: recipients.map((address) => ({ address })),
         content: {
           subject,
           text: body,
+          html: `<pre style="font-family:sans-serif;white-space:pre-wrap">${body}</pre>`,
         },
       }),
     })

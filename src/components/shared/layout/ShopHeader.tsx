@@ -14,6 +14,7 @@ import NavbarNotificationBell from "@/components/shared/layout/Navbar-Notificati
 import { ShopHeaderConflictDialog, type ConflictLine } from "@/components/shared/layout/ShopHeader-ConflictDialog"
 import type { DateRange } from "@/components/shared/DateRangePicker"
 import { parseLocalDate, fmtLocalDate } from "@/lib/availability"
+import { useInventoryMode } from "@/contexts/InventoryModeContext"
 
 const NAV = [
   { href: "/", label: "Home", match: ["/"], navClass: "hidden xl:flex" },
@@ -35,7 +36,8 @@ export default function ShopHeader() {
   const [pendingDates, setPendingDates] = useState<{ s: Date; e: Date } | null>(null)
   const [conflicts, setConflicts] = useState<ConflictLine[]>([])
 
-  const showDateAndQuote = !pathname.startsWith("/dashboard")
+  const inventoryMode = useInventoryMode()
+  const showDateAndQuote = !pathname.startsWith("/dashboard") && inventoryMode !== "off"
 
   const fromStr = searchParams.get("from")
   const toStr = searchParams.get("to")
