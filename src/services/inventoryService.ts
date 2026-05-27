@@ -13,6 +13,7 @@ import {
   buildConfigAvailability,
   maxConcurrentBooked,
   calcBuildableFromParts,
+  fmtLocalDate,
   type AvailabilityShape,
   type BookingDemand,
   type ConfigAvailabilityShape,
@@ -398,6 +399,112 @@ export async function getItemDailyAvailability(
     })
   }
   return result
+}
+
+/**
+ * Returns per-day availability for a tent configuration over `days` days
+ * starting at `startDate`. For each day, computes the minimum buildable
+ * count across all BOM parts. Uses one DB query per BOM part for the
+ * whole range, then distributes per-day in memory.
+ *
+ * Returns all-zeros if the BOM is incomplete or the config doesn't exist.
+ */
+export async function getTentConfigDailyAvailability(
+  configId: number,
+  startDate: Date,
+  days: number = 60,
+): Promise<{ date: string; available: number; total: number }[]> {
+  const rangeEnd = new Date(startDate)
+  rangeEnd.setDate(rangeEnd.getDate() + days)
+
+  const config = await prisma.tentConfiguration.findUnique({
+    where: { id: configId },
+    include: {
+      bomParts: {
+        include: {
+          tentPart: { select: { id: true, qty: true, isSerialized: true } },
+        },
+      },
+    },
+  })
+
+  const zeros = Array.from({ length: days }, (_, i) => {
+    const d = new Date(startDate)
+    d.setDate(d.getDate() + i)
+    d.setHours(0, 0, 0, 0)
+    return { date: fmtLocalDate(d), available: 0, total: 0 }
+  })
+
+  if (!config || !config.bomComplete || config.bomParts.length === 0) return zeros
+
+  // Per-part: load stock + all overlapping order lines
+  const partData = await Promise.all(
+    config.bomParts.map(async (row) => {
+      const stock =
+        row.tentPart.isSerialized && row.tentPart.qty === null
+          ? await prisma.serializedUnit.count({
+              where: { tentPartId: row.tentPart.id, status: "available" },
+            })
+          : (row.tentPart.qty ?? 0)
+
+      const lines = await prisma.orderLineItem.findMany({
+        where: {
+          tentConfigId: { not: null },
+          order: {
+            startDate: { lt: rangeEnd },
+            dueDateEnd: { gt: startDate },
+            state: { consumesInventory: true },
+          },
+          tentConfig: { bomParts: { some: { tentPartId: row.tentPart.id } } },
+        },
+        select: {
+          qty: true,
+          order: { select: { startDate: true, dueDateEnd: true } },
+          tentConfig: {
+            select: {
+              bomParts: {
+                where: { tentPartId: row.tentPart.id },
+                select: { qtyRequired: true },
+              },
+            },
+          },
+        },
+      })
+
+      return { qtyRequired: row.qtyRequired, stock, lines }
+    }),
+  )
+
+  return zeros.map(({ date }) => {
+    const day = new Date(date)
+    day.setHours(0, 0, 0, 0)
+    const dayEnd = new Date(day)
+    dayEnd.setHours(23, 59, 59, 999)
+
+    let minAvail = Infinity
+    let minTotal = Infinity
+
+    for (const part of partData) {
+      const bookedQty = part.lines
+        .filter(
+          (l) =>
+            l.order.startDate !== null &&
+            l.order.dueDateEnd !== null &&
+            l.order.startDate <= dayEnd &&
+            l.order.dueDateEnd >= day,
+        )
+        .reduce((sum, l) => sum + l.qty * (l.tentConfig?.bomParts[0]?.qtyRequired ?? 0), 0)
+
+      minAvail = Math.min(minAvail, Math.floor(Math.max(0, part.stock - bookedQty) / part.qtyRequired))
+      minTotal = Math.min(minTotal, Math.floor(part.stock / part.qtyRequired))
+    }
+
+    return {
+      date,
+      available: minAvail === Infinity ? 0 : minAvail,
+      total: minTotal === Infinity ? 0 : minTotal,
+    }
+  })
 }
 
 // ---------------------------------------------------------------------------

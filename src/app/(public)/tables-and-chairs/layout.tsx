@@ -1,14 +1,3 @@
-export default function TablesAndChairsLayout({
-  children,
-  modal,
-}: {
-  children: React.ReactNode
-  modal: React.ReactNode
-}) {
-  return (
-    <>
-      {children}
-      {modal}
-    </>
-  )
+export default function TablesAndChairsLayout({ children }: { children: React.ReactNode }) {
+  return <>{children}</>
 }

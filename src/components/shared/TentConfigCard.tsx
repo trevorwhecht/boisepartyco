@@ -1,8 +1,12 @@
+"use client"
 import Image from "next/image"
-import Link from "next/link"
-import { AlertTriangle } from "lucide-react"
+import { AlertTriangle, Plus } from "lucide-react"
 import AvailabilityBadge from "@/components/shared/AvailabilityBadge"
+import AvailabilityCalendarPopover from "@/components/shared/AvailabilityCalendarPopover"
+import QtyStepper from "@/components/shared/QtyStepper"
 import { TENT_IMAGES } from "@/lib/tent-images"
+import { useCart } from "@/contexts/CartContext"
+import { useInventoryMode } from "@/contexts/InventoryModeContext"
 import type { TentConfigurationSummary, ConfigAvailabilityResult } from "@/models/inventory"
 
 type Props = {
@@ -12,14 +16,16 @@ type Props = {
 }
 
 export default function TentConfigCard({ config, avail, hasRange }: Props) {
+  const mode = useInventoryMode()
+  const { lines, addToCart, updateLine } = useCart()
   const imgSrc = TENT_IMAGES[config.slug] ?? null
+  const cartLine = lines.find((l) => l.refId === config.id && l.kind === "tentConfig") ?? null
+  const disabled = hasRange && avail.available <= 0
+  const maxQty = hasRange ? Math.max(1, avail.available + (cartLine?.qty ?? 0)) : 99
 
   return (
-    <Link
-      href={`/tents/${config.slug}`}
-      scroll={false}
-      className="block bg-white border border-(--shop-line) rounded-xl overflow-hidden hover:-translate-y-1 transition-transform duration-150"
-    >
+    <div className="bg-white border border-(--shop-line) rounded-xl overflow-hidden flex flex-col">
+      {/* Image — no longer a link */}
       <div className="aspect-4/3 relative bg-(--shop-paper)">
         {imgSrc ? (
           <Image
@@ -35,9 +41,12 @@ export default function TentConfigCard({ config, avail, hasRange }: Props) {
           </div>
         )}
       </div>
-      <div className="p-4 md:p-5">
+
+      <div className="p-4 md:p-5 flex-1 flex flex-col">
         <div className="flex justify-between items-baseline gap-2 mb-1">
-          <h3 className="serif text-xl md:text-2xl font-medium text-(--shop-ink) leading-tight">{config.name}</h3>
+          <h3 className="serif text-xl md:text-2xl font-medium text-(--shop-ink) leading-tight">
+            {config.name}
+          </h3>
           <span className="mono text-sm whitespace-nowrap">
             {Number(config.flatPrice) > 0 ? (
               <>
@@ -49,6 +58,7 @@ export default function TentConfigCard({ config, avail, hasRange }: Props) {
             )}
           </span>
         </div>
+
         <div className="flex gap-2 text-xs text-(--shop-ink-soft) mb-3 flex-wrap">
           {config.widthFt ? <span>{config.widthFt}×{config.lengthFt} ft</span> : null}
           {config.capacity ? (
@@ -58,18 +68,53 @@ export default function TentConfigCard({ config, avail, hasRange }: Props) {
             </>
           ) : null}
         </div>
+
         {config.blurb ? (
-          <p className="text-sm text-(--shop-ink-soft) leading-relaxed mb-4 hidden sm:block">{config.blurb}</p>
+          <p className="text-sm text-(--shop-ink-soft) leading-relaxed mb-4 hidden sm:block flex-1">{config.blurb}</p>
+        ) : <div className="flex-1" />}
+
+        {!avail.bomComplete ? (
+          <div className="mb-3 inline-flex items-center gap-1 text-xs text-(--shop-warn)">
+            <AlertTriangle size={12} /> Contact for exact pricing
+          </div>
         ) : null}
-        <div className="flex items-center justify-between flex-wrap gap-2">
-          <AvailabilityBadge stock={avail.stock} available={avail.available} hasRange={hasRange} />
-          {!avail.bomComplete ? (
-            <span className="inline-flex items-center gap-1 text-xs text-(--shop-warn)">
-              <AlertTriangle size={12} /> Contact for pricing
-            </span>
-          ) : null}
-        </div>
+
+        {mode === "off" ? (
+          <div className="mt-2">
+            <a href="/contact" className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full text-xs font-semibold bg-(--shop-blue) text-white">
+              Contact Us
+            </a>
+          </div>
+        ) : (
+          <div className="mt-2">
+            {/* Availability row */}
+            <div className="flex items-center gap-2 mb-2">
+              <AvailabilityBadge stock={avail.stock} available={avail.available} hasRange={hasRange} />
+              <AvailabilityCalendarPopover configId={config.id} name={config.name} />
+            </div>
+            {/* Add / stepper row */}
+            <div className="flex justify-end">
+              {cartLine ? (
+                <QtyStepper
+                  compact
+                  value={cartLine.qty}
+                  min={1}
+                  max={maxQty}
+                  onChange={(q) => updateLine(config.id, "tentConfig", q)}
+                />
+              ) : (
+                <button
+                  disabled={disabled}
+                  onClick={() => addToCart(config.id, "tentConfig", 1, config.name, Number(config.flatPrice))}
+                  className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full text-xs font-semibold disabled:bg-(--shop-paper) disabled:text-(--shop-ink-soft) bg-(--shop-blue) text-white cursor-pointer disabled:cursor-not-allowed"
+                >
+                  <Plus size={12} /> Add
+                </button>
+              )}
+            </div>
+          </div>
+        )}
       </div>
-    </Link>
+    </div>
   )
 }
