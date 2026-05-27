@@ -1,11 +1,10 @@
 "use client"
 import Image from "next/image"
-import Link from "next/link"
 import { Plus } from "lucide-react"
 import AvailabilityBadge from "@/components/shared/AvailabilityBadge"
+import AvailabilityCalendarPopover from "@/components/shared/AvailabilityCalendarPopover"
 import QtyStepper from "@/components/shared/QtyStepper"
 import { ITEM_IMAGES } from "@/lib/item-images"
-import { itemUrl } from "@/lib/item-url"
 import { useInventoryMode } from "@/contexts/InventoryModeContext"
 import type { ItemSummary, AvailabilityResult, CartLine } from "@/models/inventory"
 
@@ -27,8 +26,8 @@ export default function ItemCardList({ item, avail, hasRange, cartLine, onAdd, o
   return (
     <div className="bg-white border border-(--shop-line) rounded-xl p-3.5 flex gap-3.5 items-start md:grid md:gap-5 md:items-center md:p-4 md:grid-cols-[96px_1fr_auto_auto_auto]">
 
-      {/* Col 1: Image */}
-      <Link href={itemUrl(item.category.slug, item.slug)} className="shrink-0">
+      {/* Col 1: Image — no longer a link */}
+      <div className="shrink-0">
         <div className="w-18 md:w-auto aspect-4/3 relative rounded-lg md:rounded-xl overflow-hidden bg-(--shop-paper)">
           {imgSrc ? (
             <Image
@@ -44,14 +43,12 @@ export default function ItemCardList({ item, avail, hasRange, cartLine, onAdd, o
             </div>
           )}
         </div>
-      </Link>
+      </div>
 
       {/* Col 2: Name + subcategory + blurb + mobile controls */}
       <div className="flex-1 min-w-0">
-        <h3 className="serif text-[1.05rem] md:text-xl font-medium leading-tight">
-          <Link href={itemUrl(item.category.slug, item.slug)} className="text-(--shop-ink) hover:text-(--shop-blue)">
-            {item.name}
-          </Link>
+        <h3 className="serif text-[1.05rem] md:text-xl font-medium leading-tight text-(--shop-ink)">
+          {item.name}
         </h3>
         {item.subcategory ? (
           <div className="text-xs text-(--shop-ink-soft) mt-0.5">{item.subcategory}</div>
@@ -60,10 +57,13 @@ export default function ItemCardList({ item, avail, hasRange, cartLine, onAdd, o
           <p className="text-sm text-(--shop-ink-soft) mt-1.5 leading-snug max-w-lg hidden md:block">{item.blurb}</p>
         ) : null}
 
-        {/* Mobile-only: availability + price + add button */}
-        <div className="flex items-center gap-2 mt-2.5 md:hidden">
+        {/* Mobile-only: availability + calendar + price + add button */}
+        <div className="flex items-center gap-2 mt-2.5 md:hidden flex-wrap">
           {mode === "off" ? null : (
-            <AvailabilityBadge available={avail.available} stock={avail.stock} hasRange={hasRange} />
+            <>
+              <AvailabilityBadge available={avail.available} stock={avail.stock} hasRange={hasRange} />
+              <AvailabilityCalendarPopover itemId={item.id} name={item.name} />
+            </>
           )}
           <div className="ml-auto mono text-sm whitespace-nowrap">
             {Number(item.flatPrice) > 0
@@ -71,9 +71,9 @@ export default function ItemCardList({ item, avail, hasRange, cartLine, onAdd, o
               : <strong className="text-(--shop-blue)">Call</strong>}
           </div>
           {mode === "off" ? (
-            <Link href="/contact" className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold shrink-0 bg-(--shop-blue) text-white">
+            <a href="/contact" className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold shrink-0 bg-(--shop-blue) text-white">
               Contact Us
-            </Link>
+            </a>
           ) : cartLine ? (
             <QtyStepper compact value={cartLine.qty} min={1} max={maxQty} onChange={(q) => onUpdate(item.id, q)} />
           ) : (
@@ -88,10 +88,11 @@ export default function ItemCardList({ item, avail, hasRange, cartLine, onAdd, o
         </div>
       </div>
 
-      {/* Col 3: Availability (desktop only) — hidden in "off" mode */}
+      {/* Col 3: Availability + calendar button (desktop only) */}
       {mode !== "off" ? (
-        <div className="hidden md:flex items-center">
+        <div className="hidden md:flex items-center gap-1.5">
           <AvailabilityBadge available={avail.available} stock={avail.stock} hasRange={hasRange} />
+          <AvailabilityCalendarPopover itemId={item.id} name={item.name} />
         </div>
       ) : null}
 
@@ -105,9 +106,9 @@ export default function ItemCardList({ item, avail, hasRange, cartLine, onAdd, o
       {/* Col 5: Add button or Contact Us (desktop only) */}
       <div className="hidden md:block">
         {mode === "off" ? (
-          <Link href="/contact" className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-full text-sm font-semibold bg-(--shop-blue) text-white">
+          <a href="/contact" className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-full text-sm font-semibold bg-(--shop-blue) text-white">
             Contact Us
-          </Link>
+          </a>
         ) : cartLine ? (
           <QtyStepper compact value={cartLine.qty} min={1} max={maxQty} onChange={(q) => onUpdate(item.id, q)} />
         ) : (
