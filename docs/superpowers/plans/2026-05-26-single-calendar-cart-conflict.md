@@ -1,3 +1,355 @@
+# Single Calendar & Cart Conflict Implementation Plan
+
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+
+**Goal:** Fix two UX bugs — (1) the hero no longer renders its own duplicate calendar, instead triggering the nav's calendar via a shared context; (2) changing dates with cart items triggers an availability check and shows a conflict dialog if any items exceed what's available for the new dates.
+
+**Architecture:** A new `DatePickerContext` owns `isOpen`/`openPicker()`/`closePicker()` for the single nav calendar. The nav's `DateRangeField` gains optional controlled-mode props (`externalOpen`, `onExternalChange`) and defers to the context when they're provided. The hero's `DateRangeField` is replaced with a plain button that calls `openPicker()`. `ShopHeader.handleDateChange` becomes async: on a full range with cart items it fetches `/api/inventory/availability`, and if conflicts exist it holds the pending dates and shows a new `ShopHeaderConflictDialog` before applying.
+
+**Tech Stack:** Next.js App Router, React 19, Tailwind 4, shadcn/ui, TypeScript
+
+---
+
+## File Map
+
+| File | Action | Responsibility |
+|---|---|---|
+| `src/contexts/DatePickerContext.tsx` | **Create** | Shared open/close state for the single nav calendar |
+| `src/app/(public)/layout.tsx` | **Modify** | Mount `DatePickerProvider` |
+| `src/components/shared/DateRangeField.tsx` | **Modify** | Add optional controlled mode (`externalOpen`, `onExternalChange`) |
+| `src/components/shared/layout/ShopHeader-ConflictDialog.tsx` | **Create** | AlertDialog for cart-conflict confirmation |
+| `src/components/shared/layout/ShopHeader.tsx` | **Modify** | Wire context; async conflict check on date change |
+| `src/app/(public)/Home-Hero.tsx` | **Modify** | Replace `DateRangeField` instances with a context button |
+
+> **No tests required.** All changes are React UI state management and event wiring. No pure business logic to unit-test.
+
+---
+
+### Task 1: DatePickerContext
+
+**Files:**
+- Create: `src/contexts/DatePickerContext.tsx`
+
+- [ ] Create `src/contexts/DatePickerContext.tsx` with this exact content:
+
+```tsx
+// src/contexts/DatePickerContext.tsx
+"use client"
+
+import { createContext, useContext, useState, useCallback } from "react"
+
+type DatePickerContextValue = {
+  isOpen: boolean
+  openPicker: () => void
+  closePicker: () => void
+}
+
+const DatePickerContext = createContext<DatePickerContextValue | null>(null)
+
+export function DatePickerProvider({ children }: { children: React.ReactNode }) {
+  const [isOpen, setIsOpen] = useState(false)
+
+  const openPicker = useCallback(() => setIsOpen(true), [])
+  const closePicker = useCallback(() => setIsOpen(false), [])
+
+  return (
+    <DatePickerContext.Provider value={{ isOpen, openPicker, closePicker }}>
+      {children}
+    </DatePickerContext.Provider>
+  )
+}
+
+export function useDatePicker() {
+  const ctx = useContext(DatePickerContext)
+  if (!ctx) throw new Error("useDatePicker must be used inside DatePickerProvider")
+  return ctx
+}
+```
+
+- [ ] Commit:
+```bash
+git add src/contexts/DatePickerContext.tsx
+git commit -m "feat: add DatePickerContext for unified calendar control"
+```
+
+---
+
+### Task 2: Public layout — mount DatePickerProvider
+
+**Files:**
+- Modify: `src/app/(public)/layout.tsx`
+
+Current content:
+```tsx
+import { Suspense } from "react"
+import ShopHeader from "@/components/shared/layout/ShopHeader"
+import ShopFooter from "@/components/shared/layout/ShopFooter"
+import { CartProvider } from "@/contexts/CartContext"
+
+export default function PublicLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <CartProvider>
+      <Suspense fallback={<div style={{ height: 137, background: "#fff", borderBottom: "1px solid #e4e7ec" }} />}>
+        <ShopHeader />
+      </Suspense>
+      {children}
+      <ShopFooter />
+    </CartProvider>
+  )
+}
+```
+
+- [ ] Replace the entire file with:
+
+```tsx
+// src/app/(public)/layout.tsx
+import { Suspense } from "react"
+import ShopHeader from "@/components/shared/layout/ShopHeader"
+import ShopFooter from "@/components/shared/layout/ShopFooter"
+import { CartProvider } from "@/contexts/CartContext"
+import { DatePickerProvider } from "@/contexts/DatePickerContext"
+
+// ShopHeader uses useSearchParams — must be in Suspense to avoid static-render errors
+export default function PublicLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <CartProvider>
+      <DatePickerProvider>
+        <Suspense fallback={<div style={{ height: 137, background: "#fff", borderBottom: "1px solid #e4e7ec" }} />}>
+          <ShopHeader />
+        </Suspense>
+        {children}
+        <ShopFooter />
+      </DatePickerProvider>
+    </CartProvider>
+  )
+}
+```
+
+- [ ] Commit:
+```bash
+git add src/app/(public)/layout.tsx
+git commit -m "feat: mount DatePickerProvider in public layout"
+```
+
+---
+
+### Task 3: DateRangeField — controlled mode
+
+**Files:**
+- Modify: `src/components/shared/DateRangeField.tsx`
+
+- [ ] Replace the entire file with the following. The only changes from the original are: (1) two new optional props `externalOpen`/`onExternalChange`, (2) `isControlled`/`showPicker` derived values, (3) `close()` helper, (4) `toggle()` updated to call `onExternalChange`, (5) a `useEffect` to capture `anchorRect` when opened externally, (6) the `useEffect` click-outside handler updated to call `close()` instead of `setOpen(false)`, (7) the picker renders on `showPicker` and receives `onClose={close}`:
+
+```tsx
+// src/components/shared/DateRangeField.tsx
+"use client"
+
+import { useEffect, useRef, useState } from "react"
+import { Calendar } from "lucide-react"
+import DateRangePicker, { type DateRange } from "./DateRangePicker"
+import { fmtRangeShort, daysBetween } from "@/lib/availability"
+
+type Props = {
+  start: Date | null
+  end: Date | null
+  onChange: (r: DateRange) => void
+  compact?: boolean
+  dark?: boolean
+  fullWidth?: boolean
+  // Controlled mode — when provided, the caller (DatePickerContext) owns open state
+  externalOpen?: boolean
+  onExternalChange?: (open: boolean) => void
+}
+
+export default function DateRangeField({
+  start, end, onChange,
+  compact, dark, fullWidth,
+  externalOpen, onExternalChange,
+}: Props) {
+  const [open, setOpen] = useState(false)
+  const ref = useRef<HTMLButtonElement>(null)
+  const [anchorRect, setAnchorRect] = useState<DOMRect | null>(null)
+
+  const isControlled = externalOpen !== undefined
+  const showPicker = isControlled ? externalOpen : open
+
+  // When opened externally, capture anchor rect from the button
+  useEffect(() => {
+    if (externalOpen && ref.current) {
+      setAnchorRect(ref.current.getBoundingClientRect())
+    }
+  }, [externalOpen])
+
+  const close = () => {
+    if (isControlled) onExternalChange?.(false)
+    else setOpen(false)
+  }
+
+  const toggle = () => {
+    if (ref.current) setAnchorRect(ref.current.getBoundingClientRect())
+    if (isControlled) {
+      onExternalChange?.(!externalOpen)
+    } else {
+      setOpen((o) => !o)
+    }
+  }
+
+  useEffect(() => {
+    if (!showPicker) return
+    const handler = (e: MouseEvent) => {
+      const target = e.target as Element
+      if (target.closest("[data-cal-pop]") || target.closest("[data-cal-trigger]")) return
+      close()
+    }
+    document.addEventListener("mousedown", handler)
+    return () => document.removeEventListener("mousedown", handler)
+  }, [showPicker, isControlled, externalOpen]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  const label = start && end
+    ? fmtRangeShort(start, end)
+    : start
+    ? `${fmtRangeShort(start, start).split(",")[0]} – pick end`
+    : "Pick event dates"
+
+  const style: React.CSSProperties = compact ? {
+    display: "flex", alignItems: "center", gap: 8,
+    padding: "8px 14px", borderRadius: 999,
+    background: dark ? "rgba(255,255,255,0.12)" : "#fff",
+    border: `1px solid ${dark ? "rgba(255,255,255,0.25)" : "#e4e7ec"}`,
+    color: dark ? "#fff" : "#1a2433",
+    fontSize: 13, cursor: "pointer", whiteSpace: "nowrap",
+    width: fullWidth ? "100%" : undefined,
+  } : {
+    display: "inline-flex", alignItems: "center", gap: 10,
+    padding: "14px 22px", borderRadius: 8,
+    background: "#fff", border: "1px solid #e4e7ec",
+    color: "#1a2433", fontSize: 14, cursor: "pointer", whiteSpace: "nowrap",
+  }
+
+  return (
+    <>
+      <button type="button" data-cal-trigger ref={ref} onClick={toggle} style={style}>
+        <Calendar size={compact ? 14 : 16} />
+        <span style={{ fontWeight: 500 }}>{label}</span>
+        {start && end && compact ? (
+          <span style={{ marginLeft: 4, fontSize: 11, opacity: 0.7 }}>
+            {daysBetween(start, end)}d
+          </span>
+        ) : null}
+      </button>
+      {showPicker ? (
+        <DateRangePicker
+          start={start}
+          end={end}
+          onChange={onChange}
+          onClose={close}
+          anchorRect={anchorRect}
+        />
+      ) : null}
+    </>
+  )
+}
+```
+
+- [ ] Commit:
+```bash
+git add src/components/shared/DateRangeField.tsx
+git commit -m "feat: add controlled mode to DateRangeField (externalOpen/onExternalChange)"
+```
+
+---
+
+### Task 4: ShopHeader-ConflictDialog
+
+**Files:**
+- Create: `src/components/shared/layout/ShopHeader-ConflictDialog.tsx`
+
+- [ ] Check that shadcn's `alert-dialog` component exists:
+```bash
+ls src/components/ui/alert-dialog.tsx
+```
+Expected: file exists. If missing, run: `npx shadcn@latest add alert-dialog`
+
+- [ ] Create `src/components/shared/layout/ShopHeader-ConflictDialog.tsx`:
+
+```tsx
+// src/components/shared/layout/ShopHeader-ConflictDialog.tsx
+"use client"
+
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
+import type { CartLine } from "@/models/inventory"
+
+export type ConflictLine = CartLine & { available: number }
+
+type Props = {
+  open: boolean
+  conflicts: ConflictLine[]
+  onCancel: () => void
+  onProceed: () => void
+}
+
+export function ShopHeaderConflictDialog({ open, conflicts, onCancel, onProceed }: Props) {
+  return (
+    <AlertDialog open={open} onOpenChange={(o) => { if (!o) onCancel() }}>
+      <AlertDialogContent className="bg-(--color-background)">
+        <AlertDialogHeader>
+          <AlertDialogTitle>Some items aren&apos;t available for these dates</AlertDialogTitle>
+          <AlertDialogDescription>
+            The following items in your quote can&apos;t be fulfilled for the new dates and will be removed:
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+
+        <ul style={{ fontSize: 13, display: "flex", flexDirection: "column", gap: 6, margin: "0 0 4px" }}>
+          {conflicts.map(line => (
+            <li
+              key={`${line.kind}-${line.refId}`}
+              style={{ display: "flex", justifyContent: "space-between", gap: 16 }}
+            >
+              <span style={{ fontWeight: 500 }}>{line.name}</span>
+              <span style={{ color: "var(--shop-ink-soft)", whiteSpace: "nowrap" }}>
+                {line.qty} in quote · {line.available} available
+              </span>
+            </li>
+          ))}
+        </ul>
+
+        <AlertDialogFooter className="pb-[max(1rem,env(safe-area-inset-bottom))]">
+          <AlertDialogCancel onClick={onCancel}>Keep current dates</AlertDialogCancel>
+          <AlertDialogAction autoFocus onClick={onProceed}>
+            Remove {conflicts.length} {conflicts.length === 1 ? "item" : "items"} &amp; continue
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+  )
+}
+```
+
+- [ ] Commit:
+```bash
+git add src/components/shared/layout/ShopHeader-ConflictDialog.tsx
+git commit -m "feat: add ShopHeaderConflictDialog for date-change cart conflicts"
+```
+
+---
+
+### Task 5: ShopHeader — wire context + async conflict check
+
+**Files:**
+- Modify: `src/components/shared/layout/ShopHeader.tsx`
+
+- [ ] Replace the entire file with the following. Changes from the original: (1) `useDatePicker` imported and destructured, (2) `lines` + `removeLine` added to `useCart()` destructure, (3) `pendingDates` + `conflicts` state added, (4) `applyDates` helper extracted, (5) `handleDateChange` is now `async` with conflict-check logic for full ranges with cart items, (6) `handleConflictProceed` + `handleConflictCancel` added, (7) both `DateRangeField` instances receive `externalOpen`/`onExternalChange`, (8) `ShopHeaderConflictDialog` rendered at the bottom of the header:
+
+```tsx
 // src/components/shared/layout/ShopHeader.tsx
 "use client"
 
@@ -502,3 +854,160 @@ function QuoteButton({ cartCount, onClick }: { cartCount: number; onClick: () =>
     </Link>
   )
 }
+```
+
+- [ ] Commit:
+```bash
+git add src/components/shared/layout/ShopHeader.tsx
+git commit -m "feat: wire DatePickerContext into ShopHeader, add async date-change conflict check"
+```
+
+---
+
+### Task 6: Home-Hero — replace DateRangeField with context button
+
+**Files:**
+- Modify: `src/app/(public)/Home-Hero.tsx`
+
+- [ ] Replace the entire file. Removes both `DateRangeField` instances and `handleChange`/`useRouter`. Adds `useDatePicker` and a `dateLabel` helper. The mobile and desktop buttons match the visual style of the removed `DateRangeField` buttons but call `openPicker()` instead of managing their own calendar:
+
+```tsx
+// src/app/(public)/Home-Hero.tsx
+"use client"
+import Image from "next/image"
+import { useSearchParams } from "next/navigation"
+import { ArrowRight, Calendar } from "lucide-react"
+import { useDatePicker } from "@/contexts/DatePickerContext"
+import { parseLocalDate, fmtRangeShort } from "@/lib/availability"
+
+function dateLabel(from: string | null, to: string | null): string {
+  const start = from ? parseLocalDate(from) : null
+  const end = to ? parseLocalDate(to) : null
+  if (start && end) return fmtRangeShort(start, end)
+  if (start) return `${fmtRangeShort(start, start).split(",")[0]} – pick end`
+  return "Pick event dates"
+}
+
+export default function HomeHero() {
+  const params = useSearchParams()
+  const from = params.get("from")
+  const to = params.get("to")
+  const { openPicker } = useDatePicker()
+  const label = dateLabel(from, to)
+
+  return (
+    <section className="relative overflow-hidden" style={{ minHeight: 480, height: "clamp(480px, 60vw, 640px)" }}>
+      <Image
+        src="/images/heroes/home-hero.webp"
+        alt="Boise Party Co. — event rentals in the Treasure Valley"
+        fill
+        priority
+        sizes="100vw"
+        className="object-cover object-center"
+      />
+      <div
+        className="absolute inset-0"
+        style={{
+          background:
+            "linear-gradient(180deg, rgba(10,18,38,0.20) 0%, rgba(10,18,38,0.58) 65%, rgba(10,18,38,0.78) 100%)",
+        }}
+      />
+
+      <div className="relative max-w-330 mx-auto px-4 md:px-8 pt-16 md:pt-32 text-white">
+        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-white/80 mb-4">
+          Boise · Meridian · Eagle · Nampa
+        </p>
+        <h1
+          className="serif font-medium leading-[1.05] tracking-tight max-w-220"
+          style={{ fontSize: "clamp(36px, 8vw, 76px)", textShadow: "0 2px 12px rgba(0,0,0,0.3)" }}
+        >
+          Rentals for <em className="italic">every occasion</em><br />in the Treasure Valley.
+        </h1>
+        <p className="mt-4 md:mt-5 text-base md:text-lg text-white/90 max-w-lg leading-relaxed">
+          Tents, tables, dance floors, and the small details. Check live availability for your weekend and reserve in minutes.
+        </p>
+        <div
+          className="mt-8 md:mt-10 flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-0 sm:p-2.5 sm:bg-white/95 sm:rounded-full"
+          style={{ boxShadow: "0 14px 40px -10px rgba(0,0,0,0.45)" }}
+        >
+          {/* Mobile: stacked buttons */}
+          <div className="sm:hidden flex flex-col gap-2.5 w-full max-w-xs">
+            <button
+              type="button"
+              onClick={openPicker}
+              style={{
+                display: "flex", alignItems: "center", gap: 8,
+                padding: "8px 14px", borderRadius: 999,
+                background: "rgba(255,255,255,0.12)",
+                border: "1px solid rgba(255,255,255,0.25)",
+                color: "#fff",
+                fontSize: 13, cursor: "pointer", whiteSpace: "nowrap", width: "100%",
+                touchAction: "manipulation",
+              }}
+            >
+              <Calendar size={14} />
+              <span style={{ fontWeight: 500 }}>{label}</span>
+            </button>
+            <a
+              href={`/tents${from ? `?from=${from}${to ? `&to=${to}` : ""}` : ""}`}
+              className="inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-full text-sm font-semibold text-white"
+              style={{ background: "var(--shop-blue)" }}
+            >
+              See what&apos;s available <ArrowRight size={14} />
+            </a>
+          </div>
+
+          {/* Desktop: pill with date inside */}
+          <div className="hidden sm:flex items-center gap-3.5">
+            <button
+              type="button"
+              onClick={openPicker}
+              style={{
+                display: "inline-flex", alignItems: "center", gap: 10,
+                padding: "14px 22px", borderRadius: 8,
+                background: "#fff", border: "1px solid #e4e7ec",
+                color: "#1a2433", fontSize: 14, cursor: "pointer", whiteSpace: "nowrap",
+                touchAction: "manipulation",
+              }}
+            >
+              <Calendar size={16} />
+              <span style={{ fontWeight: 500 }}>{label}</span>
+            </button>
+            <a
+              href={`/tents${from ? `?from=${from}${to ? `&to=${to}` : ""}` : ""}`}
+              className="inline-flex items-center gap-2 px-6 py-3.5 rounded-full text-sm font-semibold text-white"
+              style={{ background: "var(--shop-blue)" }}
+            >
+              See what&apos;s available <ArrowRight size={14} />
+            </a>
+          </div>
+        </div>
+      </div>
+    </section>
+  )
+}
+```
+
+- [ ] Commit:
+```bash
+git add src/app/(public)/Home-Hero.tsx
+git commit -m "feat: hero date button now opens nav calendar via DatePickerContext"
+```
+
+---
+
+### Task 7: Type check & smoke test
+
+- [ ] Run the TypeScript compiler:
+```bash
+npx tsc --noEmit
+```
+Expected: no errors. Fix any that appear before continuing.
+
+- [ ] Open `http://localhost:3000` in a browser and verify:
+  - Clicking "Pick event dates" in the hero opens the nav's calendar (no second calendar appears below the hero)
+  - Picking a date range in either the nav button or the hero-triggered calendar updates the URL and shows the selected dates in both the nav and hero buttons
+  - Adding items to cart, then changing dates to a range where some items are unavailable shows the conflict dialog listing the affected items with their cart qty and available count
+  - Clicking "Keep current dates" in the dialog closes it with no changes
+  - Clicking "Remove items & continue" removes the listed items from the cart and applies the new dates
+  - Changing dates when all cart items are still available applies silently with no dialog

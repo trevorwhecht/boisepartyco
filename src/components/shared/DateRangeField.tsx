@@ -13,28 +13,54 @@ type Props = {
   compact?: boolean
   dark?: boolean
   fullWidth?: boolean
+  // Controlled mode — when provided, the caller (DatePickerContext) owns open state
+  externalOpen?: boolean
+  onExternalChange?: (open: boolean) => void
 }
 
-export default function DateRangeField({ start, end, onChange, compact, dark, fullWidth }: Props) {
+export default function DateRangeField({
+  start, end, onChange,
+  compact, dark, fullWidth,
+  externalOpen, onExternalChange,
+}: Props) {
   const [open, setOpen] = useState(false)
   const ref = useRef<HTMLButtonElement>(null)
   const [anchorRect, setAnchorRect] = useState<DOMRect | null>(null)
 
+  const isControlled = externalOpen !== undefined
+  const showPicker = isControlled ? externalOpen : open
+
+  // When opened externally, capture anchor rect from the button
+  useEffect(() => {
+    if (externalOpen && ref.current) {
+      setAnchorRect(ref.current.getBoundingClientRect())
+    }
+  }, [externalOpen])
+
+  const close = () => {
+    if (isControlled) onExternalChange?.(false)
+    else setOpen(false)
+  }
+
   const toggle = () => {
     if (ref.current) setAnchorRect(ref.current.getBoundingClientRect())
-    setOpen((o) => !o)
+    if (isControlled) {
+      onExternalChange?.(!externalOpen)
+    } else {
+      setOpen((o) => !o)
+    }
   }
 
   useEffect(() => {
-    if (!open) return
+    if (!showPicker) return
     const handler = (e: MouseEvent) => {
       const target = e.target as Element
       if (target.closest("[data-cal-pop]") || target.closest("[data-cal-trigger]")) return
-      setOpen(false)
+      close()
     }
     document.addEventListener("mousedown", handler)
     return () => document.removeEventListener("mousedown", handler)
-  }, [open])
+  }, [showPicker, isControlled, externalOpen]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const label = start && end
     ? fmtRangeShort(start, end)
@@ -68,12 +94,12 @@ export default function DateRangeField({ start, end, onChange, compact, dark, fu
           </span>
         ) : null}
       </button>
-      {open ? (
+      {showPicker ? (
         <DateRangePicker
           start={start}
           end={end}
           onChange={onChange}
-          onClose={() => setOpen(false)}
+          onClose={close}
           anchorRect={anchorRect}
         />
       ) : null}
