@@ -37,8 +37,12 @@ export default function ShopFooter() {
           </div>
         </div>
       </div>
-      <div className="max-w-330 mx-auto mt-10 px-4 md:px-8 flex justify-between" style={{ paddingTop: "20px", borderTop: "1px solid rgba(255,255,255,0.15)", fontSize: 12.5, opacity: 0.65 }}>
+      <div className="max-w-330 mx-auto mt-10 px-4 md:px-8 flex flex-wrap justify-between gap-3" style={{ paddingTop: "20px", borderTop: "1px solid rgba(255,255,255,0.15)", fontSize: 12.5, opacity: 0.65 }}>
         <span>© {new Date().getFullYear()} Boise Party Rentals. All rights reserved.</span>
+        <div style={{ display: "flex", gap: 20 }}>
+          <Link href="/privacy-policy" style={{ color: "#fff", textDecoration: "none" }}>Privacy Policy</Link>
+          <Link href="/terms" style={{ color: "#fff", textDecoration: "none" }}>Terms & Conditions</Link>
+        </div>
       </div>
     </footer>
   )
