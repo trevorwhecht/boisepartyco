@@ -5,9 +5,10 @@ import { prisma } from "@/lib/prisma"
 
 export async function PATCH(
   _req: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     const session = await getServerSession(authOptions)
     if (!session) return NextResponse.json({ data: null, error: "Unauthorized" }, { status: 401 })
 
@@ -18,7 +19,7 @@ export async function PATCH(
     if (!user) return NextResponse.json({ data: null, error: "User not found" }, { status: 404 })
 
     const notification = await prisma.notification.updateMany({
-      where: { id: params.id, userId: user.id },
+      where: { id, userId: user.id },
       data: { isRead: true },
     })
 
