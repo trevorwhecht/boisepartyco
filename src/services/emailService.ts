@@ -42,10 +42,12 @@ export async function sendEmail(
         Authorization: `Basic ${Buffer.from(`${accountSid}:${authToken}`).toString("base64")}`,
       },
       body: JSON.stringify({
-        from,
-        to: recipients.map((email) => ({ email })),
-        subject,
-        text: body,
+        from: { address: from },
+        to: recipients.map((address) => ({ address })),
+        content: {
+          subject,
+          text: body,
+        },
       }),
     })
 

@@ -200,6 +200,126 @@ export default function DashboardSettingsView() {
         </div>
       </div>
 
+      {isAdmin ? (
+        <div className="space-y-4">
+          <div>
+            <h3 className="text-base font-semibold text-(--color-foreground)">Notifications</h3>
+            <p className="text-sm text-(--color-muted) mt-0.5">
+              Configure SMS and email alerts sent when key events occur.
+            </p>
+          </div>
+
+          {/* Channel config: SMS + Email side by side */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {/* SMS */}
+            <div className="rounded-lg border border-(--color-border) overflow-hidden">
+              <div className="flex items-center justify-between px-4 py-3 border-b border-(--color-border)">
+                <div>
+                  <p className="text-sm font-medium text-(--color-foreground)">Text (SMS)</p>
+                  <p className="text-xs text-(--color-muted)">Send a text when events fire</p>
+                </div>
+                <Switch
+                  checked={notif.smsEnabled}
+                  onCheckedChange={(checked) => patchNotif({ smsEnabled: checked })}
+                  disabled={notifPending}
+                />
+              </div>
+              <div className="px-4 py-3">
+                <Label htmlFor="notif-phone" className="text-xs uppercase tracking-wide text-(--color-muted)">
+                  Phone number
+                </Label>
+                <Input
+                  id="notif-phone"
+                  type="tel"
+                  inputMode="tel"
+                  placeholder="+12085551234"
+                  value={phoneInput}
+                  onChange={(e) => setPhoneInput(e.target.value)}
+                  onBlur={handlePhoneBlur}
+                  disabled={notifPending}
+                  className="mt-1.5 text-base"
+                />
+                <p className="text-xs text-(--color-muted) mt-1">E.164 format — e.g. +12085551234</p>
+              </div>
+            </div>
+
+            {/* Email */}
+            <div className="rounded-lg border border-(--color-border) overflow-hidden">
+              <div className="flex items-center justify-between px-4 py-3 border-b border-(--color-border)">
+                <div>
+                  <p className="text-sm font-medium text-(--color-foreground)">Email</p>
+                  <p className="text-xs text-(--color-muted)">Send an email when events fire</p>
+                </div>
+                <Switch
+                  checked={notif.emailEnabled}
+                  onCheckedChange={(checked) => patchNotif({ emailEnabled: checked })}
+                  disabled={notifPending}
+                />
+              </div>
+              <div className="px-4 py-3">
+                <Label htmlFor="notif-email-recipients" className="text-xs uppercase tracking-wide text-(--color-muted)">
+                  Recipients
+                </Label>
+                <Textarea
+                  id="notif-email-recipients"
+                  placeholder="you@example.com, partner@example.com"
+                  value={emailRecipientsInput}
+                  onChange={(e) => setEmailRecipientsInput(e.target.value)}
+                  onBlur={handleEmailRecipientsBlur}
+                  disabled={notifPending}
+                  className="mt-1.5 text-base resize-none"
+                  rows={3}
+                />
+                <p className="text-xs text-(--color-muted) mt-1">One per line or comma-separated</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Per-event toggles */}
+          <div className="rounded-lg border border-(--color-border) overflow-hidden">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-(--color-border) bg-(--color-surface)">
+                  <th className="text-left px-4 py-2.5 font-medium text-(--color-muted)">Event</th>
+                  <th className="text-left px-4 py-2.5 font-medium text-(--color-muted) hidden sm:table-cell">When it fires</th>
+                  <th className="text-center px-4 py-2.5 font-medium text-(--color-muted) w-20">Text</th>
+                  <th className="text-center px-4 py-2.5 font-medium text-(--color-muted) w-20">Email</th>
+                </tr>
+              </thead>
+              <tbody>
+                {[
+                  { key: "onNewOrder" as const, label: "New public quote", description: "Customer submits a quote request via the shop" },
+                  { key: "onStateChange" as const, label: "Order state change", description: "An order is moved to a new status" },
+                  { key: "onPayment" as const, label: "Payment recorded", description: "A payment is logged on an order" },
+                ].map(({ key, label, description }) => (
+                  <tr key={key} className="border-b border-(--color-border) last:border-0">
+                    <td className="px-4 py-3 font-medium text-(--color-foreground) whitespace-nowrap">{label}</td>
+                    <td className="px-4 py-3 text-(--color-muted) text-xs hidden sm:table-cell">{description}</td>
+                    <td className="px-4 py-3 text-center">
+                      <Switch
+                        checked={notif[key] && notif.smsEnabled}
+                        onCheckedChange={(checked) => patchNotif({ [key]: checked })}
+                        disabled={notifPending || !notif.smsEnabled}
+                      />
+                    </td>
+                    <td className="px-4 py-3 text-center">
+                      <Switch
+                        checked={notif[key] && notif.emailEnabled}
+                        onCheckedChange={(checked) => patchNotif({ [key]: checked })}
+                        disabled={notifPending || !notif.emailEnabled}
+                      />
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <p className="text-xs text-(--color-muted)">
+            A channel's column is disabled until that channel is turned on above.
+          </p>
+        </div>
+      ) : null}
+
       <div className="space-y-4">
         <div>
           <h3 className="text-base font-semibold text-(--color-foreground)">Employee Permissions</h3>
@@ -246,104 +366,6 @@ export default function DashboardSettingsView() {
           <strong>Editable</strong> — fully editable.
         </p>
       </div>
-
-      {isAdmin ? (
-        <div className="space-y-4">
-          <div>
-            <h3 className="text-base font-semibold text-(--color-foreground)">Notifications</h3>
-            <p className="text-sm text-(--color-muted) mt-0.5">
-              Configure SMS and email alerts sent when key events occur.
-            </p>
-          </div>
-
-          {/* SMS toggle + phone */}
-          <div className="rounded-lg border border-(--color-border) overflow-hidden">
-            <div className="flex items-center justify-between px-4 py-3 border-b border-(--color-border)">
-              <div>
-                <p className="text-sm font-medium text-(--color-foreground)">SMS Notifications</p>
-                <p className="text-xs text-(--color-muted)">Send a text message when events occur</p>
-              </div>
-              <Switch
-                checked={notif.smsEnabled}
-                onCheckedChange={(checked) => patchNotif({ smsEnabled: checked })}
-                disabled={notifPending}
-              />
-            </div>
-            <div className="px-4 py-3">
-              <Label htmlFor="notif-phone" className="text-xs uppercase tracking-wide text-(--color-muted)">
-                Send SMS to this number
-              </Label>
-              <Input
-                id="notif-phone"
-                type="tel"
-                inputMode="tel"
-                placeholder="+12085551234"
-                value={phoneInput}
-                onChange={(e) => setPhoneInput(e.target.value)}
-                onBlur={handlePhoneBlur}
-                disabled={notifPending}
-                className="mt-1.5 text-base max-w-xs"
-              />
-              <p className="text-xs text-(--color-muted) mt-1">E.164 format — e.g. +12085551234</p>
-            </div>
-          </div>
-
-          {/* Email toggle + recipients */}
-          <div className="rounded-lg border border-(--color-border) overflow-hidden">
-            <div className="flex items-center justify-between px-4 py-3 border-b border-(--color-border)">
-              <div>
-                <p className="text-sm font-medium text-(--color-foreground)">Email Notifications</p>
-                <p className="text-xs text-(--color-muted)">Send an email when events occur</p>
-              </div>
-              <Switch
-                checked={notif.emailEnabled}
-                onCheckedChange={(checked) => patchNotif({ emailEnabled: checked })}
-                disabled={notifPending}
-              />
-            </div>
-            <div className="px-4 py-3">
-              <Label htmlFor="notif-email-recipients" className="text-xs uppercase tracking-wide text-(--color-muted)">
-                Send email to these addresses
-              </Label>
-              <Textarea
-                id="notif-email-recipients"
-                placeholder="you@example.com, partner@example.com"
-                value={emailRecipientsInput}
-                onChange={(e) => setEmailRecipientsInput(e.target.value)}
-                onBlur={handleEmailRecipientsBlur}
-                disabled={notifPending}
-                className="mt-1.5 text-base max-w-xs resize-none"
-                rows={3}
-              />
-              <p className="text-xs text-(--color-muted) mt-1">Enter one email per line, or separate with commas</p>
-            </div>
-          </div>
-
-          {/* Event toggles */}
-          <div className="rounded-lg border border-(--color-border) overflow-hidden divide-y divide-(--color-border)">
-            {[
-              { key: "onNewOrder" as const, label: "New public quote", description: "Customer submits a quote request via the shop" },
-              { key: "onStateChange" as const, label: "Order state change", description: "An order is moved to a new status" },
-              { key: "onPayment" as const, label: "Payment recorded", description: "A payment is logged on an order" },
-            ].map(({ key, label, description }) => (
-              <div key={key} className="flex items-center justify-between px-4 py-3">
-                <div>
-                  <p className="text-sm font-medium text-(--color-foreground)">{label}</p>
-                  <p className="text-xs text-(--color-muted)">{description}</p>
-                </div>
-                <Switch
-                  checked={notif[key]}
-                  onCheckedChange={(checked) => patchNotif({ [key]: checked })}
-                  disabled={notifPending || (!notif.smsEnabled && !notif.emailEnabled)}
-                />
-              </div>
-            ))}
-          </div>
-          <p className="text-xs text-(--color-muted)">
-            Event toggles are disabled when all notification channels are off.
-          </p>
-        </div>
-      ) : null}
     </div>
   )
 }
