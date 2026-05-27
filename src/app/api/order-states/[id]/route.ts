@@ -10,7 +10,7 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
 
   const { id } = await params
   const body = await req.json()
-  const { name, color, description, isActive, sortOrder } = body
+  const { name, color, description, isActive, sortOrder, consumesInventory } = body
 
   const update: Record<string, any> = {}
   if (name !== undefined) update.name = name
@@ -18,6 +18,7 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
   if (description !== undefined) update.description = description
   if (isActive !== undefined) update.isActive = isActive
   if (sortOrder !== undefined) update.sortOrder = sortOrder
+  if (consumesInventory !== undefined) update.consumesInventory = consumesInventory
 
   const state = await prisma.orderState.update({ where: { id: Number(id) }, data: update })
   return NextResponse.json({ data: state, error: null })

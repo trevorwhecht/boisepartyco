@@ -6,16 +6,16 @@ import { seedRentalInventory } from "./seed-rental"
 const prisma = new PrismaClient()
 
 const REQUIRED_STATES = [
-  { id: 0, name: "Archived",     sortOrder: -1, isRequired: true,  color: "#6b7280", description: "Archived orders — hidden from main kanban" },
-  { id: 1, name: "Admin Review", sortOrder: 0,  isRequired: true,  color: "#f59e0b", description: "New orders awaiting admin review" },
-  { id: 6, name: "Complete",     sortOrder: 5,  isRequired: true,  color: "#6b7280", description: "Order fulfilled and closed" },
+  { id: 0, name: "Archived",     sortOrder: -1, isRequired: true,  color: "#6b7280", consumesInventory: false, description: "Archived orders — hidden from main kanban" },
+  { id: 1, name: "Admin Review", sortOrder: 0,  isRequired: true,  color: "#f59e0b", consumesInventory: false, description: "New orders awaiting admin review" },
+  { id: 6, name: "Complete",     sortOrder: 5,  isRequired: true,  color: "#6b7280", consumesInventory: true,  description: "Order fulfilled and closed" },
 ]
 
 const OPTIONAL_STATES = [
-  { id: 2, name: "User Review",      sortOrder: 1, isRequired: false, color: "#3b82f6", description: "Quote sent — awaiting customer review and approval", enabled: projectConfig.orderStates.awaitingPayment },
-  { id: 3, name: "In Progress",      sortOrder: 2, isRequired: false, color: "#8b5cf6", description: "Work actively underway",                             enabled: projectConfig.orderStates.inProgress },
-  { id: 4, name: "Awaiting Pickup",  sortOrder: 3, isRequired: false, color: "#10b981", description: "Order complete, ready for customer collection",       enabled: projectConfig.orderStates.readyForPickup },
-  { id: 5, name: "Awaiting Payment", sortOrder: 4, isRequired: false, color: "#ef4444", description: "Final payment required before release",               enabled: projectConfig.orderStates.paymentNeeded },
+  { id: 2, name: "User Review",      sortOrder: 1, isRequired: false, color: "#3b82f6", consumesInventory: false, description: "Quote sent — awaiting customer review and approval", enabled: projectConfig.orderStates.awaitingPayment },
+  { id: 3, name: "In Progress",      sortOrder: 2, isRequired: false, color: "#8b5cf6", consumesInventory: true,  description: "Work actively underway",                             enabled: projectConfig.orderStates.inProgress },
+  { id: 4, name: "Awaiting Pickup",  sortOrder: 3, isRequired: false, color: "#10b981", consumesInventory: true,  description: "Order complete, ready for customer collection",       enabled: projectConfig.orderStates.readyForPickup },
+  { id: 5, name: "Awaiting Payment", sortOrder: 4, isRequired: false, color: "#ef4444", consumesInventory: true,  description: "Final payment required before release",               enabled: projectConfig.orderStates.paymentNeeded },
 ]
 
 const SETTINGS = [
@@ -41,7 +41,7 @@ async function main() {
   for (const state of REQUIRED_STATES) {
     await prisma.orderState.upsert({
       where: { id: state.id },
-      update: { name: state.name, description: state.description, color: state.color },
+      update: { name: state.name, description: state.description, color: state.color, consumesInventory: state.consumesInventory },
       create: state,
     })
   }
@@ -51,7 +51,7 @@ async function main() {
     if (enabled) {
       await prisma.orderState.upsert({
         where: { id: state.id },
-        update: { name: state.name, description: state.description, color: state.color },
+        update: { name: state.name, description: state.description, color: state.color, consumesInventory: state.consumesInventory },
         create: state,
       })
       console.log(`  ✓ "${state.name}" active`)

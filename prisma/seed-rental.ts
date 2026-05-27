@@ -264,14 +264,14 @@ export async function seedRentalInventory(prisma: PrismaClient) {
   console.log("\n▸ Seeding rental inventory…")
 
   // ---- 0. OrderState consumesInventory flags ------------------------------
-  // Set true on every OrderState with sortOrder >= 3 (per business rule:
-  // inventory consumed once order hits state 3 / after downpayment).
-  // Admin can override per-state via UI later.
+  // Set true on every OrderState with sortOrder >= 2 (per business rule:
+  // inventory consumed once order is "In Progress" / deposit received).
+  // Admin can override per-state via UI later (Settings > Order States).
   const stateUpdates = await prisma.orderState.updateMany({
-    where: { sortOrder: { gte: 3 } },
+    where: { sortOrder: { gte: 2 } },
     data: { consumesInventory: true },
   })
-  console.log(`  · OrderState.consumesInventory set on ${stateUpdates.count} states (sortOrder ≥ 3)`)
+  console.log(`  · OrderState.consumesInventory set on ${stateUpdates.count} states (sortOrder ≥ 2)`)
 
   // ---- 1. Categories ------------------------------------------------------
   for (const c of CATEGORIES) {

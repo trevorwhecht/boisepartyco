@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { format, startOfMonth, endOfMonth, eachDayOfInterval, startOfWeek, endOfWeek, isSameMonth, isPast, isToday, addMonths, subMonths } from "date-fns"
+import { format, startOfMonth, endOfMonth, eachDayOfInterval, startOfWeek, endOfWeek, isSameMonth, isPast, isToday, addMonths, subMonths, parseISO } from "date-fns"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { ChevronLeft, ChevronRight } from "lucide-react"
@@ -86,7 +86,7 @@ export default function DashboardCalendarView({ orders, loading, onOpenOrder }: 
                       "w-full text-left text-xs px-1 py-0.5 rounded truncate block touch-manipulation",
                       order.completedDate
                         ? "bg-(--color-success) bg-opacity-20 text-(--color-success)"
-                        : isPast(new Date(order.dueDate!)) ? "bg-(--color-danger) bg-opacity-20 text-(--color-danger)" : "bg-(--color-primary) bg-opacity-10 text-(--color-primary)"
+                        : isPast(parseISO(order.dueDate!.substring(0, 10))) ? "bg-(--color-danger) bg-opacity-20 text-(--color-danger)" : "bg-(--color-primary) bg-opacity-10 text-(--color-primary)"
                     )}
                     style={{ borderLeft: `2px solid ${order.state.color ?? "var(--color-border)"}` }}
                   >

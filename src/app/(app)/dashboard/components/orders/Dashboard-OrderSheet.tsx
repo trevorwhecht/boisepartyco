@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { toast } from "sonner"
-import { format } from "date-fns"
+import { format, parseISO } from "date-fns"
 import DashboardOrderSheetLineItems from "./Dashboard-OrderSheet-LineItems"
 import DashboardOrderSheetSetupCosts from "./Dashboard-OrderSheet-SetupCosts"
 import DashboardOrderSheetPayment from "./Dashboard-OrderSheet-Payment"
@@ -142,19 +142,19 @@ export default function DashboardOrderSheet({ order, open, onOpenChange, onOrder
 
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-2">
-                <Label>Due Date</Label>
+                <Label>Start Date</Label>
                 <Input
                   type="date"
-                  defaultValue={order.dueDate ? format(new Date(order.dueDate), "yyyy-MM-dd") : ""}
-                  onBlur={(e) => patchOrder({ dueDate: e.target.value || null })}
+                  defaultValue={(order.startDate ?? order.dueDate)?.substring(0, 10) ?? ""}
+                  onBlur={(e) => patchOrder({ startDate: e.target.value || null, dueDate: e.target.value || null })}
                   className="text-base"
                 />
               </div>
               <div className="space-y-2">
-                <Label>Due Date End</Label>
+                <Label>End Date</Label>
                 <Input
                   type="date"
-                  defaultValue={order.dueDateEnd ? format(new Date(order.dueDateEnd), "yyyy-MM-dd") : ""}
+                  defaultValue={order.dueDateEnd ? order.dueDateEnd.substring(0, 10) : ""}
                   onBlur={(e) => patchOrder({ dueDateEnd: e.target.value || null })}
                   className="text-base"
                 />

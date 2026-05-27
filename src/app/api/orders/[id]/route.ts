@@ -4,6 +4,7 @@ import { authOptions } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { serializeOrder, stripAdminFields, computeOrderTotals, getEmployeeFieldPermissions } from "@/services/orderService"
 import { sendSms } from "@/services/twilioService"
+import { parseLocalDate } from "@/lib/availability"
 
 const ORDER_DETAIL_INCLUDE = {
   state: true,
@@ -74,9 +75,9 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
   if (role === "admin") {
     if (stateId !== undefined) scalarUpdate.stateId = stateId
     if (nickname !== undefined) scalarUpdate.nickname = nickname
-    if (dueDate !== undefined) scalarUpdate.dueDate = dueDate ? new Date(dueDate) : null
-    if (dueDateEnd !== undefined) scalarUpdate.dueDateEnd = dueDateEnd ? new Date(dueDateEnd) : null
-    if (startDate !== undefined) scalarUpdate.startDate = startDate ? new Date(startDate) : null
+    if (dueDate !== undefined) scalarUpdate.dueDate = dueDate ? parseLocalDate(dueDate) : null
+    if (dueDateEnd !== undefined) scalarUpdate.dueDateEnd = dueDateEnd ? parseLocalDate(dueDateEnd) : null
+    if (startDate !== undefined) scalarUpdate.startDate = startDate ? parseLocalDate(startDate) : null
     if (isHardDeadline !== undefined) scalarUpdate.isHardDeadline = isHardDeadline
     if (paymentPlan !== undefined) scalarUpdate.paymentPlan = paymentPlan
     if (isPaid !== undefined) scalarUpdate.isPaid = isPaid

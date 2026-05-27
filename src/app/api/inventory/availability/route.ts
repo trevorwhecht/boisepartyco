@@ -1,6 +1,7 @@
 // GET ?itemIds=1,2,3&configIds=4,5&from=YYYY-MM-DD&to=YYYY-MM-DD
 import { NextResponse } from "next/server"
 import { getBulkItemAvailability, getBulkTentConfigAvailability } from "@/services/inventoryService"
+import { parseLocalDate } from "@/lib/availability"
 
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url)
@@ -13,8 +14,9 @@ export async function GET(req: Request) {
     return NextResponse.json({ data: null, error: "from and to are required" }, { status: 400 })
   }
 
-  const from = new Date(fromStr)
-  const to = new Date(toStr)
+  // parseLocalDate creates local midnight — consistent with how startDate/dueDateEnd are stored
+  const from = parseLocalDate(fromStr)
+  const to = parseLocalDate(toStr)
   if (isNaN(from.getTime()) || isNaN(to.getTime()) || from >= to) {
     return NextResponse.json({ data: null, error: "Invalid date range" }, { status: 400 })
   }

@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma"
 import { serializeOrder, stripAdminFields, computeOrderTotals } from "@/services/orderService"
 import { validateOrderLines } from "@/services/inventoryService"
 import { sendSms } from "@/services/twilioService"
+import { parseLocalDate } from "@/lib/availability"
 
 export async function GET() {
   const session = await getServerSession(authOptions)
@@ -47,8 +48,8 @@ async function handlePublicShopQuote(body: any): Promise<Response> {
     return NextResponse.json({ data: null, error: "At least one line is required" }, { status: 400 })
   }
 
-  const startDate = new Date(pickupDate)
-  const dueDateEnd = new Date(dropoffDate)
+  const startDate = parseLocalDate(pickupDate)
+  const dueDateEnd = parseLocalDate(dropoffDate)
   if (isNaN(startDate.getTime()) || isNaN(dueDateEnd.getTime()) || startDate >= dueDateEnd) {
     return NextResponse.json({ data: null, error: "Invalid date range — dropoffDate must be after pickupDate" }, { status: 400 })
   }

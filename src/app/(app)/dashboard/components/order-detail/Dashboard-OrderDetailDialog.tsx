@@ -12,7 +12,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
 import { Separator } from "@/components/ui/separator"
 import { toast } from "sonner"
-import { format } from "date-fns"
+import { format, parseISO } from "date-fns"
 import Link from "next/link"
 import DashboardOrderSheetLineItems from "../orders/Dashboard-OrderSheet-LineItems"
 import DashboardOrderSheetSetupCosts from "../orders/Dashboard-OrderSheet-SetupCosts"
@@ -54,6 +54,35 @@ export default function DashboardOrderDetailDialog({ order, open, onOpenChange, 
     if (json.error) { toast.error(json.error); return }
     onOrderUpdated(json.data)
     toast.success("Saved")
+  }
+
+  // Checks for inventory conflicts after an admin date change. Warns but never blocks.
+  async function warnOnDateConflicts(from: string, to: string) {
+    if (!order || !isAdmin) return
+    try {
+      const res = await fetch(`/api/orders/${order.id}/check-dates`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ from, to }),
+      })
+      const json = await res.json()
+      if (json.error || !json.data) return
+      const { conflicts } = json.data as { conflicts: { kind: string; refId: number; requested: number; available: number }[] }
+      if (conflicts.length === 0) return
+      const names = conflicts.map((c) => {
+        const li = order.orderLineItems.find((l) =>
+          c.kind === "item" ? l.item?.id === c.refId : l.tentConfig?.id === c.refId
+        )
+        const name = li ? li.description : `${c.kind} #${c.refId}`
+        return `${name} (need ${c.requested}, only ${c.available} available)`
+      })
+      toast.warning(
+        `⚠️ Date conflict: ${names.join("; ")}`,
+        { duration: 8000, description: "This order overlaps with another booking. Verify inventory before confirming." },
+      )
+    } catch {
+      // Non-blocking — ignore network errors in the warning check
+    }
   }
 
   async function handleDelete() {
@@ -142,8 +171,8 @@ export default function DashboardOrderDetailDialog({ order, open, onOpenChange, 
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 mb-1">
                 <span className="text-xs text-(--color-muted)">Order #{order.id}</span>
-                {order.dueDate ? (
-                  <span className="text-xs text-(--color-muted)">· Due {format(new Date(order.dueDate), "MMM d, yyyy")}</span>
+                {(order.startDate ?? order.dueDate) ? (
+                  <span className="text-xs text-(--color-muted)">· {format(parseISO((order.startDate ?? order.dueDate)!.substring(0, 10)), "MMM d, yyyy")}{order.dueDateEnd ? ` – ${format(parseISO(order.dueDateEnd.substring(0, 10)), "MMM d")}` : ""}</span>
                 ) : null}
               </div>
               <Input
@@ -179,12 +208,33 @@ export default function DashboardOrderDetailDialog({ order, open, onOpenChange, 
                 </Select>
               </div>
               <div className="space-y-1.5">
-                <Label>Due Date</Label>
-                <Input type="date" defaultValue={order.dueDate ? format(new Date(order.dueDate), "yyyy-MM-dd") : ""} onBlur={(e) => patchOrder({ dueDate: e.target.value || null })} className="text-base" />
+                <Label>Start Date</Label>
+                {/* Binds to startDate (used by availability queries) and also syncs dueDate for calendar display */}
+                <Input
+                  type="date"
+                  defaultValue={(order.startDate ?? order.dueDate)?.substring(0, 10) ?? ""}
+                  onBlur={(e) => {
+                    const newVal = e.target.value || null
+                    patchOrder({ startDate: newVal, dueDate: newVal })
+                    const endDate = order.dueDateEnd ? order.dueDateEnd.substring(0, 10) : null
+                    if (newVal && endDate && newVal < endDate) warnOnDateConflicts(newVal, endDate)
+                  }}
+                  className="text-base"
+                />
               </div>
               <div className="space-y-1.5">
-                <Label>Due Date End</Label>
-                <Input type="date" defaultValue={order.dueDateEnd ? format(new Date(order.dueDateEnd), "yyyy-MM-dd") : ""} onBlur={(e) => patchOrder({ dueDateEnd: e.target.value || null })} className="text-base" />
+                <Label>End Date</Label>
+                <Input
+                  type="date"
+                  defaultValue={order.dueDateEnd ? order.dueDateEnd.substring(0, 10) : ""}
+                  onBlur={(e) => {
+                    const newVal = e.target.value || null
+                    patchOrder({ dueDateEnd: newVal })
+                    const startVal = (order.startDate ?? order.dueDate)?.substring(0, 10) ?? null
+                    if (startVal && newVal && startVal < newVal) warnOnDateConflicts(startVal, newVal)
+                  }}
+                  className="text-base"
+                />
               </div>
             </div>
 

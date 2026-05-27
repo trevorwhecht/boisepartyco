@@ -5,6 +5,7 @@ export type OrderStateModel = {
   description: string | null
   isActive: boolean
   isRequired: boolean
+  consumesInventory: boolean
   color: string | null
   createdAt: string
   updatedAt: string

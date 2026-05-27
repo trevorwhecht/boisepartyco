@@ -2,7 +2,7 @@
 
 import { createContext, useContext } from "react"
 import { useDraggable } from "@dnd-kit/core"
-import { format, isPast } from "date-fns"
+import { format, isPast, parseISO } from "date-fns"
 import { cn } from "@/lib/utils"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -102,7 +102,7 @@ function Footer() {
   const { order, role } = useCard()
   const isAdmin = role === "admin"
   const isOverdue =
-    order.dueDate && !order.completedDate && isPast(new Date(order.dueDate))
+    order.dueDate && !order.completedDate && isPast(parseISO(order.dueDate.substring(0, 10)))
 
   function handleCopyLink(e: React.MouseEvent) {
     e.stopPropagation()
@@ -121,7 +121,7 @@ function Footer() {
         ) : null}
         {order.dueDate ? (
           <p className={cn(isOverdue && "text-(--color-danger) font-medium")}>
-            Due {format(new Date(order.dueDate), "MMM d")}
+            Due {format(parseISO(order.dueDate.substring(0, 10)), "MMM d")}
             {order.isHardDeadline ? " ⚑" : ""}
           </p>
         ) : null}
