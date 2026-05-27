@@ -6,6 +6,7 @@ import AvailabilityBadge from "@/components/shared/AvailabilityBadge"
 import QtyStepper from "@/components/shared/QtyStepper"
 import { ITEM_IMAGES } from "@/lib/item-images"
 import { itemUrl } from "@/lib/item-url"
+import { useInventoryMode } from "@/contexts/InventoryModeContext"
 import type { ItemSummary, AvailabilityResult, CartLine } from "@/models/inventory"
 
 type Props = {
@@ -18,6 +19,7 @@ type Props = {
 }
 
 export default function ItemCardList({ item, avail, hasRange, cartLine, onAdd, onUpdate }: Props) {
+  const mode = useInventoryMode()
   const disabled = hasRange && avail.available <= 0
   const maxQty = hasRange ? avail.available + (cartLine?.qty ?? 0) : (item.qty ?? 99)
   const imgSrc = ITEM_IMAGES[item.slug] ?? null
@@ -60,13 +62,19 @@ export default function ItemCardList({ item, avail, hasRange, cartLine, onAdd, o
 
         {/* Mobile-only: availability + price + add button */}
         <div className="flex items-center gap-2 mt-2.5 md:hidden">
-          <AvailabilityBadge available={avail.available} stock={avail.stock} hasRange={hasRange} />
+          {mode === "off" ? null : (
+            <AvailabilityBadge available={avail.available} stock={avail.stock} hasRange={hasRange} />
+          )}
           <div className="ml-auto mono text-sm whitespace-nowrap">
             {Number(item.flatPrice) > 0
               ? <><strong>${Number(item.flatPrice).toFixed(0)}</strong><span className="text-(--shop-ink-soft) text-xs">/day</span></>
               : <strong className="text-(--shop-blue)">Call</strong>}
           </div>
-          {cartLine ? (
+          {mode === "off" ? (
+            <Link href="/contact" className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold shrink-0 bg-(--shop-blue) text-white">
+              Contact Us
+            </Link>
+          ) : cartLine ? (
             <QtyStepper compact value={cartLine.qty} min={1} max={maxQty} onChange={(q) => onUpdate(item.id, q)} />
           ) : (
             <button
@@ -80,10 +88,12 @@ export default function ItemCardList({ item, avail, hasRange, cartLine, onAdd, o
         </div>
       </div>
 
-      {/* Col 3: Availability (desktop only) */}
-      <div className="hidden md:flex items-center">
-        <AvailabilityBadge available={avail.available} stock={avail.stock} hasRange={hasRange} />
-      </div>
+      {/* Col 3: Availability (desktop only) — hidden in "off" mode */}
+      {mode !== "off" ? (
+        <div className="hidden md:flex items-center">
+          <AvailabilityBadge available={avail.available} stock={avail.stock} hasRange={hasRange} />
+        </div>
+      ) : null}
 
       {/* Col 4: Price (desktop only) */}
       <div className="hidden md:block mono text-sm text-right">
@@ -92,9 +102,13 @@ export default function ItemCardList({ item, avail, hasRange, cartLine, onAdd, o
           : <strong className="text-(--shop-blue)">Call</strong>}
       </div>
 
-      {/* Col 5: Add button (desktop only) */}
+      {/* Col 5: Add button or Contact Us (desktop only) */}
       <div className="hidden md:block">
-        {cartLine ? (
+        {mode === "off" ? (
+          <Link href="/contact" className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-full text-sm font-semibold bg-(--shop-blue) text-white">
+            Contact Us
+          </Link>
+        ) : cartLine ? (
           <QtyStepper compact value={cartLine.qty} min={1} max={maxQty} onChange={(q) => onUpdate(item.id, q)} />
         ) : (
           <button

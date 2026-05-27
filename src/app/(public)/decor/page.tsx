@@ -4,6 +4,7 @@ import { getItemAvailability } from "@/services/inventoryService"
 import CategoryListing from "@/components/shared/CategoryListing"
 import CategoryHero from "@/components/shared/layout/CategoryHero"
 import type { ItemSummary, AvailabilityResult } from "@/models/inventory"
+import { getInventoryMode } from "@/lib/settings"
 
 export const dynamic = "force-dynamic"
 
@@ -18,6 +19,8 @@ export default async function DecorPage({ searchParams }: { searchParams: Promis
   const hasRange = !!(from && to)
   const dateLabel = hasRange ? `${fmtDate(from!)} – ${fmtDate(to!)}` : undefined
 
+  const mode = await getInventoryMode()
+
   const items = await prisma.item.findMany({
     where: { category: { slug: { in: ["decoration", "floor", "heater", "lighting", "linen"] } }, isActive: true },
     orderBy: { sortOrder: "asc" },
@@ -31,13 +34,13 @@ export default async function DecorPage({ searchParams }: { searchParams: Promis
   const itemsWithAvail = await Promise.all(
     items.map(async (item) => ({
       item: { ...item, flatPrice: Number(item.flatPrice) } as unknown as ItemSummary,
-      avail: hasRange
+      avail: mode === "off"
+        ? ({ available: 0, booked: 0, stock: item.qty ?? 0, isLow: false, hasConflicts: false } satisfies AvailabilityResult)
+        : mode === "fully_in_stock"
+        ? ({ available: 9999, booked: 0, stock: 9999, isLow: false, hasConflicts: false } satisfies AvailabilityResult)
+        : hasRange
         ? (await getItemAvailability(item.id, from!, to!)) as AvailabilityResult
-        : {
-            available: 0, booked: 0,
-            stock: item.qty ?? 0,
-            isLow: false, hasConflicts: false,
-          } satisfies AvailabilityResult,
+        : { available: 0, booked: 0, stock: item.qty ?? 0, isLow: false, hasConflicts: false } satisfies AvailabilityResult,
     })),
   )
 

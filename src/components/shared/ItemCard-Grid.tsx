@@ -6,6 +6,7 @@ import AvailabilityBadge from "@/components/shared/AvailabilityBadge"
 import QtyStepper from "@/components/shared/QtyStepper"
 import { ITEM_IMAGES } from "@/lib/item-images"
 import { itemUrl } from "@/lib/item-url"
+import { useInventoryMode } from "@/contexts/InventoryModeContext"
 import type { ItemSummary, AvailabilityResult, CartLine } from "@/models/inventory"
 
 type Props = {
@@ -18,6 +19,7 @@ type Props = {
 }
 
 export default function ItemCardGrid({ item, avail, hasRange, cartLine, onAdd, onUpdate }: Props) {
+  const mode = useInventoryMode()
   const disabled = hasRange && avail.available <= 0
   const maxQty = hasRange ? avail.available + (cartLine?.qty ?? 0) : (item.qty ?? 99)
   const imgSrc = ITEM_IMAGES[item.slug] ?? null
@@ -60,20 +62,28 @@ export default function ItemCardGrid({ item, avail, hasRange, cartLine, onAdd, o
         {item.blurb ? (
           <p className="text-sm text-(--shop-ink-soft) mt-3 mb-4 leading-relaxed flex-1 hidden sm:block">{item.blurb}</p>
         ) : <div className="flex-1" />}
-        <div className="flex justify-between items-center gap-3 mt-2">
-          <AvailabilityBadge available={avail.available} stock={avail.stock} hasRange={hasRange} />
-          {cartLine ? (
-            <QtyStepper compact value={cartLine.qty} min={1} max={maxQty} onChange={(q) => onUpdate(item.id, q)} />
-          ) : (
-            <button
-              disabled={disabled}
-              onClick={() => onAdd(item.id, 1, item.name, Number(item.flatPrice))}
-              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full text-xs font-semibold disabled:bg-(--shop-paper) disabled:text-(--shop-ink-soft) bg-(--shop-blue) text-white cursor-pointer disabled:cursor-not-allowed"
-            >
-              <Plus size={12} /> Add
-            </button>
-          )}
-        </div>
+        {mode === "off" ? (
+          <div className="mt-2">
+            <Link href="/contact" className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full text-xs font-semibold bg-(--shop-blue) text-white">
+              Contact Us
+            </Link>
+          </div>
+        ) : (
+          <div className="flex justify-between items-center gap-3 mt-2">
+            <AvailabilityBadge available={avail.available} stock={avail.stock} hasRange={hasRange} />
+            {cartLine ? (
+              <QtyStepper compact value={cartLine.qty} min={1} max={maxQty} onChange={(q) => onUpdate(item.id, q)} />
+            ) : (
+              <button
+                disabled={disabled}
+                onClick={() => onAdd(item.id, 1, item.name, Number(item.flatPrice))}
+                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full text-xs font-semibold disabled:bg-(--shop-paper) disabled:text-(--shop-ink-soft) bg-(--shop-blue) text-white cursor-pointer disabled:cursor-not-allowed"
+              >
+                <Plus size={12} /> Add
+              </button>
+            )}
+          </div>
+        )}
       </div>
     </div>
   )

@@ -1,8 +1,10 @@
 "use client"
 import { useState } from "react"
+import Link from "next/link"
 import { useRouter, useSearchParams } from "next/navigation"
 import { ArrowRight, Info } from "lucide-react"
 import { useCart } from "@/contexts/CartContext"
+import { useInventoryMode } from "@/contexts/InventoryModeContext"
 import DateRangeField from "@/components/shared/DateRangeField"
 import QtyStepper from "@/components/shared/QtyStepper"
 import AvailabilityBadge from "@/components/shared/AvailabilityBadge"
@@ -27,6 +29,7 @@ function daysBetween(from: Date, to: Date) {
 }
 
 export default function ShopItemModalItemBooking({ item, avail, hasRange }: Props) {
+  const mode = useInventoryMode()
   const router = useRouter()
   const params = useSearchParams()
   const from = params.get("from")
@@ -58,6 +61,19 @@ export default function ShopItemModalItemBooking({ item, avail, hasRange }: Prop
 
   const subtotal = price * qty * days
 
+  if (mode === "off") {
+    return (
+      <div className="bg-white border border-(--shop-line) rounded-xl p-6 flex flex-col items-center text-center gap-4">
+        <p className="text-sm text-(--shop-ink-soft) leading-relaxed">
+          To check availability and reserve this item, get in touch.
+        </p>
+        <Link href="/contact" className="inline-flex items-center gap-2 px-5 py-3.5 rounded-full font-semibold text-sm text-white" style={{ background: "var(--shop-blue)" }}>
+          Contact Us <ArrowRight size={14} />
+        </Link>
+      </div>
+    )
+  }
+
   return (
     <div className="bg-white border border-(--shop-line) rounded-xl p-6">
       <div className="flex justify-between items-baseline mb-1">
@@ -73,7 +89,7 @@ export default function ShopItemModalItemBooking({ item, avail, hasRange }: Prop
       <div className="mt-4 flex justify-between items-center">
         <div>
           <div className="text-[11px] font-semibold uppercase tracking-[0.12em] text-(--shop-ink-soft) mb-1.5">Quantity</div>
-          <QtyStepper value={qty} min={1} max={item.qty ?? 99} onChange={setQty} />
+          <QtyStepper value={qty} min={1} max={hasRange ? Math.max(1, avail.available) : (item.qty ?? 99)} onChange={setQty} />
         </div>
         <div className="text-right">
           <AvailabilityBadge available={avail.available} stock={avail.stock} hasRange={hasRange} />

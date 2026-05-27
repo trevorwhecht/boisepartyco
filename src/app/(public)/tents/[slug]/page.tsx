@@ -7,6 +7,7 @@ import CategoryHero from "@/components/shared/layout/CategoryHero"
 import ShopItemModal from "@/components/shared/modals/ShopItemModal"
 import type { TentConfigurationSummary, ConfigAvailabilityResult, ItemSummary, AvailabilityResult } from "@/models/inventory"
 import { parseLocalDate } from "@/lib/availability"
+import { getInventoryMode } from "@/lib/settings"
 
 export const dynamic = "force-dynamic"
 
@@ -28,6 +29,8 @@ export default async function TentsItemPage({
   const hasRange = !!(from && to)
   const dateLabel = hasRange ? `${fmtDate(from!)} – ${fmtDate(to!)}` : undefined
   const qs = fromParam && toParam ? `?from=${fromParam}&to=${toParam}` : ""
+
+  const mode = await getInventoryMode()
 
   // Fetch listing + lookup target in parallel
   const [configs, items, config, item] = await Promise.all([
@@ -73,7 +76,11 @@ export default async function TentsItemPage({
     Promise.all(
       configs.map(async (c) => ({
         config: { ...c, flatPrice: Number(c.flatPrice) } as TentConfigurationSummary,
-        avail: hasRange
+        avail: mode === "off"
+          ? ({ available: 0, booked: 0, stock: 0, isLow: false, hasConflicts: false, bomComplete: c.bomComplete, bottleneckParts: [] } satisfies ConfigAvailabilityResult)
+          : mode === "fully_in_stock"
+          ? ({ available: 9999, booked: 0, stock: 9999, isLow: false, hasConflicts: false, bomComplete: true, bottleneckParts: [] } satisfies ConfigAvailabilityResult)
+          : hasRange
           ? (await getTentConfigAvailability(c.id, from!, to!)) as ConfigAvailabilityResult
           : { available: 0, booked: 0, stock: 0, isLow: false, hasConflicts: false, bomComplete: c.bomComplete, bottleneckParts: [] } satisfies ConfigAvailabilityResult,
       })),
@@ -81,7 +88,11 @@ export default async function TentsItemPage({
     Promise.all(
       items.map(async (i) => ({
         item: { ...i, flatPrice: Number(i.flatPrice) } as unknown as ItemSummary,
-        avail: hasRange
+        avail: mode === "off"
+          ? ({ available: 0, booked: 0, stock: i.qty ?? 0, isLow: false, hasConflicts: false } satisfies AvailabilityResult)
+          : mode === "fully_in_stock"
+          ? ({ available: 9999, booked: 0, stock: 9999, isLow: false, hasConflicts: false } satisfies AvailabilityResult)
+          : hasRange
           ? (await getItemAvailability(i.id, from!, to!)) as AvailabilityResult
           : { available: 0, booked: 0, stock: i.qty ?? 0, isLow: false, hasConflicts: false } satisfies AvailabilityResult,
       })),
@@ -112,6 +123,7 @@ export default async function TentsItemPage({
       <ModalForSlug
         slug={slug} config={config} item={item}
         from={from} to={to} hasRange={hasRange} fromParam={fromParam} toParam={toParam} qs={qs}
+        mode={mode}
       />
     </main>
   )
@@ -119,16 +131,21 @@ export default async function TentsItemPage({
 
 // Async sub-component so listing renders immediately while modal data loads
 async function ModalForSlug({
-  slug, config, item, from, to, hasRange, fromParam, toParam, qs,
+  slug, config, item, from, to, hasRange, fromParam, toParam, qs, mode,
 }: {
   slug: string
   config: { id: number; slug: string; name: string; blurb: string | null; flatPrice: any; widthFt: number | null; lengthFt: number | null; capacity: string | null; bomComplete: boolean } | null
   item: { id: number; slug: string; name: string; blurb: string | null; flatPrice: any; qty: number | null; size: string | null; subcategory: string | null; category: { slug: string; name: string } } | null
   from: Date | null; to: Date | null; hasRange: boolean
   fromParam?: string; toParam?: string; qs: string
+  mode: "on" | "off" | "fully_in_stock"
 }) {
   if (config) {
-    const avail = hasRange
+    const avail = mode === "off"
+      ? { available: 0, booked: 0, stock: 0, isLow: false, hasConflicts: false, bomComplete: config.bomComplete, bottleneckParts: [] }
+      : mode === "fully_in_stock"
+      ? { available: 9999, booked: 0, stock: 9999, isLow: false, hasConflicts: false, bomComplete: true, bottleneckParts: [] }
+      : hasRange
       ? await getTentConfigAvailability(config.id, from!, to!)
       : { available: 0, booked: 0, stock: 0, isLow: false, hasConflicts: false, bomComplete: config.bomComplete, bottleneckParts: [] }
 
@@ -144,12 +161,15 @@ async function ModalForSlug({
   }
 
   if (item) {
-    const [avail, strip] = await Promise.all([
-      hasRange
-        ? getItemAvailability(item.id, from!, to!)
-        : Promise.resolve({ available: 0, booked: 0, stock: item.qty ?? 0, isLow: false, hasConflicts: false }),
-      getItemDailyAvailability(item.id, new Date(), 35),
-    ])
+    const avail = mode === "off"
+      ? { available: 0, booked: 0, stock: item.qty ?? 0, isLow: false, hasConflicts: false }
+      : mode === "fully_in_stock"
+      ? { available: 9999, booked: 0, stock: 9999, isLow: false, hasConflicts: false }
+      : hasRange
+      ? await getItemAvailability(item.id, from!, to!)
+      : { available: 0, booked: 0, stock: item.qty ?? 0, isLow: false, hasConflicts: false }
+
+    const strip = await getItemDailyAvailability(item.id, new Date(), 35)
 
     return (
       <ShopItemModal

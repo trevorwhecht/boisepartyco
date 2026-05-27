@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma"
 import { getItemAvailability, getItemDailyAvailability, getTentConfigAvailability } from "@/services/inventoryService"
 import { parseLocalDate } from "@/lib/availability"
 import ShopItemModal from "@/components/shared/modals/ShopItemModal"
+import { getInventoryMode } from "@/lib/settings"
 
 export const dynamic = "force-dynamic"
 
@@ -20,6 +21,8 @@ export default async function TentsItemModalPage({
   const hasRange = !!(from && to)
   const qs = fromParam && toParam ? `?from=${fromParam}&to=${toParam}` : ""
 
+  const mode = await getInventoryMode()
+
   // Try tent configuration first
   const config = await prisma.tentConfiguration.findUnique({
     where: { slug, isActive: true },
@@ -30,7 +33,11 @@ export default async function TentsItemModalPage({
   })
 
   if (config) {
-    const avail = hasRange
+    const avail = mode === "off"
+      ? { available: 0, booked: 0, stock: 0, isLow: false, hasConflicts: false, bomComplete: config.bomComplete, bottleneckParts: [] }
+      : mode === "fully_in_stock"
+      ? { available: 9999, booked: 0, stock: 9999, isLow: false, hasConflicts: false, bomComplete: true, bottleneckParts: [] }
+      : hasRange
       ? await getTentConfigAvailability(config.id, from!, to!)
       : { available: 0, booked: 0, stock: 0, isLow: false, hasConflicts: false, bomComplete: config.bomComplete, bottleneckParts: [] }
 
@@ -57,12 +64,15 @@ export default async function TentsItemModalPage({
 
   if (!item) notFound()
 
-  const [avail, strip] = await Promise.all([
-    hasRange
-      ? getItemAvailability(item.id, from!, to!)
-      : Promise.resolve({ available: 0, booked: 0, stock: item.qty ?? 0, isLow: false, hasConflicts: false }),
-    getItemDailyAvailability(item.id, new Date(), 35),
-  ])
+  const avail = mode === "off"
+    ? { available: 0, booked: 0, stock: item.qty ?? 0, isLow: false, hasConflicts: false }
+    : mode === "fully_in_stock"
+    ? { available: 9999, booked: 0, stock: 9999, isLow: false, hasConflicts: false }
+    : hasRange
+    ? await getItemAvailability(item.id, from!, to!)
+    : { available: 0, booked: 0, stock: item.qty ?? 0, isLow: false, hasConflicts: false }
+
+  const strip = await getItemDailyAvailability(item.id, new Date(), 35)
 
   return (
     <ShopItemModal

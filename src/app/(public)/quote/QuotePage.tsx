@@ -4,6 +4,7 @@ import { useSearchParams, useRouter } from "next/navigation"
 import Link from "next/link"
 import { ArrowRight, ArrowLeft, X, Info, CheckCircle } from "lucide-react"
 import { useCart } from "@/contexts/CartContext"
+import { useInventoryMode } from "@/contexts/InventoryModeContext"
 import DateRangeField from "@/components/shared/DateRangeField"
 import { parseLocalDate, fmtLocalDate } from "@/lib/availability"
 import QtyStepper from "@/components/shared/QtyStepper"
@@ -34,6 +35,7 @@ export default function QuotePage() {
   const days = hasRange ? daysBetween(start!, end!) : 1
 
   const { lines, updateLine, removeLine, clearCart } = useCart()
+  const mode = useInventoryMode()
   const [step, setStep] = useState<Step>("cart")
   // availMap[`${kind}-${refId}`] = max qty the user is allowed to request
   const [availMap, setAvailMap] = useState<Record<string, number>>({})
@@ -41,6 +43,7 @@ export default function QuotePage() {
   const lineKey = lines.map(l => `${l.kind}-${l.refId}`).join(",")
   useEffect(() => {
     if (!start || !end || lines.length === 0) { setAvailMap({}); return }
+    if (mode === "off") { setAvailMap({}); return }
     const itemIds = lines.filter(l => l.kind === "item").map(l => l.refId)
     const configIds = lines.filter(l => l.kind === "tentConfig").map(l => l.refId)
     const qs = new URLSearchParams({ from: fmtLocalDate(start), to: fmtLocalDate(end) })
@@ -61,7 +64,7 @@ export default function QuotePage() {
       })
       .catch(() => {}) // silent — gracefully degrades to no-cap
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [start?.toISOString(), end?.toISOString(), lineKey])
+  }, [start?.toISOString(), end?.toISOString(), lineKey, mode])
 
   const lineMax = (line: CartLine) => {
     const avail = availMap[`${line.kind}-${line.refId}`]
@@ -129,6 +132,36 @@ export default function QuotePage() {
       clearCart()
       setStep("confirm")
     })
+  }
+
+  if (mode === "off") {
+    return (
+      <main>
+        <section className="py-8 md:py-12" style={{ background: "var(--shop-paper)" }}>
+          <div className="max-w-330 mx-auto px-4 md:px-8">
+            <p className="text-xs text-(--shop-ink-soft) mb-3">
+              <a href="/" className="hover:text-(--shop-ink)">Home</a> / <span className="text-(--shop-ink)">Your Quote</span>
+            </p>
+            <h1 className="serif font-medium leading-tight tracking-tight" style={{ fontSize: "clamp(28px, 8vw, 56px)" }}>Ready to book?</h1>
+            <p className="mt-2 text-base text-(--shop-ink-soft)">Reach out directly and we'll walk you through availability and pricing.</p>
+          </div>
+        </section>
+        <section className="py-16 pb-24">
+          <div className="max-w-330 mx-auto px-4 md:px-8 flex justify-center">
+            <div className="bg-white border border-(--shop-line) rounded-xl p-14 text-center max-w-md w-full">
+              <h3 className="serif text-3xl font-medium mb-3">Get in touch</h3>
+              <p className="text-sm text-(--shop-ink-soft) leading-relaxed mb-6">
+                Browse our inventory, then reach out — we'll confirm availability and send you a formal quote within 4 business hours.
+              </p>
+              <Link href="/contact" className="inline-flex items-center gap-2 px-6 py-3.5 rounded-full text-sm font-semibold text-white"
+                style={{ background: "var(--shop-blue)" }}>
+                Contact Us <ArrowRight size={14} />
+              </Link>
+            </div>
+          </div>
+        </section>
+      </main>
+    )
   }
 
   return (

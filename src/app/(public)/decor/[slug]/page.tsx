@@ -6,6 +6,7 @@ import CategoryListing from "@/components/shared/CategoryListing"
 import CategoryHero from "@/components/shared/layout/CategoryHero"
 import ShopItemModal from "@/components/shared/modals/ShopItemModal"
 import type { ItemSummary, AvailabilityResult } from "@/models/inventory"
+import { getInventoryMode } from "@/lib/settings"
 
 export const dynamic = "force-dynamic"
 
@@ -29,6 +30,8 @@ export default async function DecorItemPage({
   const hasRange = !!(from && to)
   const dateLabel = hasRange ? `${fmtDate(from!)} – ${fmtDate(to!)}` : undefined
   const qs = fromParam && toParam ? `?from=${fromParam}&to=${toParam}` : ""
+
+  const mode = await getInventoryMode()
 
   // Fetch category listing + specific item in parallel
   const [items, item] = await Promise.all([
@@ -57,12 +60,20 @@ export default async function DecorItemPage({
     Promise.all(
       items.map(async (i) => ({
         item: { ...i, flatPrice: Number(i.flatPrice) } as unknown as ItemSummary,
-        avail: hasRange
+        avail: mode === "off"
+          ? ({ available: 0, booked: 0, stock: i.qty ?? 0, isLow: false, hasConflicts: false } satisfies AvailabilityResult)
+          : mode === "fully_in_stock"
+          ? ({ available: 9999, booked: 0, stock: 9999, isLow: false, hasConflicts: false } satisfies AvailabilityResult)
+          : hasRange
           ? (await getItemAvailability(i.id, from!, to!)) as AvailabilityResult
           : { available: 0, booked: 0, stock: i.qty ?? 0, isLow: false, hasConflicts: false } satisfies AvailabilityResult,
       })),
     ),
-    hasRange
+    mode === "off"
+      ? Promise.resolve({ available: 0, booked: 0, stock: item.qty ?? 0, isLow: false, hasConflicts: false })
+      : mode === "fully_in_stock"
+      ? Promise.resolve({ available: 9999, booked: 0, stock: 9999, isLow: false, hasConflicts: false })
+      : hasRange
       ? getItemAvailability(item.id, from!, to!)
       : Promise.resolve({ available: 0, booked: 0, stock: item.qty ?? 0, isLow: false, hasConflicts: false }),
     getItemDailyAvailability(item.id, new Date(), 35),

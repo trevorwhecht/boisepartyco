@@ -4,6 +4,7 @@ import { Grid, List } from "lucide-react"
 import ItemCardGrid from "@/components/shared/ItemCard-Grid"
 import ItemCardList from "@/components/shared/ItemCard-List"
 import { useCart } from "@/contexts/CartContext"
+import { useInventoryMode } from "@/contexts/InventoryModeContext"
 import type { ItemSummary, AvailabilityResult } from "@/models/inventory"
 
 export type ItemWithAvail = {
@@ -21,6 +22,7 @@ export default function CategoryListing({ items, hasRange, dateLabel }: Props) {
   const [view, setView] = useState<"grid" | "list">("grid")
   const [hideUnavailable, setHideUnavailable] = useState(false)
   const { lines, addToCart, updateLine } = useCart()
+  const mode = useInventoryMode()
 
   const visible = hideUnavailable && hasRange
     ? items.filter(x => x.avail.available > 0)
@@ -45,7 +47,7 @@ export default function CategoryListing({ items, hasRange, dateLabel }: Props) {
               <strong className="text-(--shop-ink)">{visible.length}</strong> items
               {dateLabel ? <> · for {dateLabel}</> : null}
             </span>
-            {hasRange ? (
+            {hasRange && mode !== "off" ? (
               <label className="inline-flex gap-2 items-center text-sm text-(--shop-ink-soft) cursor-pointer">
                 <input
                   type="checkbox"

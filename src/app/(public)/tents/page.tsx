@@ -4,6 +4,7 @@ import { getItemAvailability, getTentConfigAvailability } from "@/services/inven
 import TentsListing from "./TentsListing"
 import CategoryHero from "@/components/shared/layout/CategoryHero"
 import type { TentConfigurationSummary, ConfigAvailabilityResult, ItemSummary, AvailabilityResult } from "@/models/inventory"
+import { getInventoryMode } from "@/lib/settings"
 
 export const dynamic = "force-dynamic"
 
@@ -17,6 +18,8 @@ export default async function TentsPage({ searchParams }: { searchParams: Promis
   const to = toParam ? new Date(toParam) : null
   const hasRange = !!(from && to)
   const dateLabel = hasRange ? `${fmtDate(from!)} – ${fmtDate(to!)}` : undefined
+
+  const mode = await getInventoryMode()
 
   const [configs, items] = await Promise.all([
     prisma.tentConfiguration.findMany({
@@ -42,27 +45,26 @@ export default async function TentsPage({ searchParams }: { searchParams: Promis
   const configsWithAvail = await Promise.all(
     configs.map(async (c) => ({
       config: { ...c, flatPrice: Number(c.flatPrice) } as TentConfigurationSummary,
-      avail: hasRange
+      avail: mode === "off"
+        ? ({ available: 0, booked: 0, stock: 0, isLow: false, hasConflicts: false, bomComplete: c.bomComplete, bottleneckParts: [] } satisfies ConfigAvailabilityResult)
+        : mode === "fully_in_stock"
+        ? ({ available: 9999, booked: 0, stock: 9999, isLow: false, hasConflicts: false, bomComplete: true, bottleneckParts: [] } satisfies ConfigAvailabilityResult)
+        : hasRange
         ? (await getTentConfigAvailability(c.id, from!, to!)) as ConfigAvailabilityResult
-        : {
-            available: 0, booked: 0, stock: 0,
-            isLow: false, hasConflicts: false,
-            bomComplete: c.bomComplete,
-            bottleneckParts: [],
-          } satisfies ConfigAvailabilityResult,
+        : { available: 0, booked: 0, stock: 0, isLow: false, hasConflicts: false, bomComplete: c.bomComplete, bottleneckParts: [] } satisfies ConfigAvailabilityResult,
     })),
   )
 
   const itemsWithAvail = await Promise.all(
     items.map(async (item) => ({
       item: { ...item, flatPrice: Number(item.flatPrice) } as unknown as ItemSummary,
-      avail: hasRange
+      avail: mode === "off"
+        ? ({ available: 0, booked: 0, stock: item.qty ?? 0, isLow: false, hasConflicts: false } satisfies AvailabilityResult)
+        : mode === "fully_in_stock"
+        ? ({ available: 9999, booked: 0, stock: 9999, isLow: false, hasConflicts: false } satisfies AvailabilityResult)
+        : hasRange
         ? (await getItemAvailability(item.id, from!, to!)) as AvailabilityResult
-        : {
-            available: 0, booked: 0,
-            stock: item.qty ?? 0,
-            isLow: false, hasConflicts: false,
-          } satisfies AvailabilityResult,
+        : { available: 0, booked: 0, stock: item.qty ?? 0, isLow: false, hasConflicts: false } satisfies AvailabilityResult,
     })),
   )
 

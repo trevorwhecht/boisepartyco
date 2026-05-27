@@ -2,6 +2,7 @@ import { notFound } from "next/navigation"
 import { prisma } from "@/lib/prisma"
 import { getItemAvailability, getItemDailyAvailability } from "@/services/inventoryService"
 import ShopItemModal from "@/components/shared/modals/ShopItemModal"
+import { getInventoryMode } from "@/lib/settings"
 
 export const dynamic = "force-dynamic"
 
@@ -20,6 +21,8 @@ export default async function DecorItemModalPage({
   const to = toParam ? new Date(toParam) : null
   const hasRange = !!(from && to)
 
+  const mode = await getInventoryMode()
+
   const item = await prisma.item.findFirst({
     where: { slug, isActive: true, category: { slug: { in: DECOR_SLUGS } } },
     select: {
@@ -31,12 +34,15 @@ export default async function DecorItemModalPage({
 
   if (!item) notFound()
 
-  const [avail, strip] = await Promise.all([
-    hasRange
-      ? getItemAvailability(item.id, from!, to!)
-      : Promise.resolve({ available: 0, booked: 0, stock: item.qty ?? 0, isLow: false, hasConflicts: false }),
-    getItemDailyAvailability(item.id, new Date(), 35),
-  ])
+  const avail = mode === "off"
+    ? { available: 0, booked: 0, stock: item.qty ?? 0, isLow: false, hasConflicts: false }
+    : mode === "fully_in_stock"
+    ? { available: 9999, booked: 0, stock: 9999, isLow: false, hasConflicts: false }
+    : hasRange
+    ? await getItemAvailability(item.id, from!, to!)
+    : { available: 0, booked: 0, stock: item.qty ?? 0, isLow: false, hasConflicts: false }
+
+  const strip = await getItemDailyAvailability(item.id, new Date(), 35)
 
   const qs = fromParam && toParam ? `?from=${fromParam}&to=${toParam}` : ""
 
