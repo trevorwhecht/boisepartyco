@@ -59,6 +59,7 @@ export default function DashboardSettingsView() {
   const [notifPending, startNotifTransition] = useTransition()
   const [phoneInput, setPhoneInput] = useState("")
   const [emailRecipientsInput, setEmailRecipientsInput] = useState("")
+  const [smsConsentChecked, setSmsConsentChecked] = useState(false)
 
   useEffect(() => {
     fetch("/api/settings")
@@ -94,6 +95,7 @@ export default function DashboardSettingsView() {
         })
         setPhoneInput(data.smsPhone ?? "")
         setEmailRecipientsInput(data.emailRecipients ?? "")
+        if (data.smsEnabled) setSmsConsentChecked(true)
       })
   }, [isAdmin])
 
@@ -220,7 +222,13 @@ export default function DashboardSettingsView() {
                 </div>
                 <Switch
                   checked={notif.smsEnabled}
-                  onCheckedChange={(checked) => patchNotif({ smsEnabled: checked })}
+                  onCheckedChange={(checked) => {
+                    if (checked && !smsConsentChecked) {
+                      toast.error("Please check the SMS consent box before enabling text notifications.")
+                      return
+                    }
+                    patchNotif({ smsEnabled: checked })
+                  }}
                   disabled={notifPending}
                 />
               </div>
@@ -240,6 +248,31 @@ export default function DashboardSettingsView() {
                   className="mt-1.5 text-base"
                 />
                 <p className="text-xs text-(--color-muted) mt-1">E.164 format — e.g. +12085551234</p>
+                <p className="text-xs text-(--color-muted) mt-3 leading-relaxed">
+                  By enabling SMS notifications and saving your phone number, you agree to receive recurring text
+                  message order notifications from Boise Party Co. Message frequency varies based on your order
+                  activity. Msg &amp; data rates may apply. You can reply STOP at any time to cancel, or reply HELP
+                  for assistance. Mobile information will not be shared with third parties or affiliates for marketing
+                  purposes. View our{" "}
+                  <a href="/privacy-policy" target="_blank" rel="noopener noreferrer" className="underline hover:text-(--color-foreground)">
+                    Privacy Policy
+                  </a>{" "}
+                  and{" "}
+                  <a href="/terms" target="_blank" rel="noopener noreferrer" className="underline hover:text-(--color-foreground)">
+                    Terms &amp; Conditions
+                  </a>.
+                </p>
+                <label className="flex items-start gap-2 mt-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={smsConsentChecked}
+                    onChange={(e) => setSmsConsentChecked(e.target.checked)}
+                    className="mt-0.5 h-4 w-4 shrink-0 accent-(--color-primary) cursor-pointer"
+                  />
+                  <span className="text-xs text-(--color-muted) leading-snug">
+                    I agree to receive SMS order notification messages from Boise Party Co.
+                  </span>
+                </label>
               </div>
             </div>
 
