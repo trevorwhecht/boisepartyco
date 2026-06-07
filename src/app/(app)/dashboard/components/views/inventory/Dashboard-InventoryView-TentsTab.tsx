@@ -135,14 +135,12 @@ export default function DashboardInventoryViewTentsTab({ role }: Props) {
                   {parts.map(part => (
                     <tr
                       key={part.id}
-                      className="border-b border-(--color-border) last:border-0 transition-colors hover:bg-(--color-surface)"
+                      className="border-b border-(--color-border) last:border-0 cursor-pointer transition-colors hover:bg-(--color-surface)"
+                      onClick={() => editingId !== part.id && handleQtyClick(part)}
                     >
                       <td className="px-4 py-3 font-medium text-(--color-foreground)">{part.name}</td>
                       <td className="px-4 py-3 capitalize text-(--color-muted)">{part.partType}</td>
-                      <td
-                        className="px-4 py-3 text-center font-semibold text-(--color-foreground)"
-                        onClick={() => editingId !== part.id && handleQtyClick(part)}
-                      >
+                      <td className="px-4 py-3 text-center font-semibold text-(--color-foreground)">
                         {savingId === part.id ? (
                           <Loader2 className="h-4 w-4 animate-spin mx-auto text-(--color-muted)" />
                         ) : editingId === part.id ? (

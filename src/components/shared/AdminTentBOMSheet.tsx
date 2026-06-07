@@ -44,6 +44,10 @@ export default function AdminTentBOMSheet({ config, allParts, open, onOpenChange
     }
   }, [config])
 
+  useEffect(() => {
+    if (!open) setBomEditMode(false)
+  }, [open])
+
   function enterBOMEditMode() {
     const bom: PartQtys = {}
     // Default all parts to 0, then override with existing BOM values
@@ -179,21 +183,9 @@ export default function AdminTentBOMSheet({ config, allParts, open, onOpenChange
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="right" className="w-full sm:max-w-sm bg-(--color-background) flex flex-col">
         <SheetHeader>
-          <div className="flex items-start justify-between gap-2 pr-6">
-            <SheetTitle className="text-(--color-foreground)">
-              {bomEditMode ? `BOM: ${config?.name ?? ""}` : `Edit Tent: ${config?.name ?? ""}`}
-            </SheetTitle>
-            {config && !bomEditMode ? (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={enterBOMEditMode}
-                className="text-xs h-7 shrink-0 mt-0.5"
-              >
-                Edit BOM
-              </Button>
-            ) : null}
-          </div>
+          <SheetTitle className="text-(--color-foreground)">
+            Edit Tent: {config?.name ?? ""}
+          </SheetTitle>
         </SheetHeader>
 
         {config ? (
@@ -231,7 +223,14 @@ export default function AdminTentBOMSheet({ config, allParts, open, onOpenChange
               // Normal mode: inventory qty editing
               <div className="space-y-6">
                 <div className="space-y-2">
-                  <Label className="text-xs uppercase tracking-wide text-(--color-muted)">Inventory</Label>
+                  <div className="flex items-center justify-between">
+                    <Label className="text-xs uppercase tracking-wide text-(--color-muted)">Inventory</Label>
+                    {config ? (
+                      <Button variant="outline" size="sm" onClick={enterBOMEditMode} className="text-xs h-6 shrink-0">
+                        Edit BOM
+                      </Button>
+                    ) : null}
+                  </div>
                   {config.bomParts.length === 0 ? (
                     <p className="text-sm text-(--color-muted)">No BOM parts configured.</p>
                   ) : (
