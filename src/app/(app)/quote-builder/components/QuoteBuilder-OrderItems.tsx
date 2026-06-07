@@ -17,7 +17,7 @@ import SectionShell from "@/components/shared/layout/SectionShell"
 import type { DraftLineItem } from "../QuoteBuilder"
 import type { QuoteBuilderPermissions } from "../quoteBuilderPermissions"
 
-type InventoryItem = { id: number; name: string; flatPrice: number }
+type InventoryItem = { id: number; name: string; flatPrice: number; isPerFoot: boolean }
 
 type Props = {
   items: DraftLineItem[]
@@ -65,6 +65,7 @@ export default function QuoteBuilderOrderItems({ items, onChange, permissions }:
       qty: inventoryQty,
       unitPrice: Number(inventorySelected.flatPrice),
       unitCost: 0,
+      isPerFoot: inventorySelected.isPerFoot,
     }])
     resetInventoryDialog()
     setShowInventoryDialog(false)
@@ -146,14 +147,17 @@ export default function QuoteBuilderOrderItems({ items, onChange, permissions }:
                 </td>
                 <td className="px-3 py-2 text-right">
                   {canEdit ? (
-                    <Input
-                      type="number" inputMode="numeric" min={1}
-                      value={item.qty}
-                      onChange={(e) => updateItem(item.localId, "qty", Math.max(1, Number(e.target.value)))}
-                      className="text-base h-8 w-16 text-right"
-                    />
+                    <div className="flex items-center justify-end gap-1">
+                      <Input
+                        type="number" inputMode="numeric" min={1}
+                        value={item.qty}
+                        onChange={(e) => updateItem(item.localId, "qty", Math.max(1, Number(e.target.value)))}
+                        className="text-base h-8 w-16 text-right"
+                      />
+                      {item.isPerFoot ? <span className="text-xs text-(--color-muted)">ft</span> : null}
+                    </div>
                   ) : (
-                    <span>{item.qty}</span>
+                    <span>{item.qty}{item.isPerFoot ? <span className="text-xs text-(--color-muted) ml-0.5">ft</span> : null}</span>
                   )}
                 </td>
                 <td className="px-3 py-2 text-right">
@@ -242,7 +246,7 @@ export default function QuoteBuilderOrderItems({ items, onChange, permissions }:
                     className={`w-full text-left px-3 py-2.5 text-sm flex justify-between items-center gap-3 hover:bg-(--color-surface) transition-colors ${inventorySelected?.id === item.id ? "bg-(--color-surface) font-medium" : ""}`}
                   >
                     <span>{item.name}</span>
-                    <span className="text-(--color-muted) shrink-0">${Number(item.flatPrice).toFixed(0)}/day</span>
+                    <span className="text-(--color-muted) shrink-0">${Number(item.flatPrice).toFixed(0)}{item.isPerFoot ? "/ft" : "/day"}</span>
                   </button>
                 ))}
                 {filteredInventory.length === 0 ? (
@@ -252,7 +256,7 @@ export default function QuoteBuilderOrderItems({ items, onChange, permissions }:
             )}
             {inventorySelected ? (
               <div className="space-y-1.5">
-                <Label>Qty</Label>
+                <Label>{inventorySelected?.isPerFoot ? "Feet" : "Qty"}</Label>
                 <Input type="number" inputMode="numeric" min={1} value={inventoryQty}
                   onChange={(e) => setInventoryQty(Math.max(1, Number(e.target.value)))} className="text-base" />
               </div>

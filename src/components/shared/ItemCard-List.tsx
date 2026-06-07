@@ -51,7 +51,7 @@ export default function ItemCardList({ item, avail, hasRange, cartLine, onAdd, o
             <button
               type="button"
               onClick={() => quickEdit?.openItemEdit(item.id)}
-              className="absolute top-1 right-1 z-10 rounded-full bg-white/90 border border-(--color-border) p-1 text-(--color-muted) hover:text-(--color-foreground) transition-colors md:opacity-0 md:group-hover:opacity-100 focus:opacity-100"
+              className="absolute top-1 right-1 z-10 rounded-full bg-white/90 border border-(--color-border) p-1 text-(--color-muted) hover:text-(--color-foreground) transition-colors"
               aria-label="Edit item"
             >
               <Pencil size={10} />

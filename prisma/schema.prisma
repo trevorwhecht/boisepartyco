@@ -286,7 +286,7 @@ model Item {
   qty             Int?
   size            String?
   capacity        String?
-  pricingMode     String    @default("per_day")
+  isPerFoot       Boolean   @default(false)
   pricingNote     String?
   sortOrder       Int       @default(0)
   isActive        Boolean   @default(true)

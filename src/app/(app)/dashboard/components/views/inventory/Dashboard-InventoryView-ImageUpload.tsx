@@ -81,7 +81,7 @@ export default function DashboardInventoryViewImageUpload({ value, onChange, dis
       <div className="space-y-2">
         <div className="relative rounded-md overflow-hidden border border-(--color-border) bg-(--color-surface)">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={value} alt="Item image" className="w-full h-40 object-cover" />
+          <img src={value} alt="Item image" className="w-full h-40 object-contain" />
           <button
             type="button"
             onClick={() => onChange(null)}
@@ -110,7 +110,7 @@ export default function DashboardInventoryViewImageUpload({ value, onChange, dis
       <div className="space-y-2">
         <div className="relative rounded-md overflow-hidden border border-(--color-border) bg-(--color-surface)">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={fallbackImageUrl} alt="Current library image" className="w-full h-40 object-cover" />
+          <img src={fallbackImageUrl} alt="Current library image" className="w-full h-40 object-contain" />
           <span className="absolute top-2 left-2 rounded text-[10px] font-semibold uppercase tracking-wide px-1.5 py-0.5 bg-(--color-background)/80 text-(--color-muted)">
             Library image
           </span>

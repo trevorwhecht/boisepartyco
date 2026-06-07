@@ -41,11 +41,15 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
   const { from: _from, to: _to } = await searchParams
 
   // Category item counts
-  const cats = await prisma.category.findMany({
-    where: { isActive: true },
-    select: { slug: true, _count: { select: { items: true } } },
-  })
+  const [cats, tentConfigCount] = await Promise.all([
+    prisma.category.findMany({
+      where: { isActive: true },
+      select: { slug: true, _count: { select: { items: true } } },
+    }),
+    prisma.tentConfiguration.count({ where: { isActive: true } }),
+  ])
   const countBySlug = Object.fromEntries(cats.map(c => [c.slug, c._count.items]))
+  countBySlug["tent"] = tentConfigCount
 
   return (
     <main>

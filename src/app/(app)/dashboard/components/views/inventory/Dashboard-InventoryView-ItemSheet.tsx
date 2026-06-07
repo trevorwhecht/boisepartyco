@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
 import { Switch } from "@/components/ui/switch"
 import { Button } from "@/components/ui/button"
-import type { AdminItemSummary, PricingMode } from "@/models/inventory"
+import type { AdminItemSummary } from "@/models/inventory"
 import { ITEM_IMAGES } from "@/lib/item-images"
 import DashboardInventoryViewImageUpload from "./Dashboard-InventoryView-ImageUpload"
 
@@ -24,7 +24,6 @@ export default function DashboardInventoryViewItemSheet({ item, open, onOpenChan
   const [isActive, setIsActive] = useState(true)
   const [imageUrl, setImageUrl] = useState<string | null>(null)
   const [flatPrice, setFlatPrice] = useState("")
-  const [pricingMode, setPricingMode] = useState<PricingMode>("per_day")
   const [isUploading, setIsUploading] = useState(false)
   const [isPending, startTransition] = useTransition()
 
@@ -34,7 +33,6 @@ export default function DashboardInventoryViewItemSheet({ item, open, onOpenChan
       setIsActive(item.isActive)
       setImageUrl(item.primaryImageUrl ?? null)
       setFlatPrice(String(item.flatPrice))
-      setPricingMode(item.pricingMode)
     }
   }, [item])
 
@@ -67,7 +65,6 @@ export default function DashboardInventoryViewItemSheet({ item, open, onOpenChan
           isActive,
           primaryImageUrl: imageUrl || null,
           flatPrice: parsedPrice,
-          pricingMode,
         }),
       })
       const json = await res.json()
@@ -125,19 +122,9 @@ export default function DashboardInventoryViewItemSheet({ item, open, onOpenChan
               />
               <p className="text-xs text-(--color-muted)">Set to 0 for "call for pricing"</p>
             </div>
-            <div className="space-y-1">
-              <Label htmlFor="inv-item-pricing-mode" className="text-xs uppercase tracking-wide text-(--color-muted)">Pricing Mode</Label>
-              <select
-                id="inv-item-pricing-mode"
-                value={pricingMode}
-                onChange={e => setPricingMode(e.target.value as PricingMode)}
-                className="w-full h-10 rounded-md border border-(--color-border) bg-(--color-background) px-3 text-base text-(--color-foreground) focus:outline-none focus:ring-2 focus:ring-(--color-primary)/50"
-              >
-                <option value="per_day">Per Day</option>
-                <option value="per_foot">Per Foot</option>
-                <option value="per_event">Per Event</option>
-              </select>
-            </div>
+            {/* TODO[5]: isPerFoot toggle — add this field to the Create Item form when
+                admin item creation is built. Lighting items are the only isPerFoot=true
+                items and are seeded directly, so no edit UI is needed for now. */}
             <div className="flex items-center justify-between rounded-md bg-(--color-surface) px-3 py-3">
               <Label htmlFor="inv-item-active" className="text-sm text-(--color-foreground) cursor-pointer">Active</Label>
               <Switch

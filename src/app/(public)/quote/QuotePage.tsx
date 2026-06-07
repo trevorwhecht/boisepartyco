@@ -2,7 +2,7 @@
 import { useState, useTransition, useEffect } from "react"
 import { useSearchParams, useRouter } from "next/navigation"
 import Link from "next/link"
-import { ArrowRight, ArrowLeft, X, Info, CheckCircle } from "lucide-react"
+import { ArrowRight, ArrowLeft, X, CheckCircle } from "lucide-react"
 import { useCart } from "@/contexts/CartContext"
 import { useInventoryMode } from "@/contexts/InventoryModeContext"
 import DateRangeField from "@/components/shared/DateRangeField"
@@ -151,7 +151,7 @@ export default function QuotePage() {
             <div className="bg-white border border-(--shop-line) rounded-xl p-14 text-center max-w-md w-full">
               <h3 className="serif text-3xl font-medium mb-3">Get in touch</h3>
               <p className="text-sm text-(--shop-ink-soft) leading-relaxed mb-6">
-                Browse our inventory, then reach out — we'll confirm availability and send you a formal quote within 4 business hours.
+                Browse our inventory, then reach out — we'll confirm availability and send you a formal quote soon.
               </p>
               <Link href="/contact" className="inline-flex items-center gap-2 px-6 py-3.5 rounded-full text-sm font-semibold text-white"
                 style={{ background: "var(--shop-blue)" }}>
@@ -173,7 +173,7 @@ export default function QuotePage() {
             <a href="/" className="hover:text-(--shop-ink)">Home</a> / <span className="text-(--shop-ink)">Your Quote</span>
           </p>
           <h1 className="serif font-medium leading-tight tracking-tight" style={{ fontSize: "clamp(28px, 8vw, 56px)" }}>Your quote</h1>
-          <p className="mt-2 text-base text-(--shop-ink-soft)">Review your list, confirm dates, and we'll come back within 4 business hours.</p>
+          <p className="mt-2 text-base text-(--shop-ink-soft)">Review your list, confirm dates, and we'll be back to you soon.</p>
         </div>
       </section>
 
@@ -258,7 +258,7 @@ export default function QuotePage() {
             {step === "contact" ? (
               <div className="bg-white border border-(--shop-line) rounded-xl p-7">
                 <h3 className="serif text-3xl font-medium mb-1">Your details</h3>
-                <p className="text-sm text-(--shop-ink-soft) mb-6">We'll send your formal quote here within 4 business hours.</p>
+                <p className="text-sm text-(--shop-ink-soft) mb-6">We'll send your formal quote here soon.</p>
                 <div className="grid grid-cols-2 gap-4">
                   {[
                     { label: "First name *", key: "firstName", span: 1 },
@@ -323,7 +323,7 @@ export default function QuotePage() {
                 </div>
                 <h3 className="serif text-4xl font-medium">Quote on the way.</h3>
                 <p className="text-sm text-(--shop-ink-soft) mt-4 max-w-sm mx-auto leading-relaxed">
-                  We've received your request and are holding your items for 48 hours. Look for a formal quote in your inbox within 4 business hours.
+                  We've received your request and are holding your items for 48 hours. Look for a formal quote in your inbox soon.
                 </p>
                 {orderId ? (
                   <div className="mono mt-6 text-xs text-(--shop-ink-soft)">Reference: BPR-{orderId}</div>
@@ -373,10 +373,6 @@ export default function QuotePage() {
                 ) : null}
               </>
             ) : null}
-            <p className="mt-4 text-xs text-(--shop-ink-soft) leading-relaxed">
-              <Info size={12} className="inline mr-1" />
-              Final total may vary based on site visit and final guest count.
-            </p>
           </aside>
         </div>
       </section>

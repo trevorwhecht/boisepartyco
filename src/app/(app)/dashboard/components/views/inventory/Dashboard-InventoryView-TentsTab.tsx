@@ -1,9 +1,11 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import { Loader2 } from "lucide-react"
+import { toast } from "sonner"
 import { Badge } from "@/components/ui/badge"
-import DashboardInventoryViewTentPartSheet from "./Dashboard-InventoryView-TentPartSheet"
 import DashboardInventoryViewTentConfigSheet from "./Dashboard-InventoryView-TentConfigSheet"
+import AdminTentBOMSheet from "@/components/shared/AdminTentBOMSheet"
 import type { AdminTentPartSummary, AdminTentConfigSummary } from "@/models/inventory"
 
 type Tab = "parts" | "configs"
@@ -15,8 +17,9 @@ export default function DashboardInventoryViewTentsTab({ role }: Props) {
   const [configs, setConfigs] = useState<AdminTentConfigSummary[]>([])
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState<Tab>("parts")
-  const [selectedPart, setSelectedPart] = useState<AdminTentPartSummary | null>(null)
-  const [partSheetOpen, setPartSheetOpen] = useState(false)
+  const [editingId, setEditingId] = useState<number | null>(null)
+  const [editQty, setEditQty] = useState("")
+  const [savingId, setSavingId] = useState<number | null>(null)
   const [selectedConfig, setSelectedConfig] = useState<AdminTentConfigSummary | null>(null)
   const [configSheetOpen, setConfigSheetOpen] = useState(false)
   const isAdmin = role === "admin"
@@ -34,9 +37,34 @@ export default function DashboardInventoryViewTentsTab({ role }: Props) {
     })
   }, [isAdmin])
 
-  function handlePartClick(part: AdminTentPartSummary) {
-    setSelectedPart(part)
-    setPartSheetOpen(true)
+  function handleQtyClick(part: AdminTentPartSummary) {
+    if (savingId === part.id) return
+    setEditingId(part.id)
+    setEditQty(part.qty !== null ? String(part.qty) : "")
+  }
+
+  async function handleQtySave(part: AdminTentPartSummary) {
+    const parsed = parseInt(editQty, 10)
+    if (isNaN(parsed) || parsed < 0) {
+      toast.error("Qty must be a non-negative whole number.")
+      setEditingId(null)
+      return
+    }
+    setEditingId(null)
+    setSavingId(part.id)
+    const res = await fetch(`/api/admin/inventory/tent-parts/${part.id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ qty: parsed }),
+    })
+    const json = await res.json()
+    setSavingId(null)
+    if (json.error) { toast.error(json.error); return }
+    setParts(prev => prev.map(p => p.id === json.data.id ? json.data : p))
+    const configsRes = await fetch("/api/admin/inventory/tent-configurations")
+    const { data } = await configsRes.json()
+    if (data) setConfigs(data)
+    toast.success("Saved")
   }
 
   function handleConfigClick(config: AdminTentConfigSummary) {
@@ -44,16 +72,13 @@ export default function DashboardInventoryViewTentsTab({ role }: Props) {
     setConfigSheetOpen(true)
   }
 
-  async function handlePartSaved(updated: AdminTentPartSummary) {
-    setParts(prev => prev.map(p => p.id === updated.id ? updated : p))
-    // Re-fetch configs so canBuild / bottleneck recalculates from new qty
-    const res = await fetch("/api/admin/inventory/tent-configurations")
-    const { data } = await res.json()
-    if (data) setConfigs(data)
-  }
-
-  function handleConfigSaved(updated: AdminTentConfigSummary) {
-    setConfigs(prev => prev.map(c => c.id === updated.id ? updated : c))
+  async function handleAdminConfigSaved(_updated: AdminTentConfigSummary) {
+    const [partsRes, configsRes] = await Promise.all([
+      fetch("/api/admin/inventory/tent-parts").then(r => r.json()),
+      fetch("/api/admin/inventory/tent-configurations").then(r => r.json()),
+    ])
+    if (partsRes.data) setParts(partsRes.data)
+    if (configsRes.data) setConfigs(configsRes.data)
   }
 
   if (loading) return <div className="p-6 text-sm text-(--color-muted)">Loading…</div>
@@ -94,7 +119,7 @@ export default function DashboardInventoryViewTentsTab({ role }: Props) {
         <div className="space-y-3">
           <div>
             <h3 className="text-sm font-semibold text-(--color-foreground)">Tent Parts</h3>
-            <p className="text-xs text-(--color-muted)">Physical units you own — click a row to edit qty</p>
+            <p className="text-xs text-(--color-muted)">Physical units you own — click a qty value to edit</p>
           </div>
           <div className="rounded-lg border border-(--color-border) overflow-hidden">
             <div className="w-full overflow-x-auto">
@@ -110,16 +135,43 @@ export default function DashboardInventoryViewTentsTab({ role }: Props) {
                   {parts.map(part => (
                     <tr
                       key={part.id}
-                      className={[
-                        "border-b border-(--color-border) last:border-0 cursor-pointer transition-colors hover:bg-(--color-surface)",
-                        selectedPart?.id === part.id && partSheetOpen ? "bg-(--color-surface)" : "",
-                      ].join(" ")}
-                      onClick={() => handlePartClick(part)}
+                      className="border-b border-(--color-border) last:border-0 transition-colors hover:bg-(--color-surface)"
                     >
                       <td className="px-4 py-3 font-medium text-(--color-foreground)">{part.name}</td>
                       <td className="px-4 py-3 capitalize text-(--color-muted)">{part.partType}</td>
-                      <td className="px-4 py-3 text-center font-semibold text-(--color-foreground)">
-                        {part.qty !== null ? part.qty : <span className="text-(--color-muted)">—</span>}
+                      <td
+                        className="px-4 py-3 text-center font-semibold text-(--color-foreground)"
+                        onClick={() => editingId !== part.id && handleQtyClick(part)}
+                      >
+                        {savingId === part.id ? (
+                          <Loader2 className="h-4 w-4 animate-spin mx-auto text-(--color-muted)" />
+                        ) : editingId === part.id ? (
+                          <div className="flex items-center justify-center gap-2">
+                            <input
+                              type="number"
+                              inputMode="numeric"
+                              min={0}
+                              value={editQty}
+                              autoFocus
+                              onChange={e => setEditQty(e.target.value)}
+                              onKeyDown={e => {
+                                if (e.key === "Enter") handleQtySave(part)
+                                if (e.key === "Escape") setEditingId(null)
+                              }}
+                              className="w-16 text-center text-sm font-semibold border border-(--color-border) rounded px-2 py-1 bg-(--color-background) focus:outline-none focus:ring-1 focus:ring-(--color-primary)"
+                            />
+                            <button
+                              onClick={e => { e.stopPropagation(); handleQtySave(part) }}
+                              className="text-xs font-medium text-(--color-primary) hover:underline"
+                            >
+                              Save
+                            </button>
+                          </div>
+                        ) : (
+                          <span className="cursor-text hover:text-(--color-primary) transition-colors">
+                            {part.qty !== null ? part.qty : <span className="text-(--color-muted) font-normal">—</span>}
+                          </span>
+                        )}
                       </td>
                     </tr>
                   ))}
@@ -213,21 +265,20 @@ export default function DashboardInventoryViewTentsTab({ role }: Props) {
       ) : null}
 
       {isAdmin ? (
-        <DashboardInventoryViewTentPartSheet
-          part={selectedPart}
-          open={partSheetOpen}
-          onOpenChange={setPartSheetOpen}
-          onSaved={handlePartSaved}
+        <AdminTentBOMSheet
+          config={selectedConfig}
+          allParts={parts}
+          open={configSheetOpen}
+          onOpenChange={setConfigSheetOpen}
+          onSaved={handleAdminConfigSaved}
         />
-      ) : null}
-
-      <DashboardInventoryViewTentConfigSheet
-        config={selectedConfig}
-        open={configSheetOpen}
-        onOpenChange={setConfigSheetOpen}
-        onSaved={handleConfigSaved}
-        role={role}
-      />
+      ) : (
+        <DashboardInventoryViewTentConfigSheet
+          config={selectedConfig}
+          open={configSheetOpen}
+          onOpenChange={setConfigSheetOpen}
+        />
+      )}
     </div>
   )
 }

@@ -519,7 +519,7 @@ export async function getTentConfigDailyAvailability(
  */
 export async function getTentConfigBuildableCount(
   tentConfigId: number,
-): Promise<Omit<AdminTentConfigSummary, "id" | "name" | "widthFt" | "lengthFt" | "isActive" | "flatPrice">> {
+): Promise<Omit<AdminTentConfigSummary, "id" | "slug" | "name" | "widthFt" | "lengthFt" | "isActive" | "flatPrice" | "primaryImageUrl">> {
   const config = await prisma.tentConfiguration.findUnique({
     where: { id: tentConfigId },
     include: {
@@ -533,12 +533,20 @@ export async function getTentConfigBuildableCount(
     },
   })
 
+  const dbParts = (config?.bomParts ?? []).map(row => ({
+    tentPartId: row.tentPartId,
+    name: row.tentPart.name,
+    partType: row.tentPart.partType,
+    qtyRequired: row.qtyRequired,
+    qty: row.tentPart.qty,
+  }))
+
   if (!config || !config.bomComplete || config.bomParts.length === 0) {
     return {
       bomComplete: config?.bomComplete ?? false,
       canBuild: 0,
       bottleneck: null,
-      bomParts: [],
+      bomParts: dbParts,
     }
   }
 
@@ -563,11 +571,6 @@ export async function getTentConfigBuildableCount(
     bomComplete: true,
     canBuild,
     bottleneck,
-    bomParts: config.bomParts.map(row => ({
-      tentPartId: row.tentPartId,
-      name: row.tentPart.name,
-      partType: row.tentPart.partType,
-      qtyRequired: row.qtyRequired,
-    })),
+    bomParts: dbParts,
   }
 }

@@ -1,6 +1,6 @@
 "use client"
 import Image from "next/image"
-import { AlertTriangle, Pencil, Plus } from "lucide-react"
+import { AlertTriangle, Info, Pencil, Plus } from "lucide-react"
 import AvailabilityBadge from "@/components/shared/AvailabilityBadge"
 import AvailabilityCalendarPopover from "@/components/shared/AvailabilityCalendarPopover"
 import QtyStepper from "@/components/shared/QtyStepper"
@@ -21,7 +21,9 @@ export default function TentConfigCard({ config, avail, hasRange }: Props) {
   const mode = useInventoryMode()
   const quickEdit = useAdminQuickEdit()
   const { data: session } = useSession()
-  const isPrivileged = session?.user?.role === "admin" || session?.user?.role === "employee"
+  const role = session?.user?.role
+  const isAdmin = role === "admin"
+  const isEmployee = role === "employee"
   const { lines, addToCart, updateLine } = useCart()
   const imgSrc = config.primaryImageUrl ?? TENT_IMAGES[config.slug] ?? null
   const cartLine = lines.find((l) => l.refId === config.id && l.kind === "tentConfig") ?? null
@@ -45,14 +47,23 @@ export default function TentConfigCard({ config, avail, hasRange }: Props) {
             {config.name}
           </div>
         )}
-        {isPrivileged ? (
+        {isAdmin ? (
           <button
             type="button"
             onClick={() => quickEdit?.openTentEdit(config.id)}
-            className="absolute top-2 right-2 z-10 rounded-full bg-white/90 border border-(--color-border) p-1.5 text-(--color-muted) hover:text-(--color-foreground) transition-colors md:opacity-0 md:group-hover:opacity-100 focus:opacity-100"
-            aria-label="Edit tent BOM"
+            className="absolute top-2 right-2 z-10 rounded-full bg-white/90 border border-(--color-border) p-1.5 text-(--color-muted) hover:text-(--color-foreground) transition-colors"
+            aria-label="Edit tent"
           >
             <Pencil size={12} />
+          </button>
+        ) : isEmployee ? (
+          <button
+            type="button"
+            onClick={() => quickEdit?.openTentView(config.id)}
+            className="absolute top-2 right-2 z-10 rounded-full bg-white/90 border border-(--color-border) p-1.5 text-(--color-muted) hover:text-(--color-foreground) transition-colors"
+            aria-label="View packing list"
+          >
+            <Info size={12} />
           </button>
         ) : null}
       </div>

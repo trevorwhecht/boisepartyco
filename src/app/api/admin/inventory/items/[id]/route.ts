@@ -3,9 +3,7 @@ import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 
-const VALID_PRICING_MODES = ["per_day", "per_foot", "per_event"]
-
-const ITEM_SELECT = { id: true, sku: true, slug: true, name: true, qty: true, isActive: true, primaryImageUrl: true, sortOrder: true, flatPrice: true, pricingMode: true } as const
+const ITEM_SELECT = { id: true, sku: true, slug: true, name: true, qty: true, isActive: true, primaryImageUrl: true, sortOrder: true, flatPrice: true, isPerFoot: true } as const
 
 export async function GET(
   _req: Request,
@@ -42,7 +40,7 @@ export async function PATCH(
   if (isNaN(id)) return NextResponse.json({ data: null, error: "Invalid id" }, { status: 400 })
 
   const body = await req.json()
-  const { qty, isActive, primaryImageUrl, flatPrice, pricingMode } = body
+  const { qty, isActive, primaryImageUrl, flatPrice, isPerFoot } = body
 
   if (qty !== undefined && (typeof qty !== "number" || !Number.isInteger(qty) || qty < 0)) {
     return NextResponse.json({ data: null, error: "qty must be a non-negative integer" }, { status: 400 })
@@ -54,10 +52,6 @@ export async function PATCH(
     }
   }
 
-  if (pricingMode !== undefined && !VALID_PRICING_MODES.includes(pricingMode)) {
-    return NextResponse.json({ data: null, error: "Invalid pricingMode" }, { status: 400 })
-  }
-
   const item = await prisma.item.update({
     where: { id },
     data: {
@@ -65,7 +59,7 @@ export async function PATCH(
       ...(isActive !== undefined ? { isActive } : {}),
       ...(primaryImageUrl !== undefined ? { primaryImageUrl: primaryImageUrl || null } : {}),
       ...(flatPrice !== undefined ? { flatPrice } : {}),
-      ...(pricingMode !== undefined ? { pricingMode } : {}),
+      ...(isPerFoot !== undefined ? { isPerFoot } : {}),
     },
     select: ITEM_SELECT,
   })

@@ -174,7 +174,7 @@ type ItemSeed = {
   qty: number | null            // null = serialized
   size: string
   capacity: string
-  pricingMode?: "per_day" | "per_foot" | "per_event"
+  isPerFoot?: boolean
   pricingNote?: string
   sortOrder?: number
   // Spec data — kind tells the seeder which spec table to populate
@@ -196,8 +196,8 @@ const ITEMS: ItemSeed[] = [
   { sku: "TENT-15x15",     slug: "15x15-base",          name: "15'x15' Tent (base unit)",          blurb: "Single-piece frame tent.",   categorySlug: "tent", subcategory: "Tent base units",  flatPrice: 330, qty: null, size: "15' × 15'", capacity: "24 guests", sortOrder: 2, spec: { kind: "tent", widthFt: 15, lengthFt: 15, style: "Frame" } },
 
   // ── Tent add-ons (priced per foot) ──
-  { sku: "TENT-LIGHTS",   slug: "tent-lights",       name: "Tent Lights",     blurb: "Warm white string lights, priced per linear foot.", categorySlug: "lighting", subcategory: "Tent add-ons", flatPrice: 1, qty: 2000, size: "per ft", capacity: "per foot", pricingMode: "per_foot", pricingNote: "Priced per linear foot", sortOrder: 1, spec: { kind: "lighting", lightType: "string-lights", pricePerFoot: 1, minFeet: 10 } },
-  { sku: "TENT-SIDEWALL", slug: "tent-side-wall",    name: "Tent Side Wall",  blurb: "Solid or clear sidewall panels — keeps wind out.",   categorySlug: "tent",     subcategory: "Tent add-ons", flatPrice: 5, qty: 1000, size: "per ft", capacity: "per foot", pricingMode: "per_foot", pricingNote: "Priced per linear foot", sortOrder: 3, spec: { kind: "decoration", decType: "side-wall" } },
+  { sku: "TENT-LIGHTS",   slug: "tent-lights",       name: "Tent Lights",     blurb: "Warm white string lights, priced per linear foot.", categorySlug: "lighting", subcategory: "Tent add-ons", flatPrice: 1, qty: 2000, size: "per ft", capacity: "per foot", isPerFoot: true, pricingNote: "Priced per linear foot", sortOrder: 1, spec: { kind: "lighting", lightType: "string-lights", pricePerFoot: 1, minFeet: 10 } },
+  { sku: "TENT-SIDEWALL", slug: "tent-side-wall",    name: "Tent Side Wall",  blurb: "Solid or clear sidewall panels — keeps wind out.",   categorySlug: "tent",     subcategory: "Tent add-ons", flatPrice: 5, qty: 1000, size: "per ft", capacity: "per foot", isPerFoot: true, pricingNote: "Priced per linear foot", sortOrder: 3, spec: { kind: "decoration", decType: "side-wall" } },
   { sku: "TENT-HEATER",   slug: "tent-heater",       name: "Tent Heater",     blurb: "Indirect propane tent heater. Keeps a 30×30 cozy.",    categorySlug: "heater",   subcategory: "Tent add-ons", flatPrice: 225, qty: null, size: "propane",   capacity: "tent climate", sortOrder: 1, spec: { kind: "heater", heaterType: "heater", fuelType: "propane" } },
   { sku: "TENT-COOLER",   slug: "tent-cooler",       name: "Tent Cooler",     blurb: "Tent A/C unit — closed-wall summer essential.",         categorySlug: "heater",   subcategory: "Tent add-ons", flatPrice: 350, qty: null, size: "4-ton",     capacity: "tent climate", sortOrder: 2, spec: { kind: "heater", heaterType: "cooler", fuelType: "electric" } },
 
@@ -352,7 +352,7 @@ export async function seedRentalInventory(prisma: PrismaClient) {
         categoryId, subcategory: item.subcategory,
         flatPrice: item.flatPrice as any, qty: item.qty,
         size: item.size, capacity: item.capacity,
-        pricingMode: item.pricingMode ?? "per_day",
+        isPerFoot: item.isPerFoot ?? false,
         pricingNote: item.pricingNote ?? null,
         sortOrder: item.sortOrder ?? 0,
       },
@@ -361,7 +361,7 @@ export async function seedRentalInventory(prisma: PrismaClient) {
         categoryId, subcategory: item.subcategory,
         flatPrice: item.flatPrice as any, qty: item.qty,
         size: item.size, capacity: item.capacity,
-        pricingMode: item.pricingMode ?? "per_day",
+        isPerFoot: item.isPerFoot ?? false,
         pricingNote: item.pricingNote ?? null,
         sortOrder: item.sortOrder ?? 0,
       },

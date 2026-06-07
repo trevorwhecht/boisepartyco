@@ -40,7 +40,7 @@ export async function GET(
       categoryId: true,
       category: { select: { slug: true, name: true } },
       subcategory: true, flatPrice: true, qty: true, size: true,
-      capacity: true, pricingMode: true, pricingNote: true,
+      capacity: true, isPerFoot: true, pricingNote: true,
       sortOrder: true, isActive: true, primaryImageUrl: true,
       images: {
         select: { id: true, url: true, alt: true, sortOrder: true },

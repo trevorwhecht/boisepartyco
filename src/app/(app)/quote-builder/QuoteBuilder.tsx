@@ -23,6 +23,7 @@ export type DraftLineItem = {
   qty: number
   unitPrice: number
   unitCost: number
+  isPerFoot?: boolean
 }
 
 export type DraftSetupCost = {

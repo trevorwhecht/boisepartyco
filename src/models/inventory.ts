@@ -11,8 +11,6 @@ export type PartType = "panel" | "pole" | "crown" | "hardware"
 
 export type SerializedStatus = "available" | "damaged" | "in_repair" | "decommissioned"
 
-export type PricingMode = "per_day" | "per_foot" | "per_event"
-
 // -----------------------------------------------------------------------------
 // Reads
 // -----------------------------------------------------------------------------
@@ -40,7 +38,7 @@ export type ItemSummary = {
   qty: number | null
   size: string | null
   capacity: string | null
-  pricingMode: PricingMode
+  isPerFoot: boolean
   pricingNote: string | null
   sortOrder: number
   isActive: boolean
@@ -190,7 +188,7 @@ export type AdminItemSummary = {
   primaryImageUrl: string | null
   sortOrder: number
   flatPrice: number
-  pricingMode: PricingMode
+  isPerFoot: boolean
 }
 
 export type AdminTentPartSummary = {
@@ -204,10 +202,12 @@ export type AdminTentPartSummary = {
 
 export type AdminTentConfigSummary = {
   id: number
+  slug: string
   name: string
   widthFt: number
   lengthFt: number
   flatPrice: number
+  primaryImageUrl: string | null
   isActive: boolean
   bomComplete: boolean
   canBuild: number
@@ -223,5 +223,6 @@ export type AdminTentConfigSummary = {
     name: string
     partType: string
     qtyRequired: number
+    qty: number | null
   }[]
 }

@@ -19,7 +19,7 @@ export async function GET(req: Request) {
 
   const items = await prisma.item.findMany({
     where: { categoryId: id },
-    select: { id: true, sku: true, slug: true, name: true, qty: true, isActive: true, primaryImageUrl: true, sortOrder: true, flatPrice: true, pricingMode: true },
+    select: { id: true, sku: true, slug: true, name: true, qty: true, isActive: true, primaryImageUrl: true, sortOrder: true, flatPrice: true, isPerFoot: true },
     orderBy: { sortOrder: "asc" },
   })
 

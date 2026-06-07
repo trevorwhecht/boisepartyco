@@ -30,7 +30,7 @@ export async function GET(req: Request) {
       qty: true,
       size: true,
       capacity: true,
-      pricingMode: true,
+      isPerFoot: true,
       pricingNote: true,
       sortOrder: true,
       isActive: true,

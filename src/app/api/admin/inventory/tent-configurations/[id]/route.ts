@@ -7,7 +7,7 @@ import { getTentConfigBuildableCount } from "@/services/inventoryService"
 async function buildResponse(id: number) {
   const config = await prisma.tentConfiguration.findUnique({
     where: { id },
-    select: { id: true, name: true, widthFt: true, lengthFt: true, flatPrice: true, isActive: true, bomComplete: true, sortOrder: true },
+    select: { id: true, slug: true, name: true, widthFt: true, lengthFt: true, flatPrice: true, primaryImageUrl: true, isActive: true, bomComplete: true, sortOrder: true },
   })
   if (!config) return null
   const buildable = await getTentConfigBuildableCount(id)
@@ -49,7 +49,7 @@ export async function PATCH(
   if (isNaN(id)) return NextResponse.json({ data: null, error: "Invalid id" }, { status: 400 })
 
   const body = await req.json()
-  const { flatPrice, isActive, bomParts } = body
+  const { flatPrice, isActive, primaryImageUrl, bomParts } = body
 
   if (flatPrice !== undefined) {
     if (typeof flatPrice !== "number" || isNaN(flatPrice) || flatPrice < 0) {
@@ -68,25 +68,40 @@ export async function PATCH(
     }
   }
 
-  if (flatPrice !== undefined || isActive !== undefined) {
+  if (flatPrice !== undefined || isActive !== undefined || primaryImageUrl !== undefined) {
     await prisma.tentConfiguration.update({
       where: { id },
       data: {
         ...(flatPrice !== undefined ? { flatPrice } : {}),
         ...(isActive !== undefined ? { isActive } : {}),
+        ...(primaryImageUrl !== undefined ? { primaryImageUrl: primaryImageUrl || null } : {}),
       },
     })
   }
 
-  if (bomParts?.length) {
+  if (bomParts !== undefined) {
+    // Full replace: upsert parts with qty > 0, delete the rest
+    const toUpsert = (bomParts as { tentPartId: number; qtyRequired: number }[]).filter(p => p.qtyRequired > 0)
+    const toUpsertIds = toUpsert.map(p => p.tentPartId)
+
+    await prisma.tentConfigPart.deleteMany({
+      where: { tentConfigId: id, tentPartId: { notIn: toUpsertIds } },
+    })
+
     await Promise.all(
-      bomParts.map(({ tentPartId, qtyRequired }: { tentPartId: number; qtyRequired: number }) =>
-        prisma.tentConfigPart.update({
+      toUpsert.map(({ tentPartId, qtyRequired }) =>
+        prisma.tentConfigPart.upsert({
           where: { tentConfigId_tentPartId: { tentConfigId: id, tentPartId } },
-          data: { qtyRequired },
+          update: { qtyRequired },
+          create: { tentConfigId: id, tentPartId, qtyRequired },
         })
       )
     )
+
+    await prisma.tentConfiguration.update({
+      where: { id },
+      data: { bomComplete: toUpsertIds.length > 0 },
+    })
   }
 
   const data = await buildResponse(id)
