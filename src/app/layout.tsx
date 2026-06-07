@@ -1,8 +1,14 @@
 import type { Metadata, Viewport } from "next"
 import "./globals.css"
 import SessionWrapper from "@/components/shared/layout/SessionWrapper"
+import { AdminQuickEditProvider } from "@/contexts/AdminQuickEditContext"
 import { Toaster } from "@/components/ui/sonner"
 import { Cormorant_Garamond, JetBrains_Mono } from "next/font/google"
+import dynamic from "next/dynamic"
+
+const DevLogger = process.env.NODE_ENV === "development"
+  ? dynamic(() => import("@/components/DevLogger"))
+  : () => null
 
 const cormorant = Cormorant_Garamond({
   subsets: ["latin"],
@@ -34,8 +40,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en" className={`${cormorant.variable} ${jetbrains.variable}`} suppressHydrationWarning>
       <body className="min-h-dvh flex flex-col bg-(--color-background) text-(--color-foreground) antialiased">
         <SessionWrapper>
-          {children}
-          <Toaster />
+          <AdminQuickEditProvider>
+            {children}
+            <Toaster />
+            <DevLogger />
+          </AdminQuickEditProvider>
         </SessionWrapper>
       </body>
     </html>

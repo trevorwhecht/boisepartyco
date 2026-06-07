@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import { useRouter } from "next/navigation"
 import { Badge } from "@/components/ui/badge"
 import DashboardInventoryViewItemSheet from "./Dashboard-InventoryView-ItemSheet"
 import type { AdminItemSummary } from "@/models/inventory"
@@ -13,6 +14,7 @@ export default function DashboardInventoryViewCategoryTab({ categoryId, role }: 
   const [selectedItem, setSelectedItem] = useState<AdminItemSummary | null>(null)
   const [sheetOpen, setSheetOpen] = useState(false)
   const isAdmin = role === "admin"
+  const router = useRouter()
 
   useEffect(() => {
     setLoading(true)
@@ -30,6 +32,7 @@ export default function DashboardInventoryViewCategoryTab({ categoryId, role }: 
 
   function handleSaved(updated: AdminItemSummary) {
     setItems(prev => prev.map(i => i.id === updated.id ? updated : i))
+    router.refresh()
   }
 
   if (loading) {
@@ -44,12 +47,13 @@ export default function DashboardInventoryViewCategoryTab({ categoryId, role }: 
     <div className="p-4 md:p-6">
       <div className="rounded-lg border border-(--color-border) overflow-hidden">
         <div className="w-full overflow-x-auto">
-          <table className="w-full text-sm border-collapse min-w-[480px]">
+          <table className="w-full text-sm border-collapse min-w-[560px]">
             <thead>
               <tr className="bg-(--color-surface) border-b border-(--color-border)">
                 <th className="text-left px-4 py-2.5 font-medium text-(--color-muted)">Name</th>
                 <th className="text-left px-4 py-2.5 font-medium text-(--color-muted)">SKU</th>
                 <th className="text-center px-4 py-2.5 font-medium text-(--color-muted)">Qty Owned</th>
+                <th className="text-right px-4 py-2.5 font-medium text-(--color-muted)">Price</th>
                 <th className="text-center px-4 py-2.5 font-medium text-(--color-muted)">Active</th>
               </tr>
             </thead>
@@ -68,6 +72,9 @@ export default function DashboardInventoryViewCategoryTab({ categoryId, role }: 
                   <td className="px-4 py-3 font-mono text-xs text-(--color-muted)">{item.sku}</td>
                   <td className="px-4 py-3 text-center font-semibold text-(--color-foreground)">
                     {item.qty !== null ? item.qty : <span className="text-(--color-muted)">—</span>}
+                  </td>
+                  <td className="px-4 py-3 text-right font-semibold text-(--color-foreground)">
+                    {item.flatPrice > 0 ? `$${item.flatPrice.toFixed(2)}` : <span className="text-(--color-muted)">Call</span>}
                   </td>
                   <td className="px-4 py-3 text-center">
                     {item.isActive ? (

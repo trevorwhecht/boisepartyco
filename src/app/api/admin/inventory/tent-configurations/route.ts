@@ -12,14 +12,15 @@ export async function GET() {
   }
 
   const configs = await prisma.tentConfiguration.findMany({
-    select: { id: true, name: true, widthFt: true, lengthFt: true, isActive: true, bomComplete: true, sortOrder: true },
+    select: { id: true, name: true, widthFt: true, lengthFt: true, flatPrice: true, isActive: true, bomComplete: true, sortOrder: true },
     orderBy: { sortOrder: "asc" },
   })
 
   const data = await Promise.all(
     configs.map(async (config) => {
       const buildable = await getTentConfigBuildableCount(config.id)
-      return { ...config, ...buildable }
+      const { flatPrice: rawFp, ...configRest } = config
+      return { ...configRest, flatPrice: rawFp.toNumber(), ...buildable }
     }),
   )
 

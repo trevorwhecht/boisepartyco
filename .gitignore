@@ -39,6 +39,9 @@ yarn-error.log*
 # Claude Code worktrees (temp isolated workspaces, never commit)
 .claude/worktrees/
 
+# dev log capture
+/.logs/
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts

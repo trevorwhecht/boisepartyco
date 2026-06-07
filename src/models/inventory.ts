@@ -189,6 +189,8 @@ export type AdminItemSummary = {
   isActive: boolean
   primaryImageUrl: string | null
   sortOrder: number
+  flatPrice: number
+  pricingMode: PricingMode
 }
 
 export type AdminTentPartSummary = {
@@ -205,6 +207,7 @@ export type AdminTentConfigSummary = {
   name: string
   widthFt: number
   lengthFt: number
+  flatPrice: number
   isActive: boolean
   bomComplete: boolean
   canBuild: number

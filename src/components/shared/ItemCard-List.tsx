@@ -1,11 +1,13 @@
 "use client"
 import Image from "next/image"
-import { Plus } from "lucide-react"
+import { Pencil, Plus } from "lucide-react"
 import AvailabilityBadge from "@/components/shared/AvailabilityBadge"
 import AvailabilityCalendarPopover from "@/components/shared/AvailabilityCalendarPopover"
 import QtyStepper from "@/components/shared/QtyStepper"
 import { ITEM_IMAGES } from "@/lib/item-images"
 import { useInventoryMode } from "@/contexts/InventoryModeContext"
+import { useAdminQuickEdit } from "@/contexts/AdminQuickEditContext"
+import { useSession } from "next-auth/react"
 import type { ItemSummary, AvailabilityResult, CartLine } from "@/models/inventory"
 
 type Props = {
@@ -19,16 +21,19 @@ type Props = {
 
 export default function ItemCardList({ item, avail, hasRange, cartLine, onAdd, onUpdate }: Props) {
   const mode = useInventoryMode()
+  const quickEdit = useAdminQuickEdit()
+  const { data: session } = useSession()
+  const isPrivileged = session?.user?.role === "admin" || session?.user?.role === "employee"
   const disabled = hasRange && avail.available <= 0
   const maxQty = hasRange ? avail.available + (cartLine?.qty ?? 0) : (item.qty ?? 99)
-  const imgSrc = ITEM_IMAGES[item.slug] ?? null
+  const imgSrc = item.primaryImageUrl ?? ITEM_IMAGES[item.slug] ?? null
 
   return (
     <div className="bg-white border border-(--shop-line) rounded-xl p-3.5 flex gap-3.5 items-start md:grid md:gap-5 md:items-center md:p-4 md:grid-cols-[96px_1fr_auto_auto_auto]">
 
-      {/* Col 1: Image — no longer a link */}
+      {/* Col 1: Image */}
       <div className="shrink-0">
-        <div className="w-18 md:w-auto aspect-4/3 relative rounded-lg md:rounded-xl overflow-hidden bg-(--shop-paper)">
+        <div className="w-18 md:w-auto aspect-4/3 relative rounded-lg md:rounded-xl overflow-hidden bg-(--shop-paper) group">
           {imgSrc ? (
             <Image
               src={imgSrc}
@@ -42,6 +47,16 @@ export default function ItemCardList({ item, avail, hasRange, cartLine, onAdd, o
               {item.name}
             </div>
           )}
+          {isPrivileged ? (
+            <button
+              type="button"
+              onClick={() => quickEdit?.openItemEdit(item.id)}
+              className="absolute top-1 right-1 z-10 rounded-full bg-white/90 border border-(--color-border) p-1 text-(--color-muted) hover:text-(--color-foreground) transition-colors md:opacity-0 md:group-hover:opacity-100 focus:opacity-100"
+              aria-label="Edit item"
+            >
+              <Pencil size={10} />
+            </button>
+          ) : null}
         </div>
       </div>
 

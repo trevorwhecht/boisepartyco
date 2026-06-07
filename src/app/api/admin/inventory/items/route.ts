@@ -19,9 +19,12 @@ export async function GET(req: Request) {
 
   const items = await prisma.item.findMany({
     where: { categoryId: id },
-    select: { id: true, sku: true, slug: true, name: true, qty: true, isActive: true, primaryImageUrl: true, sortOrder: true },
+    select: { id: true, sku: true, slug: true, name: true, qty: true, isActive: true, primaryImageUrl: true, sortOrder: true, flatPrice: true, pricingMode: true },
     orderBy: { sortOrder: "asc" },
   })
 
-  return NextResponse.json({ data: items, error: null })
+  return NextResponse.json({
+    data: items.map(item => ({ ...item, flatPrice: item.flatPrice.toNumber() })),
+    error: null,
+  })
 }

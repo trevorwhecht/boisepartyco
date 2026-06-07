@@ -1,12 +1,14 @@
 "use client"
 import Image from "next/image"
-import { AlertTriangle, Plus } from "lucide-react"
+import { AlertTriangle, Pencil, Plus } from "lucide-react"
 import AvailabilityBadge from "@/components/shared/AvailabilityBadge"
 import AvailabilityCalendarPopover from "@/components/shared/AvailabilityCalendarPopover"
 import QtyStepper from "@/components/shared/QtyStepper"
 import { TENT_IMAGES } from "@/lib/tent-images"
 import { useCart } from "@/contexts/CartContext"
 import { useInventoryMode } from "@/contexts/InventoryModeContext"
+import { useAdminQuickEdit } from "@/contexts/AdminQuickEditContext"
+import { useSession } from "next-auth/react"
 import type { TentConfigurationSummary, ConfigAvailabilityResult } from "@/models/inventory"
 
 type Props = {
@@ -17,16 +19,19 @@ type Props = {
 
 export default function TentConfigCard({ config, avail, hasRange }: Props) {
   const mode = useInventoryMode()
+  const quickEdit = useAdminQuickEdit()
+  const { data: session } = useSession()
+  const isPrivileged = session?.user?.role === "admin" || session?.user?.role === "employee"
   const { lines, addToCart, updateLine } = useCart()
-  const imgSrc = TENT_IMAGES[config.slug] ?? null
+  const imgSrc = config.primaryImageUrl ?? TENT_IMAGES[config.slug] ?? null
   const cartLine = lines.find((l) => l.refId === config.id && l.kind === "tentConfig") ?? null
   const disabled = hasRange && avail.available <= 0
   const maxQty = hasRange ? Math.max(1, avail.available + (cartLine?.qty ?? 0)) : 99
 
   return (
     <div className="bg-white border border-(--shop-line) rounded-xl overflow-hidden flex flex-col">
-      {/* Image — no longer a link */}
-      <div className="aspect-4/3 relative bg-(--shop-paper)">
+      {/* Image */}
+      <div className="aspect-4/3 relative bg-(--shop-paper) group">
         {imgSrc ? (
           <Image
             src={imgSrc}
@@ -40,6 +45,16 @@ export default function TentConfigCard({ config, avail, hasRange }: Props) {
             {config.name}
           </div>
         )}
+        {isPrivileged ? (
+          <button
+            type="button"
+            onClick={() => quickEdit?.openTentEdit(config.id)}
+            className="absolute top-2 right-2 z-10 rounded-full bg-white/90 border border-(--color-border) p-1.5 text-(--color-muted) hover:text-(--color-foreground) transition-colors md:opacity-0 md:group-hover:opacity-100 focus:opacity-100"
+            aria-label="Edit tent BOM"
+          >
+            <Pencil size={12} />
+          </button>
+        ) : null}
       </div>
 
       <div className="p-4 md:p-5 flex-1 flex flex-col">

@@ -1,11 +1,13 @@
 "use client"
 import Image from "next/image"
-import { Plus } from "lucide-react"
+import { Pencil, Plus } from "lucide-react"
 import AvailabilityBadge from "@/components/shared/AvailabilityBadge"
 import AvailabilityCalendarPopover from "@/components/shared/AvailabilityCalendarPopover"
 import QtyStepper from "@/components/shared/QtyStepper"
 import { ITEM_IMAGES } from "@/lib/item-images"
 import { useInventoryMode } from "@/contexts/InventoryModeContext"
+import { useAdminQuickEdit } from "@/contexts/AdminQuickEditContext"
+import { useSession } from "next-auth/react"
 import type { ItemSummary, AvailabilityResult, CartLine } from "@/models/inventory"
 
 type Props = {
@@ -19,14 +21,17 @@ type Props = {
 
 export default function ItemCardGrid({ item, avail, hasRange, cartLine, onAdd, onUpdate }: Props) {
   const mode = useInventoryMode()
+  const quickEdit = useAdminQuickEdit()
+  const { data: session } = useSession()
+  const isPrivileged = session?.user?.role === "admin" || session?.user?.role === "employee"
   const disabled = hasRange && avail.available <= 0
   const maxQty = hasRange ? avail.available + (cartLine?.qty ?? 0) : (item.qty ?? 99)
-  const imgSrc = ITEM_IMAGES[item.slug] ?? null
+  const imgSrc = item.primaryImageUrl ?? ITEM_IMAGES[item.slug] ?? null
 
   return (
     <div className="bg-white border border-(--shop-line) rounded-xl overflow-hidden flex flex-col">
-      {/* Image — no longer a link */}
-      <div className="aspect-4/3 relative bg-(--shop-paper)">
+      {/* Image */}
+      <div className="aspect-4/3 relative bg-(--shop-paper) group">
         {imgSrc ? (
           <Image
             src={imgSrc}
@@ -40,6 +45,16 @@ export default function ItemCardGrid({ item, avail, hasRange, cartLine, onAdd, o
             {item.name}
           </div>
         )}
+        {isPrivileged ? (
+          <button
+            type="button"
+            onClick={() => quickEdit?.openItemEdit(item.id)}
+            className="absolute top-2 right-2 z-10 rounded-full bg-white/90 border border-(--color-border) p-1.5 text-(--color-muted) hover:text-(--color-foreground) transition-colors md:opacity-0 md:group-hover:opacity-100 focus:opacity-100"
+            aria-label="Edit item"
+          >
+            <Pencil size={12} />
+          </button>
+        ) : null}
       </div>
 
       <div className="p-4 md:p-5 flex-1 flex flex-col">

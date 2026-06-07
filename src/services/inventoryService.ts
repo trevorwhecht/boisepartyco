@@ -519,7 +519,7 @@ export async function getTentConfigDailyAvailability(
  */
 export async function getTentConfigBuildableCount(
   tentConfigId: number,
-): Promise<Omit<AdminTentConfigSummary, "id" | "name" | "widthFt" | "lengthFt" | "isActive">> {
+): Promise<Omit<AdminTentConfigSummary, "id" | "name" | "widthFt" | "lengthFt" | "isActive" | "flatPrice">> {
   const config = await prisma.tentConfiguration.findUnique({
     where: { id: tentConfigId },
     include: {
