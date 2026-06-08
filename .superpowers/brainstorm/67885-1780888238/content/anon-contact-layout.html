@@ -1,0 +1,102 @@
+<h2>Anonymous User: Contact Step Layout</h2>
+<p class="subtitle">Where should the "Sign in" / "Create account" prompts live?</p>
+
+<div class="cards">
+
+  <!-- Option A: Soft banner above the form -->
+  <div class="card" data-choice="a" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="card-image" style="background:#f8f9fc;padding:16px 20px;font-family:system-ui,sans-serif;font-size:12px;">
+      <!-- Banner at top -->
+      <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:10px 14px;display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+        <span style="color:#1e3a8a;font-size:11px;">Have an account? <span style="font-weight:700;text-decoration:underline;cursor:pointer;">Sign in</span> to auto-fill.</span>
+        <span style="color:#1e40af;font-size:11px;font-weight:700;text-decoration:underline;cursor:pointer;">Create account</span>
+      </div>
+      <!-- Form fields -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">
+        <div><div style="color:#9ca3af;font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;margin-bottom:4px;">First name *</div><div style="border:1px solid #d1d5db;border-radius:6px;padding:7px 10px;color:#6b7280;background:#fff;"></div></div>
+        <div><div style="color:#9ca3af;font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;margin-bottom:4px;">Last name *</div><div style="border:1px solid #d1d5db;border-radius:6px;padding:7px 10px;color:#6b7280;background:#fff;"></div></div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">
+        <div><div style="color:#9ca3af;font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;margin-bottom:4px;">Phone *</div><div style="border:1px solid #d1d5db;border-radius:6px;padding:7px 10px;background:#fff;"></div></div>
+        <div><div style="color:#9ca3af;font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;margin-bottom:4px;">Email *</div><div style="border:1px solid #d1d5db;border-radius:6px;padding:7px 10px;background:#fff;"></div></div>
+      </div>
+      <div style="color:#9ca3af;font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;margin-bottom:4px;">Venue / address</div>
+      <div style="border:1px solid #d1d5db;border-radius:6px;padding:7px 10px;background:#fff;margin-bottom:8px;"></div>
+      <!-- Submit row -->
+      <div style="display:flex;justify-content:flex-end;margin-top:10px;">
+        <div style="background:#1e40af;color:#fff;padding:8px 20px;border-radius:20px;font-size:12px;font-weight:600;display:inline-flex;align-items:center;gap:6px;">Send quote request →</div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>Soft banner above the form</h3>
+      <p>"Have an account? Sign in" and "Create account" appear as a banner at the top before the fields.</p>
+    </div>
+  </div>
+
+  <!-- Option B: Below the form, above submit button -->
+  <div class="card" data-choice="b" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="card-image" style="background:#f8f9fc;padding:16px 20px;font-family:system-ui,sans-serif;font-size:12px;">
+      <!-- Form fields -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">
+        <div><div style="color:#9ca3af;font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;margin-bottom:4px;">First name *</div><div style="border:1px solid #d1d5db;border-radius:6px;padding:7px 10px;background:#fff;"></div></div>
+        <div><div style="color:#9ca3af;font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;margin-bottom:4px;">Last name *</div><div style="border:1px solid #d1d5db;border-radius:6px;padding:7px 10px;background:#fff;"></div></div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">
+        <div><div style="color:#9ca3af;font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;margin-bottom:4px;">Phone *</div><div style="border:1px solid #d1d5db;border-radius:6px;padding:7px 10px;background:#fff;"></div></div>
+        <div><div style="color:#9ca3af;font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;margin-bottom:4px;">Email *</div><div style="border:1px solid #d1d5db;border-radius:6px;padding:7px 10px;background:#fff;"></div></div>
+      </div>
+      <div style="color:#9ca3af;font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;margin-bottom:4px;">Venue / address</div>
+      <div style="border:1px solid #d1d5db;border-radius:6px;padding:7px 10px;background:#fff;margin-bottom:12px;"></div>
+      <!-- Account actions between form and submit -->
+      <div style="border-top:1px solid #e5e7eb;padding-top:10px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center;">
+        <span style="color:#6b7280;font-size:11px;">Already have an account? <span style="color:#1e40af;font-weight:700;text-decoration:underline;">Sign in</span></span>
+        <span style="color:#1e40af;font-size:11px;font-weight:700;text-decoration:underline;cursor:pointer;">+ Create account</span>
+      </div>
+      <!-- Submit row -->
+      <div style="display:flex;justify-content:flex-end;">
+        <div style="background:#1e40af;color:#fff;padding:8px 20px;border-radius:20px;font-size:12px;font-weight:600;display:inline-flex;align-items:center;gap:6px;">Send quote request →</div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>Below the form, above submit</h3>
+      <p>Form first, then a subtle divider with "Sign in" and "+ Create account" links, then the send button. Focused flow — account prompts don't interrupt filling out the form.</p>
+    </div>
+  </div>
+
+  <!-- Option C: Inline password reveal on "Create account" click, shown in context -->
+  <div class="card" data-choice="c" onclick="toggleSelect(this)">
+    <div class="letter">C</div>
+    <div class="card-image" style="background:#f8f9fc;padding:16px 20px;font-family:system-ui,sans-serif;font-size:12px;">
+      <!-- Form fields (compact) -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">
+        <div><div style="color:#9ca3af;font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;margin-bottom:4px;">First name *</div><div style="border:1px solid #d1d5db;border-radius:6px;padding:7px 10px;background:#fff;"></div></div>
+        <div><div style="color:#9ca3af;font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;margin-bottom:4px;">Last name *</div><div style="border:1px solid #d1d5db;border-radius:6px;padding:7px 10px;background:#fff;"></div></div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">
+        <div><div style="color:#9ca3af;font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;margin-bottom:4px;">Phone *</div><div style="border:1px solid #d1d5db;border-radius:6px;padding:7px 10px;background:#fff;"></div></div>
+        <div><div style="color:#9ca3af;font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;margin-bottom:4px;">Email *</div><div style="border:1px solid #d1d5db;border-radius:6px;padding:7px 10px;background:#fff;"></div></div>
+      </div>
+      <!-- Password field revealed (shown as "create account" state) -->
+      <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:10px 12px;margin-bottom:10px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+          <span style="font-size:10px;color:#1e3a8a;font-weight:700;">✓ Create an account with this email</span>
+          <span style="font-size:10px;color:#6b7280;cursor:pointer;">✕</span>
+        </div>
+        <div style="color:#9ca3af;font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;margin-bottom:4px;">Password</div>
+        <div style="border:1px solid #bfdbfe;border-radius:6px;padding:7px 10px;background:#fff;display:flex;justify-content:space-between;"><span style="color:#9ca3af;">••••••••</span><span style="font-size:10px;color:#6b7280;">Show</span></div>
+      </div>
+      <!-- Bottom row: sign in link + submit -->
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <span style="color:#6b7280;font-size:10px;">Have an account? <span style="color:#1e40af;text-decoration:underline;font-weight:600;">Sign in</span></span>
+        <div style="background:#1e40af;color:#fff;padding:8px 18px;border-radius:20px;font-size:11px;font-weight:600;">Create &amp; send →</div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>Password reveals inline at bottom</h3>
+      <p>Form fields, then at the very bottom: a "Create account" toggle that slides in a password field, and a separate "Sign in" link. When active, submit button changes to "Create &amp; send".</p>
+    </div>
+  </div>
+
+</div>

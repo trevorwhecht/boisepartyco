@@ -15,7 +15,7 @@ type Props = {
   avail: AvailabilityResult
   hasRange: boolean
   cartLine: CartLine | null
-  onAdd: (refId: number, qty: number, name: string, unitPrice: number) => void
+  onAdd: (refId: number, qty: number, name: string, unitPrice: number, imageUrl?: string | null) => void
   onUpdate: (refId: number, qty: number) => void
 }
 
@@ -91,11 +91,11 @@ export default function ItemCardGrid({ item, avail, hasRange, cartLine, onAdd, o
             {/* Add / stepper row */}
             <div className="flex justify-end">
               {cartLine ? (
-                <QtyStepper compact value={cartLine.qty} min={1} max={maxQty} onChange={(q) => onUpdate(item.id, q)} />
+                <QtyStepper compact value={cartLine.qty} min={0} max={maxQty} onChange={(q) => onUpdate(item.id, q)} />
               ) : (
                 <button
                   disabled={disabled}
-                  onClick={() => onAdd(item.id, 1, item.name, Number(item.flatPrice))}
+                  onClick={() => onAdd(item.id, 1, item.name, Number(item.flatPrice), imgSrc)}
                   className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full text-xs font-semibold disabled:bg-(--shop-paper) disabled:text-(--shop-ink-soft) bg-(--shop-blue) text-white cursor-pointer disabled:cursor-not-allowed"
                 >
                   <Plus size={12} /> Add

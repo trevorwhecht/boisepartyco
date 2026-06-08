@@ -131,7 +131,7 @@ export default function TentConfigCard({ config, avail, hasRange }: Props) {
               ) : (
                 <button
                   disabled={disabled}
-                  onClick={() => addToCart(config.id, "tentConfig", 1, config.name, Number(config.flatPrice))}
+                  onClick={() => addToCart(config.id, "tentConfig", 1, config.name, Number(config.flatPrice), imgSrc)}
                   className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full text-xs font-semibold disabled:bg-(--shop-paper) disabled:text-(--shop-ink-soft) bg-(--shop-blue) text-white cursor-pointer disabled:cursor-not-allowed"
                 >
                   <Plus size={12} /> Add

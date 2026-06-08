@@ -2,7 +2,8 @@
 
 import { useSession, signIn, signOut } from "next-auth/react"
 import { useRouter } from "next/navigation"
-import { useState, useTransition } from "react"
+import { useState, useTransition, useEffect } from "react"
+import { useAccountPanel } from "@/contexts/AccountPanelContext"
 import { Eye, EyeOff, LayoutGrid, BarChart2, Users, Settings, UserCog, LogOut, Package } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
@@ -20,6 +21,8 @@ interface Props {
 export default function NavbarAccountPanel({ isOpen, onClose, navigate }: Props) {
   const { data: session } = useSession()
   const router = useRouter()
+  const { prefillEmail } = useAccountPanel()
+  const [signinEmail, setSigninEmail] = useState("")
   const [view, setView] = useState<"signin" | "signup">("signin")
   const [signInError, setSignInError] = useState<string | null>(null)
   const [signUpError, setSignUpError] = useState<string | null>(null)
@@ -28,6 +31,11 @@ export default function NavbarAccountPanel({ isOpen, onClose, navigate }: Props)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [isPending, startTransition] = useTransition()
   const [showGuestModal, setShowGuestModal] = useState(false)
+
+  // Sync pre-fill email from context whenever it changes (only if field is currently empty)
+  useEffect(() => {
+    if (prefillEmail && !signinEmail) setSigninEmail(prefillEmail)
+  }, [prefillEmail]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const role = session?.user?.role
   const isStaff = role === "admin" || role === "employee"
@@ -222,7 +230,8 @@ export default function NavbarAccountPanel({ isOpen, onClose, navigate }: Props)
           <h3 className="font-semibold text-sm mb-3">Sign In</h3>
           <form onSubmit={handleSignIn} className="space-y-3">
             <Field id="panel-signin-email" label="Email">
-              <Input id="panel-signin-email" name="email" type="email" inputMode="email" autoComplete="email" required className="text-base h-9" />
+              <Input id="panel-signin-email" name="email" type="email" inputMode="email" autoComplete="email" required className="text-base h-9"
+                value={signinEmail} onChange={e => setSigninEmail(e.target.value)} />
             </Field>
             <Field id="panel-signin-password" label="Password">
               <div className="relative">

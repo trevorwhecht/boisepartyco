@@ -1,0 +1,122 @@
+<h2>Consent Section Layout</h2>
+<p class="subtitle">User must check at least one: SMS, email, or create an account. Where does this sit and how does it look?</p>
+
+<div class="cards">
+
+  <!-- Option A: Grouped "How should we reach you?" block -->
+  <div class="card" data-choice="a" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="card-image" style="background:#f8f9fc;padding:18px 22px;font-family:system-ui,sans-serif;font-size:12px;">
+
+      <!-- Form fields above (abbreviated) -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;opacity:.45;">
+        <div style="border:1px solid #d1d5db;border-radius:6px;padding:7px 10px;background:#fff;color:#374151;">Sarah</div>
+        <div style="border:1px solid #d1d5db;border-radius:6px;padding:7px 10px;background:#fff;color:#374151;">Miller</div>
+      </div>
+
+      <!-- Consent block -->
+      <div style="border:1px solid #e5e7eb;border-radius:10px;padding:14px 16px;background:#fff;margin-bottom:12px;">
+        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:#374151;margin-bottom:10px;">How should we reach you? <span style="color:#e53e3e;font-size:10px;font-weight:400;text-transform:none;letter-spacing:0;">(at least one required)</span></div>
+
+        <!-- SMS -->
+        <div style="display:flex;align-items:flex-start;gap:8px;margin-bottom:10px;">
+          <div style="width:15px;height:15px;border:1.5px solid #1e40af;border-radius:3px;background:#1e40af;flex-shrink:0;margin-top:1px;display:flex;align-items:center;justify-content:center;">
+            <svg width="9" height="9" viewBox="0 0 12 12" fill="none" stroke="#fff" stroke-width="2.5"><path d="M2 6l3 3 5-5"/></svg>
+          </div>
+          <div>
+            <div style="font-size:12px;font-weight:600;color:#111827;">Text me quote &amp; order updates</div>
+            <div style="font-size:10px;color:#9ca3af;line-height:1.4;margin-top:2px;">By opting in, you agree to receive texts from Boise Party Co about your quote and order. Msg &amp; data rates may apply. Msg frequency varies. Reply STOP to cancel, HELP for help. <span style="text-decoration:underline;cursor:pointer;">Privacy Policy</span></div>
+          </div>
+        </div>
+
+        <!-- Email -->
+        <div style="display:flex;align-items:flex-start;gap:8px;margin-bottom:10px;">
+          <div style="width:15px;height:15px;border:1.5px solid #d1d5db;border-radius:3px;background:#fff;flex-shrink:0;margin-top:1px;"></div>
+          <div>
+            <div style="font-size:12px;font-weight:600;color:#111827;">Email me my quote confirmation</div>
+            <div style="font-size:10px;color:#9ca3af;line-height:1.4;margin-top:2px;">We'll email your quote details and any important updates. You can unsubscribe at any time.</div>
+          </div>
+        </div>
+
+        <!-- Create account -->
+        <div style="display:flex;align-items:flex-start;gap:8px;">
+          <div style="width:15px;height:15px;border:1.5px solid #d1d5db;border-radius:3px;background:#fff;flex-shrink:0;margin-top:1px;"></div>
+          <div>
+            <div style="font-size:12px;font-weight:600;color:#111827;">Save my info — create an account</div>
+            <div style="font-size:10px;color:#9ca3af;margin-top:2px;">Track your quotes and orders without re-entering your details.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Submit -->
+      <div style="display:flex;justify-content:flex-end;">
+        <div style="background:#1e40af;color:#fff;padding:9px 20px;border-radius:20px;font-size:12px;font-weight:600;">Send quote request →</div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>Grouped "How should we reach you?" block</h3>
+      <p>All three options (SMS, email, account) live inside one labeled card with a single "at least one required" note. Cleanest grouping — makes the relationship obvious.</p>
+    </div>
+  </div>
+
+  <!-- Option B: Inline checkboxes below form, no separate card -->
+  <div class="card" data-choice="b" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="card-image" style="background:#f8f9fc;padding:18px 22px;font-family:system-ui,sans-serif;font-size:12px;">
+
+      <!-- Form fields above (abbreviated) -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;opacity:.45;">
+        <div style="border:1px solid #d1d5db;border-radius:6px;padding:7px 10px;background:#fff;color:#374151;">Sarah</div>
+        <div style="border:1px solid #d1d5db;border-radius:6px;padding:7px 10px;background:#fff;color:#374151;">Miller</div>
+      </div>
+      <div style="border:1px solid #d1d5db;border-radius:6px;padding:7px 10px;background:#fff;color:#9ca3af;margin-bottom:14px;opacity:.45;">sarah@example.com</div>
+
+      <div style="border-top:1px solid #f0f0f0;padding-top:12px;margin-bottom:12px;">
+        <div style="font-size:10px;color:#e53e3e;font-weight:600;margin-bottom:8px;">Choose at least one to continue:</div>
+
+        <!-- SMS row -->
+        <div style="display:flex;align-items:flex-start;gap:8px;margin-bottom:8px;">
+          <div style="width:15px;height:15px;border:1.5px solid #1e40af;border-radius:3px;background:#1e40af;flex-shrink:0;margin-top:1px;display:flex;align-items:center;justify-content:center;">
+            <svg width="9" height="9" viewBox="0 0 12 12" fill="none" stroke="#fff" stroke-width="2.5"><path d="M2 6l3 3 5-5"/></svg>
+          </div>
+          <div>
+            <span style="font-size:12px;color:#111827;font-weight:600;">Text updates</span>
+            <div style="font-size:10px;color:#9ca3af;margin-top:1px;">By opting in, you agree to receive texts from Boise Party Co. Msg &amp; data rates may apply. Reply STOP to cancel. <span style="text-decoration:underline;">Privacy Policy</span></div>
+          </div>
+        </div>
+
+        <!-- Email row -->
+        <div style="display:flex;align-items:flex-start;gap:8px;margin-bottom:8px;">
+          <div style="width:15px;height:15px;border:1.5px solid #d1d5db;border-radius:3px;background:#fff;flex-shrink:0;margin-top:1px;"></div>
+          <div><span style="font-size:12px;color:#111827;font-weight:600;">Email confirmation</span>
+          <div style="font-size:10px;color:#9ca3af;margin-top:1px;">Receive your quote by email. Unsubscribe any time.</div></div>
+        </div>
+
+        <!-- Account row -->
+        <div style="display:flex;align-items:flex-start;gap:8px;">
+          <div style="width:15px;height:15px;border:1.5px solid #d1d5db;border-radius:3px;background:#fff;flex-shrink:0;margin-top:1px;"></div>
+          <div><span style="font-size:12px;color:#111827;font-weight:600;">Save my info — create an account</span></div>
+        </div>
+      </div>
+
+      <!-- Submit -->
+      <div style="display:flex;justify-content:flex-end;">
+        <div style="background:#1e40af;color:#fff;padding:9px 20px;border-radius:20px;font-size:12px;font-weight:600;">Send quote request →</div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>Inline checkboxes below the form</h3>
+      <p>No separate card — options sit inline below the form fields, separated by a thin divider. More minimal, less visual weight.</p>
+    </div>
+  </div>
+
+</div>
+
+<div class="section" style="margin-top:24px;padding:14px 18px;background:#fff8f0;border:1px solid #f5d0a9;border-radius:8px;">
+  <p class="label">Compliance note</p>
+  <p style="font-size:12px;color:#6b4c2a;margin:0;line-height:1.5;">
+    Under TCPA, service cannot be conditioned on agreeing to receive marketing texts.
+    Since "create an account" is always a third path, users are never forced to opt into SMS/email — this is compliant.
+    The SMS checkbox must never be pre-checked. The required disclosure text (<em>Msg &amp; data rates may apply · Reply STOP to cancel · Privacy Policy link</em>) must appear beneath the SMS checkbox.
+  </p>
+</div>

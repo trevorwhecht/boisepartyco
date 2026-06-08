@@ -144,6 +144,7 @@ export type CartLine = {
   qty: number
   name: string               // display name — captured at add-time to avoid extra fetches
   unitPrice: number          // snapshot — server re-validates
+  imageUrl?: string | null   // captured at add-time for display on quote page
   notes?: string | null
 }
 

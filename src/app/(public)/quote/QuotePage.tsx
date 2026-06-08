@@ -2,7 +2,9 @@
 import { useState, useTransition, useEffect } from "react"
 import { useSearchParams, useRouter } from "next/navigation"
 import Link from "next/link"
-import { ArrowRight, ArrowLeft, X, CheckCircle } from "lucide-react"
+import Image from "next/image"
+import { ArrowRight, X, CheckCircle } from "lucide-react"
+import { useSession, signIn } from "next-auth/react"
 import { useCart } from "@/contexts/CartContext"
 import { useInventoryMode } from "@/contexts/InventoryModeContext"
 import DateRangeField from "@/components/shared/DateRangeField"
@@ -10,11 +12,12 @@ import { parseLocalDate, fmtLocalDate } from "@/lib/availability"
 import QtyStepper from "@/components/shared/QtyStepper"
 import type { DateRange } from "@/components/shared/DateRangePicker"
 import type { CartLine } from "@/models/inventory"
+import QuotePageContactStep, { type ContactState } from "./components/QuotePage-ContactStep"
+import type { ConsentValue } from "./components/QuotePage-ConsentToggles"
 
 type Step = "cart" | "contact" | "confirm"
 
 const TAX_RATE = 0.06
-const DELIVERY_FEE = 85
 
 function daysBetween(from: Date, to: Date) {
   return Math.max(1, Math.round((to.getTime() - from.getTime()) / 86400000))
@@ -35,11 +38,17 @@ export default function QuotePage() {
   const days = hasRange ? daysBetween(start!, end!) : 1
 
   const { lines, updateLine, removeLine, clearCart } = useCart()
+  const { data: session } = useSession()
+  const [consent, setConsent] = useState<ConsentValue>({ sms: false, email: false, account: false })
+  const [password, setPassword] = useState("")
+  const [selectedUserId, setSelectedUserId] = useState<string | null>(null)
   const mode = useInventoryMode()
   const [step, setStep] = useState<Step>("cart")
   // availMap[`${kind}-${refId}`] = max qty the user is allowed to request
   const [availMap, setAvailMap] = useState<Record<string, number>>({})
-  // Stable key for the effect — only re-fetch when item set or dates change, not on qty edits
+  // imageMap[`${kind}-${refId}`] = imageUrl fetched from DB for legacy cart lines missing imageUrl
+  const [imageMap, setImageMap] = useState<Record<string, string | null>>({})
+  // Stable key for the effect — only re-fetch when item set changes, not on qty edits
   const lineKey = lines.map(l => `${l.kind}-${l.refId}`).join(",")
   useEffect(() => {
     if (!start || !end || lines.length === 0) { setAvailMap({}); return }
@@ -66,6 +75,48 @@ export default function QuotePage() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [start?.toISOString(), end?.toISOString(), lineKey, mode])
 
+  // Backfill imageUrl for lines loaded from localStorage before imageUrl was captured at add-time
+  useEffect(() => {
+    if (lines.length === 0) return
+    const missing = lines.filter(l => !l.imageUrl)
+    if (missing.length === 0) return
+    const itemIds = missing.filter(l => l.kind === "item").map(l => l.refId)
+    const configIds = missing.filter(l => l.kind === "tentConfig").map(l => l.refId)
+    const qs = new URLSearchParams()
+    if (itemIds.length) qs.set("itemIds", itemIds.join(","))
+    if (configIds.length) qs.set("configIds", configIds.join(","))
+    fetch(`/api/inventory/images?${qs}`)
+      .then(r => r.json())
+      .then(json => { if (json.data) setImageMap(json.data) })
+      .catch(() => {})
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [lineKey])
+
+  // Pre-fill contact form and consent from session when a regular user is logged in
+  useEffect(() => {
+    if (!session?.user) return
+    const role = (session.user as any).role
+    if (role === "admin" || role === "employee") return
+    setContact(prev => ({
+      ...prev,
+      firstName: (session.user as any).firstName || prev.firstName,
+      lastName: (session.user as any).lastName || prev.lastName,
+      email: session.user?.email || prev.email,
+    }))
+    // Pre-fill consent from saved profile — only set, never unset
+    const s = session.user as any
+    if (s.consentSms || s.consentEmail) {
+      setConsent(prev => ({
+        ...prev,
+        sms: prev.sms || !!s.consentSms,
+        email: prev.email || !!s.consentEmail,
+      }))
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [session?.user?.email])
+
+  const lineImage = (line: CartLine) => line.imageUrl ?? imageMap[`${line.kind}-${line.refId}`] ?? null
+
   const lineMax = (line: CartLine) => {
     const avail = availMap[`${line.kind}-${line.refId}`]
     // Use whichever is greater: what's available or what's already in cart
@@ -73,19 +124,17 @@ export default function QuotePage() {
     return avail !== undefined ? Math.max(line.qty, avail) : 99
   }
   const [orderId, setOrderId] = useState<number | null>(null)
-  const [contact, setContact] = useState({
+  const [contact, setContact] = useState<ContactState>({
     firstName: "", lastName: "", email: "", phone: "", notes: "", venue: "",
   })
   const [submitError, setSubmitError] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
 
   const subtotal = lines.reduce((s, l) => s + l.unitPrice * l.qty * days, 0)
-  const delivery = subtotal > 0 ? DELIVERY_FEE : 0
-  const tax = (subtotal + delivery) * TAX_RATE
-  const total = subtotal + delivery + tax
+  const tax = subtotal * TAX_RATE
+  const total = subtotal + tax
 
   const canContinue = lines.length > 0 && hasRange
-  const contactValid = contact.firstName && contact.lastName && contact.email && contact.phone
 
   const handleDateChange = (r: DateRange) => {
     const next = new URLSearchParams(params.toString())
@@ -96,28 +145,56 @@ export default function QuotePage() {
 
   const handleSubmit = () => {
     if (!start || !end) return
-    const payload = {
-      pickupDate: fmtLocalDate(start),
-      dropoffDate: fmtLocalDate(end),
-      customer: {
-        firstName: contact.firstName,
-        lastName: contact.lastName,
-        email: contact.email,
-        phone: contact.phone,
-      },
-      lines: lines.map(l => ({
-        kind: l.kind,
-        refId: l.refId,
-        qty: l.qty,
-        name: l.name,
-        unitPrice: l.unitPrice,
-      })),
-      customerNotes: contact.notes || null,
-      shipping: contact.venue ? { street: contact.venue, city: "", state: "ID", zipCode: "" } : null,
-    }
 
     startTransition(async () => {
       setSubmitError(null)
+
+      // If "Create account" was selected, create the account then sign in before submitting
+      if (consent.account && password) {
+        const createRes = await fetch("/api/users", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            email: contact.email,
+            password,
+            firstName: contact.firstName,
+            lastName: contact.lastName,
+            phone: contact.phone || undefined,
+          }),
+        })
+        const createJson = await createRes.json()
+        if (!createRes.ok || createJson.error) {
+          setSubmitError(createJson.error ?? "Failed to create account. Please try again.")
+          return
+        }
+        // Sign in so the session reflects the new account
+        await signIn("credentials", { email: contact.email, password, redirect: false })
+      }
+
+      const payload: Record<string, any> = {
+        pickupDate: fmtLocalDate(start),
+        dropoffDate: fmtLocalDate(end),
+        customer: {
+          firstName: contact.firstName,
+          lastName: contact.lastName,
+          email: contact.email,
+          phone: contact.phone,
+        },
+        lines: lines.map(l => ({
+          kind: l.kind,
+          refId: l.refId,
+          qty: l.qty,
+          name: l.name,
+          unitPrice: l.unitPrice,
+        })),
+        customerNotes: contact.notes || null,
+        shipping: contact.venue ? { street: contact.venue, city: "", state: "ID", zipCode: "" } : null,
+        consentSms: consent.sms,
+        consentEmail: consent.email,
+      }
+
+      if (selectedUserId) payload.userId = selectedUserId
+
       const res = await fetch("/api/orders", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -166,14 +243,26 @@ export default function QuotePage() {
 
   return (
     <main>
-      {/* Page header */}
-      <section className="py-8 md:py-12" style={{ background: "var(--shop-paper)" }}>
-        <div className="max-w-330 mx-auto px-4 md:px-8">
-          <p className="text-xs text-(--shop-ink-soft) mb-3">
-            <a href="/" className="hover:text-(--shop-ink)">Home</a> / <span className="text-(--shop-ink)">Your Quote</span>
-          </p>
-          <h1 className="serif font-medium leading-tight tracking-tight" style={{ fontSize: "clamp(28px, 8vw, 56px)" }}>Your quote</h1>
-          <p className="mt-2 text-base text-(--shop-ink-soft)">Review your list, confirm dates, and we'll be back to you soon.</p>
+      {/* Hero image */}
+      <section className="relative h-52 md:h-72 overflow-hidden">
+        <Image
+          src="https://images.unsplash.com/photo-1463947628408-f8581a2f4aca?w=1600&q=80"
+          alt="Blue sky with clouds"
+          fill
+          priority
+          sizes="100vw"
+          className="object-cover"
+          style={{ objectPosition: "center 30%" }}
+        />
+        <div className="absolute inset-0" style={{ background: "linear-gradient(to bottom, rgba(0,0,0,0.08) 0%, rgba(0,0,0,0.55) 100%)" }} />
+        <div className="absolute bottom-0 left-0 right-0">
+          <div className="max-w-330 mx-auto px-4 md:px-8 pb-6 md:pb-8">
+            <p className="text-xs text-white/70 mb-2">
+              <a href="/" className="hover:text-white/90">Home</a> / <span className="text-white/90">Your Quote</span>
+            </p>
+            <h1 className="serif font-medium leading-tight tracking-tight text-white" style={{ fontSize: "clamp(28px, 8vw, 56px)" }}>Your quote</h1>
+            <p className="mt-1 text-base text-white/80">Review your list, confirm dates, and we'll be back to you soon.</p>
+          </div>
         </div>
       </section>
 
@@ -213,8 +302,12 @@ export default function QuotePage() {
                     <div key={`${line.kind}-${line.refId}`}
                       className="flex gap-3 p-3.5 items-start md:grid md:gap-5 md:p-4 md:items-center md:grid-cols-[72px_1fr_auto_auto_auto]"
                       style={{ borderBottom: idx < lines.length - 1 ? "1px solid #f0f2f5" : "none" }}>
-                      {/* Image placeholder */}
-                      <div className="w-16 shrink-0 aspect-square bg-(--shop-paper) rounded-lg md:w-auto" />
+                      {/* Thumbnail */}
+                      <div className="w-16 shrink-0 aspect-square relative rounded-lg overflow-hidden bg-(--shop-paper) md:w-auto">
+                        {lineImage(line) ? (
+                          <Image src={lineImage(line)!} alt={line.name} fill sizes="72px" className="object-cover object-center" />
+                        ) : null}
+                      </div>
                       {/* Name + mobile controls */}
                       <div className="flex-1 min-w-0">
                         <span className="serif text-lg md:text-xl font-medium text-(--shop-ink)">{line.name}</span>
@@ -256,62 +349,21 @@ export default function QuotePage() {
 
             {/* Contact step */}
             {step === "contact" ? (
-              <div className="bg-white border border-(--shop-line) rounded-xl p-7">
-                <h3 className="serif text-3xl font-medium mb-1">Your details</h3>
-                <p className="text-sm text-(--shop-ink-soft) mb-6">We'll send your formal quote here soon.</p>
-                <div className="grid grid-cols-2 gap-4">
-                  {[
-                    { label: "First name *", key: "firstName", span: 1 },
-                    { label: "Last name *", key: "lastName", span: 1 },
-                    { label: "Phone *", key: "phone", span: 1 },
-                    { label: "Email *", key: "email", span: 1, type: "email" },
-                    { label: "Venue / address", key: "venue", span: 2 },
-                  ].map(f => (
-                    <div key={f.key} style={{ gridColumn: `span ${f.span}` }}>
-                      <label className="block text-[11px] font-semibold uppercase tracking-[0.1em] text-(--shop-ink-soft) mb-1.5">
-                        {f.label}
-                      </label>
-                      <input
-                        type={f.type ?? "text"}
-                        value={(contact as any)[f.key]}
-                        onChange={e => setContact(prev => ({ ...prev, [f.key]: e.target.value }))}
-                        inputMode={f.key === "phone" ? "tel" : f.key === "email" ? "email" : "text"}
-                        autoComplete={f.key === "email" ? "email" : f.key === "phone" ? "tel" : "on"}
-                        className="w-full px-3.5 py-2.5 border border-(--shop-line) rounded-lg text-sm focus:outline-none focus:border-(--shop-blue)"
-                      />
-                    </div>
-                  ))}
-                  <div style={{ gridColumn: "span 2" }}>
-                    <label className="block text-[11px] font-semibold uppercase tracking-[0.1em] text-(--shop-ink-soft) mb-1.5">
-                      Anything else we should know?
-                    </label>
-                    <textarea
-                      value={contact.notes}
-                      onChange={e => setContact(prev => ({ ...prev, notes: e.target.value }))}
-                      rows={3}
-                      className="w-full px-3.5 py-2.5 border border-(--shop-line) rounded-lg text-sm focus:outline-none focus:border-(--shop-blue) resize-y"
-                    />
-                  </div>
-                </div>
-                {submitError ? (
-                  <div className="mt-4 p-3 rounded-lg text-sm" style={{ background: "#fbeae6", color: "#c0613a" }} role="alert">
-                    {submitError}
-                  </div>
-                ) : null}
-                <div className="mt-7 flex justify-between">
-                  <button onClick={() => setStep("cart")}
-                    className="inline-flex items-center gap-1.5 text-sm text-(--shop-ink-soft) cursor-pointer">
-                    <ArrowLeft size={13} /> Back to items
-                  </button>
-                  <button
-                    disabled={!contactValid || isPending}
-                    onClick={handleSubmit}
-                    className="inline-flex items-center gap-2 px-6 py-3.5 rounded-full text-sm font-semibold text-white disabled:bg-(--shop-paper) disabled:text-(--shop-ink-soft) cursor-pointer disabled:cursor-not-allowed"
-                    style={{ background: contactValid && !isPending ? "var(--shop-blue)" : undefined }}>
-                    {isPending ? "Sending…" : "Send quote request"} {isPending ? null : <ArrowRight size={14} />}
-                  </button>
-                </div>
-              </div>
+              <QuotePageContactStep
+                session={session}
+                contact={contact}
+                onContactChange={setContact}
+                consent={consent}
+                onConsentChange={setConsent}
+                password={password}
+                onPasswordChange={setPassword}
+                onSelectUserId={setSelectedUserId}
+                onBack={() => setStep("cart")}
+                onSubmit={handleSubmit}
+                onClearError={() => setSubmitError(null)}
+                isPending={isPending}
+                submitError={submitError}
+              />
             ) : null}
 
             {/* Confirm step */}
@@ -347,11 +399,7 @@ export default function QuotePage() {
                 <span className="mono font-medium text-(--shop-ink)">${fmtCurrency(subtotal)}</span>
               </div>
               <div className="flex justify-between">
-                <span>Delivery &amp; setup</span>
-                <span className="mono font-medium text-(--shop-ink)">{subtotal > 0 ? `$${DELIVERY_FEE}` : "—"}</span>
-              </div>
-              <div className="flex justify-between">
-                <span>Tax (est.)</span>
+                <span>Tax ({(TAX_RATE * 100).toFixed(0)}%)</span>
                 <span className="mono font-medium text-(--shop-ink)">${fmtCurrency(tax)}</span>
               </div>
             </div>

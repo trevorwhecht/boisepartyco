@@ -54,7 +54,7 @@ export default function DashboardInventoryViewImageUpload({ value, onChange, dis
           return
         }
         onChange(json.url)
-        toast.success("Image uploaded")
+        toast.success("Image uploaded", { position: "top-center" })
       } finally {
         onUploadingChange?.(false)
       }

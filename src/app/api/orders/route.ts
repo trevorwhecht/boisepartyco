@@ -4,6 +4,7 @@ import { authOptions } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { serializeOrder, stripAdminFields, computeOrderTotals } from "@/services/orderService"
 import { validateOrderLines } from "@/services/inventoryService"
+import { getInventoryMode } from "@/lib/settings"
 import { sendSms } from "@/services/twilioService"
 import { sendEmail, parseEmailRecipients } from "@/services/emailService"
 import { parseLocalDate } from "@/lib/availability"
@@ -37,12 +38,12 @@ function generateToken(): string {
 }
 
 async function handlePublicShopQuote(body: any): Promise<Response> {
-  const { pickupDate, dropoffDate, customer, lines, customerNotes } = body
+  const { pickupDate, dropoffDate, customer, lines, customerNotes, userId: bodyUserId, consentSms, consentEmail } = body
 
   if (!pickupDate || !dropoffDate) {
     return NextResponse.json({ data: null, error: "pickupDate and dropoffDate are required" }, { status: 400 })
   }
-  if (!customer?.firstName || !customer?.lastName || !customer?.email || !customer?.phone) {
+  if (!bodyUserId && (!customer?.firstName || !customer?.lastName || !customer?.email || !customer?.phone)) {
     return NextResponse.json({ data: null, error: "customer firstName, lastName, email, and phone are required" }, { status: 400 })
   }
   if (!Array.isArray(lines) || lines.length === 0) {
@@ -64,9 +65,12 @@ async function handlePublicShopQuote(body: any): Promise<Response> {
     }
   }
 
-  // Validate availability before accepting the order
+  // Validate availability before accepting the order — skip when mode is off or fully_in_stock
+  const inventoryMode = await getInventoryMode()
   const validationLines = lines.map((l: any) => ({ kind: l.kind, refId: Number(l.refId), qty: Number(l.qty) }))
-  const validation = await validateOrderLines(validationLines, startDate, dueDateEnd)
+  const validation = inventoryMode === "on"
+    ? await validateOrderLines(validationLines, startDate, dueDateEnd)
+    : { ok: true, conflicts: [], warnings: [] }
   if (!validation.ok) {
     return NextResponse.json({
       data: null,
@@ -115,39 +119,65 @@ async function handlePublicShopQuote(body: any): Promise<Response> {
     }
   })
 
-  // Upsert a guest user so customer contact info lives in the system
-  const guestUser = await prisma.user.upsert({
-    where: { email: customer.email.toLowerCase() },
-    update: {},
-    create: {
-      email: customer.email.toLowerCase(),
-      firstName: customer.firstName,
-      lastName: customer.lastName,
-      phone: customer.phone,
-      role: "user",
-      password: "__guest__",
-    },
-    select: { id: true },
-  })
+  // Resolve which user to link the order to
+  let linkedUserId: string
+  if (bodyUserId) {
+    // Admin selected an existing user — verify they exist
+    const existingUser = await prisma.user.findUnique({ where: { id: bodyUserId }, select: { id: true } })
+    if (!existingUser) {
+      return NextResponse.json({ data: null, error: "Selected user not found" }, { status: 400 })
+    }
+    linkedUserId = existingUser.id
+  } else {
+    // Upsert a guest/user record by email so contact info lives in the system
+    const guestUser = await prisma.user.upsert({
+      where: { email: customer.email.toLowerCase() },
+      update: {},
+      create: {
+        email: customer.email.toLowerCase(),
+        firstName: customer.firstName,
+        lastName: customer.lastName,
+        phone: customer.phone,
+        role: "user",
+        password: "__guest__",
+      },
+      select: { id: true },
+    })
+    linkedUserId = guestUser.id
+  }
 
   const taxSetting = await prisma.universalSettings.findUnique({ where: { setting: "taxRate" } })
   const taxRate = taxSetting ? Number(taxSetting.value) : 0
   const totals = computeOrderTotals({ lineItems: lineItemRows, setUpCosts: [], taxRate })
 
-  const order = await prisma.order.create({
-    data: {
-      state: { connect: { id: 1 } },
-      user: { connect: { id: guestUser.id } },
-      startDate,
-      dueDateEnd,
-      customerNotes: customerNotes ?? null,
-      token: generateToken(),
-      createdBy: customer.email,
-      ...totals,
-      orderLineItems: { create: lineItemRows },
-    },
-    select: { id: true, token: true },
-  })
+  const [order] = await Promise.all([
+    prisma.order.create({
+      data: {
+        state: { connect: { id: 1 } },
+        user: { connect: { id: linkedUserId } },
+        startDate,
+        dueDateEnd,
+        customerNotes: customerNotes ?? null,
+        token: generateToken(),
+        createdBy: customer.email || null,
+        consentSms: consentSms === true,
+        consentEmail: consentEmail === true,
+        ...totals,
+        orderLineItems: { create: lineItemRows },
+      },
+      select: { id: true, token: true },
+    }),
+    // Persist consent preferences to the user's profile (only set, never unset)
+    consentSms === true || consentEmail === true
+      ? prisma.user.update({
+          where: { id: linkedUserId },
+          data: {
+            ...(consentSms === true ? { consentSms: true } : {}),
+            ...(consentEmail === true ? { consentEmail: true } : {}),
+          },
+        })
+      : Promise.resolve(null),
+  ])
 
   // Notify all admins on public submission (DB notification + optional SMS)
   const admins = await prisma.user.findMany({ where: { role: "admin" }, select: { id: true } })

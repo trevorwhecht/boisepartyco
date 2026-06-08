@@ -26,7 +26,7 @@ export default async function TablesChairsPage({ searchParams }: { searchParams:
     orderBy: { sortOrder: "asc" },
     select: {
       id: true, slug: true, name: true, blurb: true, flatPrice: true,
-      qty: true, subcategory: true, size: true,
+      qty: true, subcategory: true, size: true, primaryImageUrl: true,
       category: { select: { slug: true, name: true } },
     },
   })

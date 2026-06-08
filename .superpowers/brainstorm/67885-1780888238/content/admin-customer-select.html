@@ -1,0 +1,91 @@
+<h2>Admin / Employee: Contact Step Layout</h2>
+<p class="subtitle">They're making a quote for a customer. Which approach feels cleanest?</p>
+
+<div class="cards">
+
+  <!-- Option A -->
+  <div class="card" data-choice="a" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="card-image" style="background:#f8f9fc;padding:20px 24px;font-family:system-ui,sans-serif;">
+      <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.1em;color:#6b7280;margin-bottom:8px;">Customer</div>
+      <!-- Segmented toggle -->
+      <div style="display:flex;gap:0;border:1px solid #d1d5db;border-radius:8px;overflow:hidden;margin-bottom:16px;font-size:12px;">
+        <div style="flex:1;background:#1e40af;color:#fff;padding:7px 12px;text-align:center;font-weight:600;">Existing customer</div>
+        <div style="flex:1;background:#fff;color:#374151;padding:7px 12px;text-align:center;">New / guest</div>
+      </div>
+      <!-- Search dropdown -->
+      <div style="border:1px solid #d1d5db;border-radius:8px;padding:8px 12px;background:#fff;display:flex;justify-content:space-between;align-items:center;font-size:13px;color:#374151;margin-bottom:8px;">
+        <span style="color:#9ca3af;">Search by name or email…</span>
+        <svg width="12" height="12" viewBox="0 0 20 20" fill="none" stroke="#9ca3af" stroke-width="2"><circle cx="9" cy="9" r="6"/><path d="M15 15l3 3"/></svg>
+      </div>
+      <div style="background:#f0f4ff;border:1px solid #c7d2fe;border-radius:6px;padding:8px 12px;font-size:12px;color:#3730a3;">
+        <span style="font-weight:600;">Sarah Miller</span> · sarah@example.com
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>Segmented toggle + search</h3>
+      <p>Toggle between "existing customer" and "new/guest". Shows a search combobox for existing, form fields for new.</p>
+    </div>
+  </div>
+
+  <!-- Option B -->
+  <div class="card" data-choice="b" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="card-image" style="background:#f8f9fc;padding:20px 24px;font-family:system-ui,sans-serif;">
+      <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.1em;color:#6b7280;margin-bottom:8px;">Customer</div>
+      <!-- Single combobox -->
+      <div style="border:1px solid #d1d5db;border-radius:8px;background:#fff;overflow:hidden;font-size:12px;">
+        <div style="padding:8px 12px;display:flex;justify-content:space-between;align-items:center;color:#9ca3af;border-bottom:1px solid #f3f4f6;">
+          <span>Search customers…</span>
+          <svg width="12" height="12" viewBox="0 0 20 20" fill="none" stroke="#9ca3af" stroke-width="2"><circle cx="9" cy="9" r="6"/><path d="M15 15l3 3"/></svg>
+        </div>
+        <div style="padding:8px 12px;background:#eff6ff;border-bottom:1px solid #f3f4f6;display:flex;align-items:center;gap:8px;">
+          <svg width="14" height="14" viewBox="0 0 20 20" fill="none" stroke="#6b7280" stroke-width="2"><circle cx="10" cy="7" r="4"/><path d="M2 19c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+          <span style="color:#374151;">Sarah Miller</span><span style="color:#9ca3af;">· sarah@example.com</span>
+        </div>
+        <div style="padding:8px 12px;border-bottom:1px solid #f3f4f6;display:flex;align-items:center;gap:8px;">
+          <svg width="14" height="14" viewBox="0 0 20 20" fill="none" stroke="#6b7280" stroke-width="2"><circle cx="10" cy="7" r="4"/><path d="M2 19c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+          <span style="color:#374151;">James Torres</span><span style="color:#9ca3af;">· james@example.com</span>
+        </div>
+        <div style="padding:8px 12px;display:flex;align-items:center;gap:8px;color:#1e40af;font-weight:600;">
+          <svg width="14" height="14" viewBox="0 0 20 20" fill="none" stroke="#1e40af" stroke-width="2"><path d="M10 5v10M5 10h10"/></svg>
+          New / guest customer…
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>Single combobox with "New" at bottom</h3>
+      <p>One dropdown that searches all users. Last item is always "+ New / guest customer" which expands the entry form below.</p>
+    </div>
+  </div>
+
+  <!-- Option C -->
+  <div class="card" data-choice="c" onclick="toggleSelect(this)">
+    <div class="letter">C</div>
+    <div class="card-image" style="background:#f8f9fc;padding:20px 24px;font-family:system-ui,sans-serif;">
+      <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.1em;color:#6b7280;margin-bottom:8px;">Customer</div>
+      <!-- Two clickable cards -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:0;">
+        <div style="border:2px solid #1e40af;border-radius:10px;padding:14px 12px;background:#eff6ff;text-align:center;cursor:pointer;">
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="#1e40af" stroke-width="2" style="margin:0 auto 6px;display:block;"><circle cx="10" cy="7" r="4"/><path d="M2 19c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+          <div style="font-size:12px;font-weight:700;color:#1e40af;">Existing customer</div>
+          <div style="font-size:10px;color:#6b7280;margin-top:3px;">Search your list</div>
+        </div>
+        <div style="border:1px solid #d1d5db;border-radius:10px;padding:14px 12px;background:#fff;text-align:center;cursor:pointer;">
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="#6b7280" stroke-width="2" style="margin:0 auto 6px;display:block;"><path d="M10 5v10M5 10h10"/></svg>
+          <div style="font-size:12px;font-weight:600;color:#374151;">New / guest</div>
+          <div style="font-size:10px;color:#9ca3af;margin-top:3px;">Enter info manually</div>
+        </div>
+      </div>
+      <div style="margin-top:12px;border:1px solid #c7d2fe;border-radius:8px;padding:8px 12px;background:#eff6ff;font-size:12px;color:#374151;">
+        <span style="font-size:10px;color:#6b7280;display:block;margin-bottom:2px;">Selected customer</span>
+        <span style="font-weight:600;">Sarah Miller</span> · sarah@example.com
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>Two-card picker</h3>
+      <p>Two prominent cards — "Existing customer" and "New / guest". Clicking either reveals the relevant input (search vs. form).</p>
+    </div>
+  </div>
+
+</div>

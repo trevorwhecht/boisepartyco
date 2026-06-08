@@ -1,0 +1,4 @@
+{"type":"server-started","port":63672,"host":"127.0.0.1","url_host":"localhost","url":"http://localhost:63672","screen_dir":"/Users/trevorhecht/Developer/repos/nextjs/boisepartyco/.superpowers/brainstorm/87405-1780944249/content","state_dir":"/Users/trevorhecht/Developer/repos/nextjs/boisepartyco/.superpowers/brainstorm/87405-1780944249/state"}
+{"type":"screen-added","file":"/Users/trevorhecht/Developer/repos/nextjs/boisepartyco/.superpowers/brainstorm/87405-1780944249/content/page-structure.html"}
+{"type":"screen-added","file":"/Users/trevorhecht/Developer/repos/nextjs/boisepartyco/.superpowers/brainstorm/87405-1780944249/content/waiting-1.html"}
+{"type":"server-stopped","reason":"idle timeout"}

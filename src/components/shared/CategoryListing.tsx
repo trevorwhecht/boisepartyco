@@ -41,7 +41,7 @@ export default function CategoryListing({ items, hasRange, dateLabel }: Props) {
     <>
       {/* Filter strip */}
       <div className="bg-white border-b border-(--shop-line) py-4 sticky top-32 md:top-25.75 z-30">
-        <div className="max-w-[1320px] mx-auto px-4 md:px-8 flex justify-between items-center">
+        <div className="max-w-330 mx-auto px-4 md:px-8 flex justify-between items-center">
           <div className="flex gap-6 items-center">
             <span className="text-sm text-(--shop-ink-soft)">
               <strong className="text-(--shop-ink)">{visible.length}</strong> items
@@ -73,7 +73,7 @@ export default function CategoryListing({ items, hasRange, dateLabel }: Props) {
       </div>
 
       {/* Items */}
-      <div className="max-w-[1320px] mx-auto px-4 md:px-8 py-10 pb-20">
+      <div className="max-w-330 mx-auto px-4 md:px-8 py-10 pb-20">
         {groups.map((g, gi) => (
           <div key={g.name} className={gi < groups.length - 1 ? "mb-14" : ""}>
             {groups.length > 1 ? (
@@ -93,7 +93,7 @@ export default function CategoryListing({ items, hasRange, dateLabel }: Props) {
                     avail={avail}
                     hasRange={hasRange}
                     cartLine={lines.find(l => l.refId === item.id && l.kind === "item") ?? null}
-                    onAdd={(refId, qty, name, unitPrice) => addToCart(refId, "item", qty, name, unitPrice)}
+                    onAdd={(refId, qty, name, unitPrice, imageUrl) => addToCart(refId, "item", qty, name, unitPrice, imageUrl)}
                     onUpdate={(refId, qty) => updateLine(refId, "item", qty)}
                   />
                 ))}
@@ -107,7 +107,7 @@ export default function CategoryListing({ items, hasRange, dateLabel }: Props) {
                     avail={avail}
                     hasRange={hasRange}
                     cartLine={lines.find(l => l.refId === item.id && l.kind === "item") ?? null}
-                    onAdd={(refId, qty, name, unitPrice) => addToCart(refId, "item", qty, name, unitPrice)}
+                    onAdd={(refId, qty, name, unitPrice, imageUrl) => addToCart(refId, "item", qty, name, unitPrice, imageUrl)}
                     onUpdate={(refId, qty) => updateLine(refId, "item", qty)}
                   />
                 ))}

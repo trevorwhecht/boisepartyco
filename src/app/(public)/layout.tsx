@@ -4,6 +4,7 @@ import ShopHeader from "@/components/shared/layout/ShopHeader"
 import ShopFooter from "@/components/shared/layout/ShopFooter"
 import { CartProvider } from "@/contexts/CartContext"
 import { DatePickerProvider } from "@/contexts/DatePickerContext"
+import { AccountPanelProvider } from "@/contexts/AccountPanelContext"
 import { getInventoryMode } from "@/lib/settings"
 import { InventoryModeProvider } from "@/contexts/InventoryModeContext"
 
@@ -14,11 +15,13 @@ export default async function PublicLayout({ children }: { children: React.React
     <InventoryModeProvider mode={mode}>
       <CartProvider>
         <DatePickerProvider>
-          <Suspense fallback={<div style={{ height: 137, background: "#fff", borderBottom: "1px solid #e4e7ec" }} />}>
-            <ShopHeader />
-          </Suspense>
-          {children}
-          <ShopFooter />
+          <AccountPanelProvider>
+            <Suspense fallback={<div style={{ height: 137, background: "#fff", borderBottom: "1px solid #e4e7ec" }} />}>
+              <ShopHeader />
+            </Suspense>
+            {children}
+            <ShopFooter />
+          </AccountPanelProvider>
         </DatePickerProvider>
       </CartProvider>
     </InventoryModeProvider>

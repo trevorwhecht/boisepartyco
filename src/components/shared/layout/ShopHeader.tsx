@@ -15,6 +15,7 @@ import { ShopHeaderConflictDialog, type ConflictLine } from "@/components/shared
 import type { DateRange } from "@/components/shared/DateRangePicker"
 import { parseLocalDate, fmtLocalDate } from "@/lib/availability"
 import { useInventoryMode } from "@/contexts/InventoryModeContext"
+import { useAccountPanel } from "@/contexts/AccountPanelContext"
 
 const NAV = [
   { href: "/", label: "Home", match: ["/"], navClass: "hidden xl:flex" },
@@ -32,7 +33,7 @@ export default function ShopHeader() {
   const { cartCount, lines, removeLine } = useCart()
   const { isOpen: datePickerOpen, openPicker, closePicker } = useDatePicker()
   const [navOpen, setNavOpen] = useState(false)
-  const [accountOpen, setAccountOpen] = useState(false)
+  const { isOpen: accountOpen, openPanel, closePanel } = useAccountPanel()
   const [pendingDates, setPendingDates] = useState<{ s: Date; e: Date } | null>(null)
   const [conflicts, setConflicts] = useState<ConflictLine[]>([])
 
@@ -43,6 +44,9 @@ export default function ShopHeader() {
   const toStr = searchParams.get("to")
   const start = fromStr ? parseLocalDate(fromStr) : null
   const end = toStr ? parseLocalDate(toStr) : null
+  const quoteHref = fromStr
+    ? `/quote?from=${fromStr}${toStr ? `&to=${toStr}` : ""}`
+    : "/quote"
 
   // Restore dates from localStorage when URL loses them (e.g. navigating to a page with no ?from=&to=)
   useEffect(() => {
@@ -158,7 +162,7 @@ export default function ShopHeader() {
 
   function closeAll() {
     setNavOpen(false)
-    setAccountOpen(false)
+    closePanel()
   }
 
   function navigate(href: string) {
@@ -227,7 +231,7 @@ export default function ShopHeader() {
                   borderRadius: 8, background: "none", border: "none",
                   cursor: "pointer", color: "var(--shop-ink)", touchAction: "manipulation",
                 }}
-                onClick={() => { setNavOpen(p => !p); setAccountOpen(false) }}
+                onClick={() => { setNavOpen(p => !p); closePanel() }}
                 aria-label={navOpen ? "Close navigation" : "Open navigation"}
                 aria-expanded={navOpen}
               >
@@ -301,7 +305,7 @@ export default function ShopHeader() {
                     externalOpen={datePickerOpen}
                     onExternalChange={(o) => o ? openPicker() : closePicker()}
                   />
-                  <QuoteButton cartCount={cartCount} onClick={closeAll} />
+                  <QuoteButton cartCount={cartCount} onClick={closeAll} href={quoteHref} />
                 </div>
               ) : null}
 
@@ -314,7 +318,7 @@ export default function ShopHeader() {
                   borderRadius: 8, background: "none", border: "none",
                   cursor: "pointer", color: "var(--shop-ink)", touchAction: "manipulation",
                 }}
-                onClick={() => { setAccountOpen(p => !p); setNavOpen(false) }}
+                onClick={() => { accountOpen ? closePanel() : openPanel(); setNavOpen(false) }}
                 aria-label={accountOpen ? "Close account menu" : "Open account menu"}
                 aria-expanded={accountOpen}
               >
@@ -353,7 +357,7 @@ export default function ShopHeader() {
                   onExternalChange={(o) => o ? openPicker() : closePicker()}
                 />
               </div>
-              <QuoteButton cartCount={cartCount} onClick={closeAll} />
+              <QuoteButton cartCount={cartCount} onClick={closeAll} href={quoteHref} />
             </div>
           ) : null}
         </div>
@@ -466,10 +470,10 @@ export default function ShopHeader() {
   )
 }
 
-function QuoteButton({ cartCount, onClick }: { cartCount: number; onClick: () => void }) {
+function QuoteButton({ cartCount, onClick, href }: { cartCount: number; onClick: () => void; href: string }) {
   return (
     <Link
-      href="/quote"
+      href={href}
       onClick={onClick}
       style={{
         minHeight: 44,

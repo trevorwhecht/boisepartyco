@@ -18,6 +18,8 @@ model User {
   resellerLicenseUploadedAt DateTime?
   phone                     String?
   role        String   @default("user") // 'guest' | 'user' | 'employee' | 'admin'
+  consentSms   Boolean  @default(false)
+  consentEmail Boolean  @default(false)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   createdBy   String?
@@ -97,6 +99,8 @@ model Order {
   isHardDeadline  Boolean   @default(false)
   needsShipping         Boolean   @default(false)
   taxDeferralRequested  Boolean   @default(false)
+  consentSms            Boolean   @default(false)
+  consentEmail          Boolean   @default(false)
   mainImage             String?
   token           String?   @unique
   referredBy      String?
