@@ -171,8 +171,8 @@ export default function DashboardOrderDetailDialog({ order, open, onOpenChange, 
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 mb-1">
                 <span className="text-xs text-(--color-muted)">Order #{order.id}</span>
-                {(order.startDate ?? order.dueDate) ? (
-                  <span className="text-xs text-(--color-muted)">· {format(parseISO((order.startDate ?? order.dueDate)!.substring(0, 10)), "MMM d, yyyy")}{order.dueDateEnd ? ` – ${format(parseISO(order.dueDateEnd.substring(0, 10)), "MMM d")}` : ""}</span>
+                {order.startDate ? (
+                  <span className="text-xs text-(--color-muted)">· {format(parseISO(order.startDate.substring(0, 10)), "MMM d, yyyy")}{order.endDate ? ` – ${format(parseISO(order.endDate.substring(0, 10)), "MMM d")}` : ""}</span>
                 ) : null}
               </div>
               <Input
@@ -209,15 +209,14 @@ export default function DashboardOrderDetailDialog({ order, open, onOpenChange, 
               </div>
               <div className="space-y-1.5">
                 <Label>Start Date</Label>
-                {/* Binds to startDate (used by availability queries) and also syncs dueDate for calendar display */}
                 <Input
                   type="date"
-                  defaultValue={(order.startDate ?? order.dueDate)?.substring(0, 10) ?? ""}
+                  defaultValue={order.startDate?.substring(0, 10) ?? ""}
                   onBlur={(e) => {
                     const newVal = e.target.value || null
-                    patchOrder({ startDate: newVal, dueDate: newVal })
-                    const endDate = order.dueDateEnd ? order.dueDateEnd.substring(0, 10) : null
-                    if (newVal && endDate && newVal < endDate) warnOnDateConflicts(newVal, endDate)
+                    patchOrder({ startDate: newVal })
+                    const end = order.endDate ? order.endDate.substring(0, 10) : null
+                    if (newVal && end && newVal < end) warnOnDateConflicts(newVal, end)
                   }}
                   className="text-base"
                 />
@@ -226,11 +225,11 @@ export default function DashboardOrderDetailDialog({ order, open, onOpenChange, 
                 <Label>End Date</Label>
                 <Input
                   type="date"
-                  defaultValue={order.dueDateEnd ? order.dueDateEnd.substring(0, 10) : ""}
+                  defaultValue={order.endDate ? order.endDate.substring(0, 10) : ""}
                   onBlur={(e) => {
                     const newVal = e.target.value || null
-                    patchOrder({ dueDateEnd: newVal })
-                    const startVal = (order.startDate ?? order.dueDate)?.substring(0, 10) ?? null
+                    patchOrder({ endDate: newVal })
+                    const startVal = order.startDate?.substring(0, 10) ?? null
                     if (startVal && newVal && startVal < newVal) warnOnDateConflicts(startVal, newVal)
                   }}
                   className="text-base"
@@ -252,7 +251,7 @@ export default function DashboardOrderDetailDialog({ order, open, onOpenChange, 
             <Separator />
 
             <div>
-              <h3 className="text-sm font-semibold text-(--color-foreground) mb-3">Order Items</h3>
+              <h3 className="text-sm font-semibold text-(--color-foreground) mb-3">Variations</h3>
               <DashboardOrderSheetLineItems order={order} onOrderUpdated={onOrderUpdated} role={role} />
             </div>
 
@@ -269,7 +268,7 @@ export default function DashboardOrderDetailDialog({ order, open, onOpenChange, 
                   <div>
                     <h3 className="text-sm font-semibold text-(--color-foreground) mb-3">Order Totals</h3>
                     <div className="rounded-md border border-(--color-border) p-4 space-y-1.5 text-sm">
-                      <div className="flex justify-between"><span className="text-(--color-muted)">Items</span><span>${order.totalAmount.toFixed(2)}</span></div>
+                      <div className="flex justify-between"><span className="text-(--color-muted)">Variations</span><span>${order.totalAmount.toFixed(2)}</span></div>
                       {order.totalSetUpPrice > 0 ? <div className="flex justify-between"><span className="text-(--color-muted)">Setup</span><span>${order.totalSetUpPrice.toFixed(2)}</span></div> : null}
                       {order.discountManual ? <div className="flex justify-between text-(--color-danger)"><span>Discount</span><span>-${order.discountManual.toFixed(2)}</span></div> : null}
                       {order.rushFeeAmount ? <div className="flex justify-between"><span className="text-(--color-muted)">Rush Fee</span><span>${order.rushFeeAmount.toFixed(2)}</span></div> : null}

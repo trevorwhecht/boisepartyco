@@ -6,6 +6,7 @@ declare module "next-auth" {
     role: string
     firstName: string
     lastName: string
+    phone?: string | null
     consentSms?: boolean
     consentEmail?: boolean
   }
@@ -15,6 +16,7 @@ declare module "next-auth" {
       role: string
       firstName: string
       lastName: string
+      phone: string | null
       consentSms: boolean
       consentEmail: boolean
     } & import("next-auth").DefaultSession["user"]
@@ -26,6 +28,7 @@ declare module "next-auth/jwt" {
     role: string
     firstName: string
     lastName: string
+    phone: string | null
     consentSms: boolean
     consentEmail: boolean
   }

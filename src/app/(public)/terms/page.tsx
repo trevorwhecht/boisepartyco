@@ -2,11 +2,11 @@
 import type { Metadata } from "next"
 
 export const metadata: Metadata = {
-  title: "Terms & Conditions | Boise Party Rentals",
-  description: "Rental terms and conditions for Boise Party Rentals — deposits, cancellations, damage policy, and delivery.",
+  title: "Terms & Conditions | Boise Party Co",
+  description: "Rental terms and conditions for Boise Party Co — deposits, cancellations, damage policy, and delivery.",
 }
 
-const LAST_UPDATED = "May 26, 2025"
+const LAST_UPDATED = "June 11, 2026"
 const PHONE = "(208) 306-3079"
 const EMAIL = "info@boisepartyco.com"
 
@@ -29,8 +29,8 @@ export default function TermsPage() {
 
           <section>
             <p>
-              These Terms and Conditions ("Agreement") govern all rental transactions between Boise Party Rentals, LLC
-              ("Boise Party Rentals," "we," "us," or "our") and you ("Client"). By submitting a quote request, placing
+              These Terms and Conditions ("Agreement") govern all rental transactions between Boise Party Co, LLC
+              ("Boise Party Co," "we," "us," or "our") and you ("Client"). By submitting a quote request, placing
               an order, or accepting delivery of any rental items, you agree to be bound by this Agreement.
             </p>
           </section>
@@ -50,7 +50,7 @@ export default function TermsPage() {
               <li>A deposit is required to hold your reservation date. The deposit amount will be specified in your quote.</li>
               <li>The remaining balance is due prior to or on the day of delivery unless other arrangements are confirmed in writing.</li>
               <li>We accept major credit cards, cash, check, and other payment methods listed at checkout.</li>
-              <li>Deposits are non-refundable unless Boise Party Rentals cancels the order (see Section 4).</li>
+              <li>Deposits are non-refundable unless Boise Party Co cancels the order (see Section 4).</li>
             </ul>
           </section>
 
@@ -71,7 +71,7 @@ export default function TermsPage() {
               <li><strong>8–30 days before event:</strong> Deposit is forfeited; 25% of remaining balance due.</li>
               <li><strong>7 days or fewer before event:</strong> Full balance is due.</li>
             </ul>
-            <h3 style={h3Style}>Cancelled by Boise Party Rentals</h3>
+            <h3 style={h3Style}>Cancelled by Boise Party Co</h3>
             <p>
               If we must cancel due to circumstances within our control, we will refund your deposit in full and make
               every effort to find a comparable vendor.
@@ -131,7 +131,7 @@ export default function TermsPage() {
           <section>
             <h2 style={h2Style}>9. Limitation of Liability</h2>
             <p>
-              Boise Party Rentals is not liable for injuries or property damage caused by improper use of rental
+              Boise Party Co is not liable for injuries or property damage caused by improper use of rental
               equipment, unauthorized modifications, or failure to follow our usage guidelines. Our maximum liability
               in any claim shall not exceed the total amount paid for the rental.
             </p>
@@ -149,7 +149,7 @@ export default function TermsPage() {
             <h2 style={h2Style}>11. Contact</h2>
             <p style={{ marginBottom: 8 }}>Questions about these Terms? Reach us at:</p>
             <div style={{ background: "#fff", border: "1px solid var(--shop-line)", borderRadius: 10, padding: "20px 24px", fontSize: 14, lineHeight: 2 }}>
-              <strong>Boise Party Rentals, LLC</strong><br />
+              <strong>Boise Party Co, LLC</strong><br />
               2815 W Overland Rd, Boise, ID 83705<br />
               <a href={`tel:${PHONE.replace(/\D/g, "")}`} style={{ color: "var(--shop-blue)" }}>{PHONE}</a><br />
               <a href={`mailto:${EMAIL}`} style={{ color: "var(--shop-blue)" }}>{EMAIL}</a>

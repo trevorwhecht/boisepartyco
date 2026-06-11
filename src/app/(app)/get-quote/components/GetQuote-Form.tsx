@@ -48,7 +48,7 @@ export default function GetQuoteForm({ role, taxRate }: Props) {
   const [lineItems, setLineItems] = useState<FormLineItem[]>([])
   const [setupCosts, setSetupCosts] = useState<DraftSetupCost[]>([])
   const [customerNotes, setCustomerNotes] = useState("")
-  const [dueDate, setDueDate] = useState("")
+  const [startDate, setStartDate] = useState("")
   const [isHardDeadline, setIsHardDeadline] = useState(false)
 
   const [needsShipping, setNeedsShipping] = useState(false)
@@ -115,7 +115,7 @@ export default function GetQuoteForm({ role, taxRate }: Props) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         customerNotes: customerNotes || null,
-        dueDate: dueDate || null,
+        startDate: startDate || null,
         isHardDeadline,
         needsShipping,
         taxDeferralRequested,
@@ -359,13 +359,13 @@ export default function GetQuoteForm({ role, taxRate }: Props) {
             {/* Hard Deadline → Due Date reveals below */}
             <div className="space-y-2">
               <div className="flex items-center gap-2">
-                <Switch checked={isHardDeadline} onCheckedChange={(c) => { setIsHardDeadline(c); if (!c) setDueDate("") }} id="isHardDeadline" />
+                <Switch checked={isHardDeadline} onCheckedChange={(c) => { setIsHardDeadline(c); if (!c) setStartDate("") }} id="isHardDeadline" />
                 <Label htmlFor="isHardDeadline" className="cursor-pointer text-sm">Hard Deadline</Label>
               </div>
               {isHardDeadline ? (
                 <div className="pl-10">
-                  <Input id="dueDate" type="date" autoComplete="off" value={dueDate}
-                    onChange={(e) => setDueDate(e.target.value)} className="text-base w-38" />
+                  <Input id="startDate" type="date" autoComplete="off" value={startDate}
+                    onChange={(e) => setStartDate(e.target.value)} className="text-base w-38" />
                 </div>
               ) : null}
             </div>

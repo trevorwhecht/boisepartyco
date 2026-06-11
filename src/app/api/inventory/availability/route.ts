@@ -48,7 +48,7 @@ export async function GET(req: Request) {
     return NextResponse.json({ data: null, error: "from and to are required" }, { status: 400 })
   }
 
-  // parseLocalDate creates local midnight — consistent with how startDate/dueDateEnd are stored
+  // parseLocalDate creates local midnight — consistent with how startDate/endDate are stored
   const from = parseLocalDate(fromStr)
   const to = parseLocalDate(toStr)
   if (isNaN(from.getTime()) || isNaN(to.getTime()) || from >= to) {

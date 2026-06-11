@@ -93,8 +93,8 @@ model Order {
   isPaid          Boolean   @default(false)
   paymentPlan     String?  //full up front, deposit, or atpickup
   finalPrice      Decimal?  @db.Decimal(10, 2)
-  dueDate         DateTime?
-  dueDateEnd      DateTime?
+  endDate         DateTime?
+  guests          Int?
   startDate       DateTime?
   isHardDeadline  Boolean   @default(false)
   needsShipping         Boolean   @default(false)

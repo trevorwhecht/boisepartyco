@@ -23,10 +23,10 @@ export default function DashboardKanbanColumn({ state, orders, role, onOpenOrder
     if (state.id === 1) {
       return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
     }
-    if (!a.dueDate && !b.dueDate) return 0
-    if (!a.dueDate) return 1
-    if (!b.dueDate) return -1
-    return new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime()
+    if (!a.startDate && !b.startDate) return 0
+    if (!a.startDate) return 1
+    if (!b.startDate) return -1
+    return new Date(a.startDate).getTime() - new Date(b.startDate).getTime()
   })
 
   const virtualizer = useVirtualizer({

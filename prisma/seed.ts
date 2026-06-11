@@ -140,7 +140,7 @@ async function main() {
         profit: 120.00,
         isPaid: false,
         token: "seed-test-order-1",
-        dueDate: new Date("2026-06-15"),
+        startDate: new Date("2026-06-15"),
         orderLineItems: {
           create: [
             {

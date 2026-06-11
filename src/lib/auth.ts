@@ -19,7 +19,7 @@ export const authOptions: NextAuthOptions = {
         try {
           const user = await prisma.user.findUnique({
             where: { email: credentials.email },
-            select: { id: true, email: true, password: true, firstName: true, lastName: true, role: true, consentSms: true, consentEmail: true },
+            select: { id: true, email: true, password: true, firstName: true, lastName: true, phone: true, role: true, consentSms: true, consentEmail: true },
           })
 
           if (!user?.password) return null
@@ -33,6 +33,7 @@ export const authOptions: NextAuthOptions = {
             name: `${user.firstName} ${user.lastName}`,
             firstName: user.firstName,
             lastName: user.lastName,
+            phone: user.phone ?? null,
             role: user.role,
             consentSms: user.consentSms,
             consentEmail: user.consentEmail,
@@ -53,7 +54,7 @@ export const authOptions: NextAuthOptions = {
         try {
           const user = await prisma.user.findUnique({
             where: { email: credentials.email },
-            select: { id: true, email: true, firstName: true, lastName: true, role: true, consentSms: true, consentEmail: true },
+            select: { id: true, email: true, firstName: true, lastName: true, phone: true, role: true, consentSms: true, consentEmail: true },
           })
           if (!user || user.role !== "guest") return null
           return {
@@ -62,6 +63,7 @@ export const authOptions: NextAuthOptions = {
             name: `${user.firstName} ${user.lastName}`,
             firstName: user.firstName,
             lastName: user.lastName,
+            phone: user.phone ?? null,
             role: user.role,
             consentSms: user.consentSms,
             consentEmail: user.consentEmail,
@@ -78,6 +80,7 @@ export const authOptions: NextAuthOptions = {
         token.role = user.role
         token.firstName = user.firstName
         token.lastName = user.lastName
+        token.phone = user.phone ?? null
         token.consentSms = user.consentSms ?? false
         token.consentEmail = user.consentEmail ?? false
       }
@@ -88,6 +91,7 @@ export const authOptions: NextAuthOptions = {
       session.user.role = token.role as string
       session.user.firstName = token.firstName as string
       session.user.lastName = token.lastName as string
+      session.user.phone = token.phone ?? null
       session.user.consentSms = token.consentSms ?? false
       session.user.consentEmail = token.consentEmail ?? false
       return session

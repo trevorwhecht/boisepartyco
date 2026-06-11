@@ -102,6 +102,7 @@ export default function QuotePage() {
       firstName: (session.user as any).firstName || prev.firstName,
       lastName: (session.user as any).lastName || prev.lastName,
       email: session.user?.email || prev.email,
+      phone: (session.user as any).phone || prev.phone,
     }))
     // Pre-fill consent from saved profile — only set, never unset
     const s = session.user as any
@@ -149,65 +150,73 @@ export default function QuotePage() {
     startTransition(async () => {
       setSubmitError(null)
 
-      // If "Create account" was selected, create the account then sign in before submitting
-      if (consent.account && password) {
-        const createRes = await fetch("/api/users", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            email: contact.email,
-            password,
+      try {
+        // If "Create account" was selected, create the account then sign in before submitting
+        if (consent.account && password) {
+          const createRes = await fetch("/api/users", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              email: contact.email,
+              password,
+              firstName: contact.firstName,
+              lastName: contact.lastName,
+              phone: contact.phone || undefined,
+            }),
+          })
+          const createJson = await createRes.json()
+          if (!createRes.ok || createJson.error) {
+            setSubmitError(createJson.error ?? "Failed to create account. Please try again.")
+            return
+          }
+          // Sign in so the session reflects the new account
+          await signIn("credentials", { email: contact.email, password, redirect: false })
+        }
+
+        const payload: Record<string, any> = {
+          pickupDate: fmtLocalDate(start),
+          dropoffDate: fmtLocalDate(end),
+          customer: {
             firstName: contact.firstName,
             lastName: contact.lastName,
-            phone: contact.phone || undefined,
-          }),
+            email: contact.email,
+            phone: contact.phone,
+          },
+          lines: lines.map(l => ({
+            kind: l.kind,
+            refId: l.refId,
+            qty: l.qty,
+            name: l.name,
+            unitPrice: l.unitPrice,
+          })),
+          customerNotes: contact.notes || null,
+          shipping: contact.venue ? { street: contact.venue, city: "", state: "ID", zipCode: "" } : null,
+          consentSms: consent.sms,
+          consentEmail: consent.email,
+        }
+
+        if (selectedUserId) payload.userId = selectedUserId
+
+        const res = await fetch("/api/orders", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
         })
-        const createJson = await createRes.json()
-        if (!createRes.ok || createJson.error) {
-          setSubmitError(createJson.error ?? "Failed to create account. Please try again.")
+        const json = await res.json()
+        if (!res.ok || json.error) {
+          setSubmitError(json.error ?? "Something went wrong. Please try again.")
           return
         }
-        // Sign in so the session reflects the new account
-        await signIn("credentials", { email: contact.email, password, redirect: false })
+        clearCart()
+        if (consent.account && json.data?.token) {
+          router.push(`/orders/${json.data.token}`)
+          return
+        }
+        setOrderId(json.data?.id ?? null)
+        setStep("confirm")
+      } catch {
+        setSubmitError("Something went wrong. Please try again.")
       }
-
-      const payload: Record<string, any> = {
-        pickupDate: fmtLocalDate(start),
-        dropoffDate: fmtLocalDate(end),
-        customer: {
-          firstName: contact.firstName,
-          lastName: contact.lastName,
-          email: contact.email,
-          phone: contact.phone,
-        },
-        lines: lines.map(l => ({
-          kind: l.kind,
-          refId: l.refId,
-          qty: l.qty,
-          name: l.name,
-          unitPrice: l.unitPrice,
-        })),
-        customerNotes: contact.notes || null,
-        shipping: contact.venue ? { street: contact.venue, city: "", state: "ID", zipCode: "" } : null,
-        consentSms: consent.sms,
-        consentEmail: consent.email,
-      }
-
-      if (selectedUserId) payload.userId = selectedUserId
-
-      const res = await fetch("/api/orders", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      })
-      const json = await res.json()
-      if (!res.ok || json.error) {
-        setSubmitError(json.error ?? "Something went wrong. Please try again.")
-        return
-      }
-      setOrderId(json.data?.id ?? null)
-      clearCart()
-      setStep("confirm")
     })
   }
 

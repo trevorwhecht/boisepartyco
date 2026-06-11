@@ -51,8 +51,8 @@ async function handlePublicShopQuote(body: any): Promise<Response> {
   }
 
   const startDate = parseLocalDate(pickupDate)
-  const dueDateEnd = parseLocalDate(dropoffDate)
-  if (isNaN(startDate.getTime()) || isNaN(dueDateEnd.getTime()) || startDate >= dueDateEnd) {
+  const endDate = parseLocalDate(dropoffDate)
+  if (isNaN(startDate.getTime()) || isNaN(endDate.getTime()) || startDate >= endDate) {
     return NextResponse.json({ data: null, error: "Invalid date range — dropoffDate must be after pickupDate" }, { status: 400 })
   }
 
@@ -69,7 +69,7 @@ async function handlePublicShopQuote(body: any): Promise<Response> {
   const inventoryMode = await getInventoryMode()
   const validationLines = lines.map((l: any) => ({ kind: l.kind, refId: Number(l.refId), qty: Number(l.qty) }))
   const validation = inventoryMode === "on"
-    ? await validateOrderLines(validationLines, startDate, dueDateEnd)
+    ? await validateOrderLines(validationLines, startDate, endDate)
     : { ok: true, conflicts: [], warnings: [] }
   if (!validation.ok) {
     return NextResponse.json({
@@ -122,14 +122,27 @@ async function handlePublicShopQuote(body: any): Promise<Response> {
   // Resolve which user to link the order to
   let linkedUserId: string
   if (bodyUserId) {
-    // Admin selected an existing user — verify they exist
-    const existingUser = await prisma.user.findUnique({ where: { id: bodyUserId }, select: { id: true } })
+    const existingUser = await prisma.user.findUnique({ where: { id: bodyUserId }, select: { id: true, role: true } })
     if (!existingUser) {
       return NextResponse.json({ data: null, error: "Selected user not found" }, { status: 400 })
     }
+    if (existingUser.role === "admin" || existingUser.role === "employee") {
+      return NextResponse.json({ data: null, error: "Orders cannot be linked to staff accounts" }, { status: 400 })
+    }
     linkedUserId = existingUser.id
   } else {
-    // Upsert a guest/user record by email so contact info lives in the system
+    // Check before upsert — never link an order to a staff account
+    const existingByEmail = await prisma.user.findUnique({
+      where: { email: customer.email.toLowerCase() },
+      select: { id: true, role: true },
+    })
+    if (existingByEmail && (existingByEmail.role === "admin" || existingByEmail.role === "employee")) {
+      return NextResponse.json({
+        data: null,
+        error: "That email belongs to a staff account. Please sign in or use a different email.",
+      }, { status: 400 })
+    }
+
     const guestUser = await prisma.user.upsert({
       where: { email: customer.email.toLowerCase() },
       update: {},
@@ -156,7 +169,7 @@ async function handlePublicShopQuote(body: any): Promise<Response> {
         state: { connect: { id: 1 } },
         user: { connect: { id: linkedUserId } },
         startDate,
-        dueDateEnd,
+        endDate,
         customerNotes: customerNotes ?? null,
         token: generateToken(),
         createdBy: customer.email || null,
@@ -222,14 +235,19 @@ export async function POST(req: Request) {
 
   // Public shop quote — different payload shape
   if (body.pickupDate !== undefined) {
-    return handlePublicShopQuote(body)
+    try {
+      return await handlePublicShopQuote(body)
+    } catch (err: any) {
+      console.error("[POST /api/orders] unhandled error:", err)
+      return NextResponse.json({ data: null, error: "Something went wrong on our end. Please try again or call us at (208) 306-3079." }, { status: 500 })
+    }
   }
 
   // Staff path — everything below is unchanged from the original file
   const role = session?.user?.role ?? "anonymous"
   const isStaff = role === "admin" || role === "employee"
   const isPublic = !session
-  const { customerNotes, notes, dueDate, isHardDeadline, needsShipping, taxDeferralRequested, lineItems = [] } = body
+  const { customerNotes, notes, startDate: bodyStartDate, isHardDeadline, needsShipping, taxDeferralRequested, lineItems = [] } = body
   const userId = isStaff ? (body.userId || null) : null
   const nickname = body.nickname || null
   const stateId = isStaff ? (body.stateId ?? 1) : 1
@@ -251,7 +269,7 @@ export async function POST(req: Request) {
       nickname,
       customerNotes: customerNotes || null,
       notes: isStaff ? (notes || null) : null,
-      dueDate: dueDate ? new Date(dueDate) : null,
+      startDate: bodyStartDate ? new Date(bodyStartDate) : null,
       isHardDeadline: isHardDeadline ?? false,
       needsShipping: needsShipping ?? false,
       taxDeferralRequested: taxDeferralRequested ?? false,

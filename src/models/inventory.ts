@@ -150,7 +150,7 @@ export type CartLine = {
 
 export type CreateOrderPayload = {
   pickupDate: string         // ISO date — Order.startDate
-  dropoffDate: string        // ISO date — Order.dueDateEnd
+  dropoffDate: string        // ISO date — Order.endDate
   customer: {
     firstName: string
     lastName: string

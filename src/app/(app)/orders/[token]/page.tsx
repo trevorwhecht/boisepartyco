@@ -32,7 +32,7 @@ export default async function OrderPublicPage({ params }: { params: Promise<{ to
       subTotal: true,
       salesTax: true,
       discountManual: true,
-      dueDate: true,
+      startDate: true,
       customerNotes: true,
       createdAt: true,
       state: { select: { name: true, color: true } },
@@ -71,7 +71,7 @@ export default async function OrderPublicPage({ params }: { params: Promise<{ to
         <div>
           <h1 className="text-2xl font-bold text-(--color-foreground)">{title}</h1>
           <p className="text-sm text-(--color-muted) mt-0.5">
-            Order #{order.id} · {format(new Date(order.createdAt), "MMM d, yyyy")}
+            {order.nickname ? `Order #${order.id} · ` : ""}{format(new Date(order.createdAt), "MMM d, yyyy")}
           </p>
         </div>
         <div className="flex flex-col items-end gap-1.5 shrink-0">
@@ -200,9 +200,9 @@ export default async function OrderPublicPage({ params }: { params: Promise<{ to
       </div>
 
       {/* Due date */}
-      {order.dueDate ? (
+      {order.startDate ? (
         <p className="text-sm text-(--color-muted)">
-          Due {format(new Date(order.dueDate), "MMMM d, yyyy")}
+          Due {format(new Date(order.startDate), "MMMM d, yyyy")}
         </p>
       ) : null}
 

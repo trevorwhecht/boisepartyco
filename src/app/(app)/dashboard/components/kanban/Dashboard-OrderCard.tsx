@@ -2,11 +2,11 @@
 
 import { createContext, useContext } from "react"
 import { useDraggable } from "@dnd-kit/core"
-import { format, isPast, parseISO } from "date-fns"
-import { cn } from "@/lib/utils"
+import { isPast, parseISO } from "date-fns"
+import { cn, formatDateRange } from "@/lib/utils"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Link2 } from "lucide-react"
+import { CalendarDays, Link2 } from "lucide-react"
 import { toast } from "sonner"
 import type { OrderSummary } from "@/models/order"
 
@@ -102,7 +102,7 @@ function Footer() {
   const { order, role } = useCard()
   const isAdmin = role === "admin"
   const isOverdue =
-    order.dueDate && !order.completedDate && isPast(parseISO(order.dueDate.substring(0, 10)))
+    order.startDate && !order.completedDate && isPast(parseISO(order.startDate.substring(0, 10)))
 
   function handleCopyLink(e: React.MouseEvent) {
     e.stopPropagation()
@@ -117,11 +117,15 @@ function Footer() {
     <div className="flex items-end justify-between mt-3">
       <div className="text-xs text-(--color-muted) space-y-0.5">
         {order._count.orderLineItems > 0 ? (
-          <p>{order._count.orderLineItems} item{order._count.orderLineItems !== 1 ? "s" : ""}</p>
+          <p>
+            {order._count.orderLineItems} variation{order._count.orderLineItems !== 1 ? "s" : ""}
+            {" · "}${order.totalAmount.toFixed(2)}
+          </p>
         ) : null}
-        {order.dueDate ? (
-          <p className={cn(isOverdue && "text-(--color-danger) font-medium")}>
-            Due {format(parseISO(order.dueDate.substring(0, 10)), "MMM d")}
+        {order.startDate ? (
+          <p className={cn("flex items-center gap-1", isOverdue && "text-(--color-danger) font-medium")}>
+            <CalendarDays size={11} />
+            {formatDateRange(order.startDate, order.endDate)}
             {order.isHardDeadline ? " ⚑" : ""}
           </p>
         ) : null}

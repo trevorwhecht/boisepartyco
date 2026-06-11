@@ -22,7 +22,7 @@ export default function DashboardCalendarView({ orders, loading, onOpenOrder }: 
   const calEnd = endOfWeek(monthEnd, { weekStartsOn: 0 })
   const days = eachDayOfInterval({ start: calStart, end: calEnd })
 
-  const ordersWithDue = orders.filter((o) => o.dueDate)
+  const ordersWithDue = orders.filter((o) => o.startDate)
 
   async function handleOpen(order: OrderSummary) {
     const res = await fetch(`/api/orders/${order.id}`)
@@ -54,8 +54,8 @@ export default function DashboardCalendarView({ orders, loading, onOpenOrder }: 
       <div className="grid grid-cols-7 border-l border-t border-(--color-border)">
         {days.map((day) => {
           const dayOrders = ordersWithDue.filter((o) => {
-            const start = new Date(o.dueDate!)
-            const end = o.dueDateEnd ? new Date(o.dueDateEnd) : start
+            const start = new Date(o.startDate!)
+            const end = o.endDate ? new Date(o.endDate) : start
             return day >= start && day <= end
           })
           const isCurrentMonth = isSameMonth(day, currentMonth)
@@ -86,7 +86,7 @@ export default function DashboardCalendarView({ orders, loading, onOpenOrder }: 
                       "w-full text-left text-xs px-1 py-0.5 rounded truncate block touch-manipulation",
                       order.completedDate
                         ? "bg-(--color-success) bg-opacity-20 text-(--color-success)"
-                        : isPast(parseISO(order.dueDate!.substring(0, 10))) ? "bg-(--color-danger) bg-opacity-20 text-(--color-danger)" : "bg-(--color-primary) bg-opacity-10 text-(--color-primary)"
+                        : isPast(parseISO(order.startDate!.substring(0, 10))) ? "bg-(--color-danger) bg-opacity-20 text-(--color-danger)" : "bg-(--color-primary) bg-opacity-10 text-(--color-primary)"
                     )}
                     style={{ borderLeft: `2px solid ${order.state.color ?? "var(--color-border)"}` }}
                   >

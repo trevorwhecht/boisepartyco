@@ -67,22 +67,22 @@ export async function getItemAvailability(
       ...(excludeOrderId ? { orderId: { not: excludeOrderId } } : {}),
       order: {
         startDate: { lte: to },
-        dueDateEnd: { gte: from },
+        endDate: { gte: from },
         state: { consumesInventory: true },
       },
     },
     select: {
       qty: true,
-      order: { select: { startDate: true, dueDateEnd: true } },
+      order: { select: { startDate: true, endDate: true } },
     },
   })
 
   const demand: BookingDemand[] = lines
-    .filter((l) => l.order.startDate && l.order.dueDateEnd)
+    .filter((l) => l.order.startDate && l.order.endDate)
     .map((l) => ({
       qty: l.qty,
       start: l.order.startDate!,
-      end: l.order.dueDateEnd!,
+      end: l.order.endDate!,
     }))
 
   const booked = maxConcurrentBooked(demand, from, to)
@@ -132,7 +132,7 @@ export async function getTentPartAvailability(
       ...(excludeOrderId ? { orderId: { not: excludeOrderId } } : {}),
       order: {
         startDate: { lte: to },
-        dueDateEnd: { gte: from },
+        endDate: { gte: from },
         state: { consumesInventory: true },
       },
       tentConfig: {
@@ -141,7 +141,7 @@ export async function getTentPartAvailability(
     },
     select: {
       qty: true,
-      order: { select: { startDate: true, dueDateEnd: true } },
+      order: { select: { startDate: true, endDate: true } },
       tentConfig: {
         select: {
           bomParts: {
@@ -154,11 +154,11 @@ export async function getTentPartAvailability(
   })
 
   const demand: BookingDemand[] = lines
-    .filter((l) => l.order.startDate && l.order.dueDateEnd && l.tentConfig?.bomParts[0])
+    .filter((l) => l.order.startDate && l.order.endDate && l.tentConfig?.bomParts[0])
     .map((l) => ({
       qty: l.qty * l.tentConfig!.bomParts[0]!.qtyRequired,
       start: l.order.startDate!,
-      end: l.order.dueDateEnd!,
+      end: l.order.endDate!,
     }))
 
   const booked = maxConcurrentBooked(demand, from, to)
@@ -369,13 +369,13 @@ export async function getItemDailyAvailability(
       itemId,
       order: {
         startDate: { lt: rangeEnd },
-        dueDateEnd: { gt: startDate },
+        endDate: { gt: startDate },
         state: { consumesInventory: true },
       },
     },
     select: {
       qty: true,
-      order: { select: { startDate: true, dueDateEnd: true } },
+      order: { select: { startDate: true, endDate: true } },
     },
   })
 
@@ -388,8 +388,8 @@ export async function getItemDailyAvailability(
     dayEnd.setHours(23, 59, 59, 999)
 
     const booked = lines
-      .filter(l => l.order.startDate !== null && l.order.dueDateEnd !== null
-        && l.order.startDate <= dayEnd && l.order.dueDateEnd >= day)
+      .filter(l => l.order.startDate !== null && l.order.endDate !== null
+        && l.order.startDate <= dayEnd && l.order.endDate >= day)
       .reduce((sum, l) => sum + l.qty, 0)
 
     result.push({
@@ -452,14 +452,14 @@ export async function getTentConfigDailyAvailability(
           tentConfigId: { not: null },
           order: {
             startDate: { lt: rangeEnd },
-            dueDateEnd: { gt: startDate },
+            endDate: { gt: startDate },
             state: { consumesInventory: true },
           },
           tentConfig: { bomParts: { some: { tentPartId: row.tentPart.id } } },
         },
         select: {
           qty: true,
-          order: { select: { startDate: true, dueDateEnd: true } },
+          order: { select: { startDate: true, endDate: true } },
           tentConfig: {
             select: {
               bomParts: {
@@ -489,9 +489,9 @@ export async function getTentConfigDailyAvailability(
         .filter(
           (l) =>
             l.order.startDate !== null &&
-            l.order.dueDateEnd !== null &&
+            l.order.endDate !== null &&
             l.order.startDate <= dayEnd &&
-            l.order.dueDateEnd >= day,
+            l.order.endDate >= day,
         )
         .reduce((sum, l) => sum + l.qty * (l.tentConfig?.bomParts[0]?.qtyRequired ?? 0), 0)
 

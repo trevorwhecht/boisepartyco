@@ -145,8 +145,8 @@ export default function DashboardOrderSheet({ order, open, onOpenChange, onOrder
                 <Label>Start Date</Label>
                 <Input
                   type="date"
-                  defaultValue={(order.startDate ?? order.dueDate)?.substring(0, 10) ?? ""}
-                  onBlur={(e) => patchOrder({ startDate: e.target.value || null, dueDate: e.target.value || null })}
+                  defaultValue={order.startDate?.substring(0, 10) ?? ""}
+                  onBlur={(e) => patchOrder({ startDate: e.target.value || null })}
                   className="text-base"
                 />
               </div>
@@ -154,8 +154,8 @@ export default function DashboardOrderSheet({ order, open, onOpenChange, onOrder
                 <Label>End Date</Label>
                 <Input
                   type="date"
-                  defaultValue={order.dueDateEnd ? order.dueDateEnd.substring(0, 10) : ""}
-                  onBlur={(e) => patchOrder({ dueDateEnd: e.target.value || null })}
+                  defaultValue={order.endDate ? order.endDate.substring(0, 10) : ""}
+                  onBlur={(e) => patchOrder({ endDate: e.target.value || null })}
                   className="text-base"
                 />
               </div>

@@ -64,13 +64,14 @@ export type OrderSummary = {
   state: Pick<OrderStateModel, "id" | "name" | "color">
   user: Pick<UserSummary, "id" | "firstName" | "lastName" | "email" | "role"> | null
   totalQty: number
+  totalAmount: number    // sum of line items before tax/setup
   totalPrice: number
   cost: number           // 0 for employee (stripped at API)
   profit: number         // 0 for employee (stripped at API)
   isPaid: boolean
   paymentPlan: string | null
-  dueDate: string | null
-  dueDateEnd: string | null
+  startDate: string | null
+  endDate: string | null
   isHardDeadline: boolean
   completedDate: string | null
   token: string | null
@@ -105,9 +106,8 @@ export type OrderDetail = {
   isPaid: boolean
   paymentPlan: string | null
   finalPrice: number | null
-  dueDate: string | null
-  dueDateEnd: string | null
   startDate: string | null
+  endDate: string | null
   isHardDeadline: boolean
   needsShipping: boolean
   taxDeferralRequested: boolean

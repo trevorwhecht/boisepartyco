@@ -65,7 +65,7 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
   const body = await req.json()
 
   const {
-    stateId, nickname, customerNotes, notes, dueDate, dueDateEnd, startDate,
+    stateId, nickname, customerNotes, notes, endDate, startDate,
     isHardDeadline, paymentPlan, isPaid, discountManual, discountReferral,
     discountMistake, rushFeeAmount, rushFeePercent, rushFeeDays,
     needsShipping, finalPrice, lineItems, setUpCosts, userId,
@@ -76,8 +76,7 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
   if (role === "admin") {
     if (stateId !== undefined) scalarUpdate.stateId = stateId
     if (nickname !== undefined) scalarUpdate.nickname = nickname
-    if (dueDate !== undefined) scalarUpdate.dueDate = dueDate ? parseLocalDate(dueDate) : null
-    if (dueDateEnd !== undefined) scalarUpdate.dueDateEnd = dueDateEnd ? parseLocalDate(dueDateEnd) : null
+    if (endDate !== undefined) scalarUpdate.endDate = endDate ? parseLocalDate(endDate) : null
     if (startDate !== undefined) scalarUpdate.startDate = startDate ? parseLocalDate(startDate) : null
     if (isHardDeadline !== undefined) scalarUpdate.isHardDeadline = isHardDeadline
     if (paymentPlan !== undefined) scalarUpdate.paymentPlan = paymentPlan
@@ -258,11 +257,23 @@ export async function DELETE(req: Request, { params }: { params: Promise<{ id: s
   const session = await getServerSession(authOptions)
   if (!session) return NextResponse.json({ data: null, error: "Unauthorized" }, { status: 401 })
 
-  if (session.user.role !== "admin") {
-    return NextResponse.json({ data: null, error: "Forbidden" }, { status: 403 })
+  const { id } = await params
+  const orderId = Number(id)
+  const role = session.user.role
+
+  if (role !== "admin") {
+    // Regular users may only delete their own orders that are still in Admin Review (stateId 1)
+    if (role !== "user") return NextResponse.json({ data: null, error: "Forbidden" }, { status: 403 })
+    const order = await prisma.order.findUnique({
+      where: { id: orderId },
+      select: { userId: true, stateId: true },
+    })
+    if (!order) return NextResponse.json({ data: null, error: "Not found" }, { status: 404 })
+    if (order.userId !== session.user.id || order.stateId !== 1) {
+      return NextResponse.json({ data: null, error: "Forbidden" }, { status: 403 })
+    }
   }
 
-  const { id } = await params
-  await prisma.order.delete({ where: { id: Number(id) } })
-  return NextResponse.json({ data: { id: Number(id) }, error: null })
+  await prisma.order.delete({ where: { id: orderId } })
+  return NextResponse.json({ data: { id: orderId }, error: null })
 }

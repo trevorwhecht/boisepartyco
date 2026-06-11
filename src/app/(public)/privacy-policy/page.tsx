@@ -2,11 +2,11 @@
 import type { Metadata } from "next"
 
 export const metadata: Metadata = {
-  title: "Privacy Policy | Boise Party Rentals",
-  description: "Privacy policy for Boise Party Rentals — how we collect, use, and protect your information.",
+  title: "Privacy Policy | Boise Party Co",
+  description: "Privacy policy for Boise Party Co — how we collect, use, and protect your information.",
 }
 
-const LAST_UPDATED = "May 26, 2025"
+const LAST_UPDATED = "June 10, 2026"
 const PHONE = "(208) 306-3079"
 const EMAIL = "info@boisepartyco.com"
 const SITE_URL = "https://boisepartyco.com"
@@ -30,7 +30,7 @@ export default function PrivacyPolicyPage() {
 
           <section>
             <p>
-              Boise Party Rentals, LLC ("Boise Party Rentals," "we," "us," or "our") operates {SITE_URL} and the associated
+              Boise Party Co, LLC ("Boise Party Co," "we," "us," or "our") operates {SITE_URL} and the associated
               order management platform. This Privacy Policy explains what information we collect, how we use it, and
               your rights regarding that information. By using our website or services, you agree to the practices described here.
             </p>
@@ -70,7 +70,7 @@ export default function PrivacyPolicyPage() {
             <ul style={ulStyle}>
               <li>With service providers who help us operate our business (payment processors, delivery logistics, email/SMS platforms) under confidentiality agreements</li>
               <li>When required by law, subpoena, or court order</li>
-              <li>To protect the rights, property, or safety of Boise Party Rentals or others</li>
+              <li>To protect the rights, property, or safety of Boise Party Co or others</li>
             </ul>
           </section>
 
@@ -83,9 +83,11 @@ export default function PrivacyPolicyPage() {
 
             <h3 style={h3Style}>Opt-In</h3>
             <p style={{ marginBottom: 12 }}>
-              By providing your mobile phone number and checking the SMS consent box during checkout or in your
-              account settings, you expressly consent to receive text messages from Boise Party Rentals at the number
-              provided. Consent is not a condition of purchase.
+              One With Arts Coding is the provider of SMS messaging services for Boise Party Co. By providing
+              your mobile phone number and checking the SMS consent box during checkout or in your account settings,
+              you expressly consent to receive SMS text messages from One With Arts Coding regarding Boise Party
+              Rentals orders and updates at the number provided. Message &amp; data rates may apply. Consent is not a
+              condition of purchase. You may opt out at any time by replying STOP.
             </p>
 
             <h3 style={h3Style}>Message Frequency</h3>
@@ -112,9 +114,9 @@ export default function PrivacyPolicyPage() {
 
             <h3 style={h3Style}>No Mobile Information Sharing</h3>
             <p>
-              Mobile phone numbers and SMS consent information collected by Boise Party Rentals will not be shared
-              with, sold to, or used by third parties for their own marketing purposes. This information is used
-              solely to deliver the service notifications described above.
+              Mobile phone numbers and SMS consent information collected by One With Arts Coding on behalf of Boise
+              Party Rentals will not be shared with, sold to, or used by third parties for their own marketing
+              purposes. This information is used solely to deliver the service notifications described above.
             </p>
           </section>
 
@@ -159,7 +161,7 @@ export default function PrivacyPolicyPage() {
             <h2 style={h2Style}>9. Contact Us</h2>
             <p style={{ marginBottom: 8 }}>If you have questions about this Privacy Policy or your personal information:</p>
             <div style={{ background: "#fff", border: "1px solid var(--shop-line)", borderRadius: 10, padding: "20px 24px", fontSize: 14, lineHeight: 2 }}>
-              <strong>Boise Party Rentals, LLC</strong><br />
+              <strong>Boise Party Co, LLC</strong><br />
               2815 W Overland Rd, Boise, ID 83705<br />
               <a href={`tel:${PHONE.replace(/\D/g,"")}`} style={{ color: "var(--shop-blue)" }}>{PHONE}</a><br />
               <a href={`mailto:${EMAIL}`} style={{ color: "var(--shop-blue)" }}>{EMAIL}</a>

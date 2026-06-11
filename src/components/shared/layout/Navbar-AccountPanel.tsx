@@ -149,7 +149,7 @@ export default function NavbarAccountPanel({ isOpen, onClose, navigate }: Props)
               </>
             ) : (
               <>
-                <PanelItem icon={<LayoutGrid className="h-4 w-4" />} onClick={() => navigate("/account")}>Orders</PanelItem>
+                <PanelItem icon={<LayoutGrid className="h-4 w-4" />} onClick={() => navigate("/account/orders")}>Orders</PanelItem>
                 <PanelItem icon={<UserCog className="h-4 w-4" />} onClick={() => navigate("/account/settings")}>Account Settings</PanelItem>
               </>
             )}
